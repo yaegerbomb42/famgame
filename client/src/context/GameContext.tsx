@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useState, useContext } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:3000'; // Make this dynamic for prod?
+const SOCKET_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
 
 interface Player {
     id: string;
