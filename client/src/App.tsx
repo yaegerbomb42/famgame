@@ -2,108 +2,179 @@ import { useState } from 'react';
 import { GameProvider } from './context/GameContext';
 import HostLogic from './components/HostLogic';
 import PlayerLogic from './components/PlayerLogic';
-import ParticleSystem from './components/ParticleSystem';
-// import { motion, AnimatePresence } from 'framer-motion'; // Disabled for debugging
+import { SoundProvider } from './context/SoundContext';
 
 function GameContent() {
   const [role, setRole] = useState<'NONE' | 'HOST' | 'PLAYER'>('NONE');
 
+  // Using inline styles to guarantee visibility - Tailwind may not be compiling
+  const containerStyle: React.CSSProperties = {
+    position: 'relative',
+    width: '100vw',
+    height: '100vh',
+    backgroundColor: '#0a0518',
+    color: 'white',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    overflow: 'hidden',
+  };
+
+  const contentStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '16px',
+    zIndex: 100,
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: 'clamp(3rem, 10vw, 8rem)',
+    fontWeight: 900,
+    marginBottom: '8px',
+    letterSpacing: '-0.05em',
+  };
+
+  const gradientTextStyle: React.CSSProperties = {
+    background: 'linear-gradient(90deg, #d946ef, #06b6d4)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+  };
+
+  const subtitleStyle: React.CSSProperties = {
+    fontSize: '1.25rem',
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: '0.5em',
+    textTransform: 'uppercase',
+    fontFamily: 'monospace',
+  };
+
+  const buttonContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: '32px',
+    marginTop: '48px',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    flex: '1 1 300px',
+    maxWidth: '400px',
+    padding: '48px',
+    borderRadius: '24px',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '16px',
+    color: 'white',
+  };
+
+  if (role === 'HOST') {
+    return <HostLogic />;
+  }
+
+  if (role === 'PLAYER') {
+    return <PlayerLogic />;
+  }
+
   return (
-    <div className="relative w-full h-screen overflow-hidden text-white selection:bg-game-primary selection:text-white">
-      {/* DEBUG: This should always be visible */}
-      <div className="fixed top-4 left-4 z-50 bg-red-500 text-white px-4 py-2 rounded font-bold">
-        DEBUG: React is rendering - Role: {role}
-      </div>
+    <div style={containerStyle}>
+      {/* Background gradient orbs */}
+      <div style={{
+        position: 'absolute',
+        top: '-20%',
+        left: '-10%',
+        width: '60vw',
+        height: '60vw',
+        background: '#d946ef',
+        borderRadius: '50%',
+        filter: 'blur(150px)',
+        opacity: 0.15,
+        zIndex: 1,
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '-20%',
+        right: '-10%',
+        width: '60vw',
+        height: '60vw',
+        background: '#06b6d4',
+        borderRadius: '50%',
+        filter: 'blur(150px)',
+        opacity: 0.15,
+        zIndex: 1,
+      }} />
 
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-0" /> {/* Dimmer for contrast */}
-      <div className="bg-noise" />
-      <ParticleSystem />
-
-      {/* Animated Background Grid */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
-
-      {/* Ambient Orbs */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-game-primary rounded-full blur-[150px] opacity-20 animate-float" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-game-secondary rounded-full blur-[150px] opacity-20 animate-float" style={{ animationDelay: '-3s' }} />
-
-      {/* Main Content */}
-      {role === 'NONE' && (
-        <div className="absolute inset-0 z-40 w-full h-full flex flex-col items-center justify-center p-4">
-          <div className="mb-12 text-center">
-            <h1 className="text-7xl md:text-9xl font-display font-black tracking-tighter mb-2">
-              FAM<span className="text-transparent bg-clip-text bg-gradient-to-r from-game-primary to-game-secondary">GAME</span>
-            </h1>
-            <p className="text-xl md:text-2xl font-mono text-white/50 tracking-[0.5em] uppercase">
-              Protocol: Singularity
-            </p>
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-8 w-full max-w-4xl">
-            <button
-              onClick={() => setRole('HOST')}
-              className="flex-1 glass-card p-12 rounded-3xl flex flex-col items-center justify-center gap-6 group hover:border-game-primary transition-all duration-300 hover:scale-105"
-            >
-              <div className="text-6xl group-hover:scale-110 transition-transform duration-300">📺</div>
-              <div className="text-center">
-                <h2 className="text-3xl font-bold mb-2">HOST</h2>
-                <p className="text-white/40">TV / Big Screen</p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setRole('PLAYER')}
-              className="flex-1 glass-card p-12 rounded-3xl flex flex-col items-center justify-center gap-6 group hover:border-game-secondary transition-all duration-300 hover:scale-105"
-            >
-              <div className="text-6xl group-hover:scale-110 transition-transform duration-300">📱</div>
-              <div className="text-center">
-                <h2 className="text-3xl font-bold mb-2">PLAYER</h2>
-                <p className="text-white/40">Phone / Tablet</p>
-              </div>
-            </button>
-          </div>
+      {/* Main content */}
+      <div style={contentStyle}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <h1 style={titleStyle}>
+            FAM<span style={gradientTextStyle}>GAME</span>
+          </h1>
+          <p style={subtitleStyle}>Protocol: Singularity</p>
         </div>
-      )}
 
-      {role === 'HOST' && <HostLogic key="host" />}
-      {role === 'PLAYER' && <PlayerLogic key="player" />}
+        <div style={buttonContainerStyle}>
+          <button
+            style={buttonStyle}
+            onClick={() => setRole('HOST')}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.borderColor = '#d946ef';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+            }}
+          >
+            <div style={{ fontSize: '4rem' }}>�</div>
+            <div style={{ textAlign: 'center' }}>
+              <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', marginBottom: '8px' }}>HOST</h2>
+              <p style={{ color: 'rgba(255,255,255,0.4)' }}>TV / Big Screen</p>
+            </div>
+          </button>
+
+          <button
+            style={buttonStyle}
+            onClick={() => setRole('PLAYER')}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.borderColor = '#06b6d4';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+            }}
+          >
+            <div style={{ fontSize: '4rem' }}>📱</div>
+            <div style={{ textAlign: 'center' }}>
+              <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', marginBottom: '8px' }}>PLAYER</h2>
+              <p style={{ color: 'rgba(255,255,255,0.4)' }}>Phone / Tablet</p>
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-import { SoundProvider } from './context/SoundContext';
-import React from 'react';
-
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="fixed inset-0 bg-red-900 text-white p-8 z-50">
-          <h1 className="text-2xl font-bold mb-4">Something went wrong!</h1>
-          <pre className="text-sm overflow-auto">{this.state.error?.message}</pre>
-          <pre className="text-xs mt-4 opacity-70">{this.state.error?.stack}</pre>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
 function App() {
   return (
-    <ErrorBoundary>
-      <GameProvider>
-        <SoundProvider>
-          <GameContent />
-        </SoundProvider>
-      </GameProvider>
-    </ErrorBoundary>
+    <GameProvider>
+      <SoundProvider>
+        <GameContent />
+      </SoundProvider>
+    </GameProvider>
   );
 }
 
