@@ -24,7 +24,7 @@ interface GameState {
 interface GameContextType {
     socket: Socket | null;
     gameState: GameState | null;
-    joinRoom: (name: string, code: string) => void;
+    joinRoom: (name: string, code: string, avatar?: string) => void;
     startGame: () => void;
     isConnected: boolean;
 }
