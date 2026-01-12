@@ -86,14 +86,39 @@ function GameContent() {
 }
 
 import { SoundProvider } from './context/SoundContext';
+import React from 'react';
+
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fixed inset-0 bg-red-900 text-white p-8 z-50">
+          <h1 className="text-2xl font-bold mb-4">Something went wrong!</h1>
+          <pre className="text-sm overflow-auto">{this.state.error?.message}</pre>
+          <pre className="text-xs mt-4 opacity-70">{this.state.error?.stack}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function App() {
   return (
-    <GameProvider>
-      <SoundProvider>
-        <GameContent />
-      </SoundProvider>
-    </GameProvider>
+    <ErrorBoundary>
+      <GameProvider>
+        <SoundProvider>
+          <GameContent />
+        </SoundProvider>
+      </GameProvider>
+    </ErrorBoundary>
   );
 }
 
