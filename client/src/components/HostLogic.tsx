@@ -66,10 +66,6 @@ const HostLogic = () => {
         socket?.emit('backToLobby');
     };
 
-    const leaveRoom = () => {
-        socket?.emit('leaveRoom');
-        window.location.reload();
-    };
 
     const joinUrl = `https://gamewithfam.vercel.app?code=${gameState.roomCode}`;
     const playerCount = Object.keys(gameState.players).length;
