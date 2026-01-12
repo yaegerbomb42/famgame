@@ -10,6 +10,11 @@ function GameContent() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden text-white selection:bg-game-primary selection:text-white">
+      {/* DEBUG: This should always be visible */}
+      <div className="fixed top-4 left-4 z-50 bg-red-500 text-white px-4 py-2 rounded font-bold">
+        DEBUG: React is rendering - Role: {role}
+      </div>
+
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-0" /> {/* Dimmer for contrast */}
       <div className="bg-noise" />
       <ParticleSystem />
