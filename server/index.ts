@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -21,7 +24,7 @@ const io = new Server(httpServer, {
 const PORT = process.env.PORT || 3000;
 
 // Gemini API for Mind Meld similarity checking
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyBF6fAuMhaokjQyw9tLH6ETc61mA0FVbRc';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 async function checkSimilarity(answer1: string, answer2: string): Promise<number> {
     try {
