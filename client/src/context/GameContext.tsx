@@ -6,6 +6,7 @@ const SOCKET_URL = import.meta.env.VITE_SERVER_URL || 'https://famgame.onrender.
 interface Player {
     id: string;
     name: string;
+    avatar?: string;
     score: number;
     isHost?: boolean;
     gameVote?: string;
@@ -61,8 +62,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, [socket]);
 
-    const joinRoom = (name: string, code: string) => {
-        socket?.emit('joinRoom', { name, code });
+    const joinRoom = (name: string, code: string, avatar: string = '🙂') => {
+        socket?.emit('joinRoom', { name, code, avatar });
     };
 
     const startGame = () => {

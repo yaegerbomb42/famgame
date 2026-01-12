@@ -18,14 +18,26 @@ import CompetePlayer from '../games/compete/Player';
 
 const PlayerLogic = () => {
     const { joinRoom, gameState, isConnected, socket } = useGame();
+    const [joinStep, setJoinStep] = useState<'CODE' | 'DETAILS'>('CODE');
+    const [roomCode, setRoomCode] = useState('');
     const [name, setName] = useState('');
+    const [avatar, setAvatar] = useState('🙂');
     const [hasJoined, setHasJoined] = useState(false);
     const [hasAnswered, setHasAnswered] = useState(false);
+
+    const AVATARS = ['🙂', '😂', '😎', '🤔', '😍', '🤩', '🤯', '🥳', '👻', '👽', '🤖', '💩', '🐱', '🐶', '🦄', '🐲'];
+
+    const handleCodeSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (roomCode.length === 4) {
+            setJoinStep('DETAILS');
+        }
+    };
 
     const handleJoin = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim()) return;
-        joinRoom(name, 'ABCD');
+        joinRoom(name, roomCode.toUpperCase(), avatar);
         setHasJoined(true);
     };
 
@@ -109,14 +121,18 @@ const PlayerLogic = () => {
     if (hasJoined && gameState) {
         const myName = gameState.players[socket?.id || '']?.name || name;
         const myScore = gameState.players[socket?.id || '']?.score || 0;
+        const myAvatar = gameState.players[socket?.id || '']?.avatar || avatar; // Fallback to local avatar if not in state yet
 
         return (
             <div className="w-full h-full flex flex-col bg-game-bg">
                 {/* Mobile Header */}
                 <div className="glass-card rounded-none border-x-0 border-t-0 p-4 flex justify-between items-center z-50">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] uppercase text-white/40 tracking-wider">Player</span>
-                        <span className="font-bold text-lg leading-none max-w-[120px] truncate">{myName}</span>
+                    <div className="flex items-center gap-3">
+                        <span className="text-2xl">{myAvatar}</span>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] uppercase text-white/40 tracking-wider">Player</span>
+                            <span className="font-bold text-lg leading-none max-w-[120px] truncate">{myName}</span>
+                        </div>
                     </div>
                     <div className="glass px-4 py-2 rounded-full">
                         <span className="text-game-secondary font-mono font-bold">{myScore}</span>
@@ -132,7 +148,7 @@ const PlayerLogic = () => {
                                 animate={{ scale: 1, opacity: 1 }}
                                 className="flex-1 flex flex-col items-center justify-center space-y-6 text-center"
                             >
-                                <div className="text-6xl animate-bounce">📱</div>
+                                <div className="text-6xl animate-bounce">{myAvatar}</div>
                                 <h2 className="text-2xl font-bold gradient-text-primary">You're Connected</h2>
                                 <p className="text-white/50 max-w-[200px]">Eyes on the big screen. The game will start soon.</p>
                             </motion.div>
@@ -316,30 +332,103 @@ const PlayerLogic = () => {
             <div className="w-full max-w-sm space-y-8 relative z-10">
                 <div className="text-center space-y-2">
                     <h1 className="text-5xl font-display gradient-text-secondary">JOIN</h1>
-                    <p className="text-white/40 tracking-widest text-sm uppercase">Enter the arena</p>
+                    <AnimatePresence mode="wait">
+                        <motion.p
+                            key={joinStep}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="text-white/40 tracking-widest text-sm uppercase"
+                        >
+                            {joinStep === 'CODE' ? 'Enter Room Code' : 'Create Profile'}
+                        </motion.p>
+                    </AnimatePresence>
                 </div>
 
-                <form onSubmit={handleJoin} className="space-y-6">
-                    <div className="space-y-2">
-                        <input
-                            type="text"
-                            placeholder="NAME"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full bg-game-surface border border-white/10 rounded-2xl px-6 py-6 text-center text-2xl font-bold focus:outline-none focus:border-game-primary/50 focus:bg-white/5 transition-all text-white placeholder-white/20"
-                            maxLength={10}
-                            autoFocus
-                        />
-                    </div>
+                <AnimatePresence mode="wait">
+                    {joinStep === 'CODE' ? (
+                        <motion.form
+                            key="code-form"
+                            initial={{ x: 50, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -50, opacity: 0 }}
+                            onSubmit={handleCodeSubmit}
+                            className="space-y-6"
+                        >
+                            <input
+                                type="text"
+                                placeholder="ABCD"
+                                value={roomCode}
+                                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                                className="w-full bg-game-surface border border-white/10 rounded-2xl px-6 py-6 text-center text-4xl font-mono font-bold focus:outline-none focus:border-game-primary/50 focus:bg-white/5 transition-all text-white placeholder-white/20 tracking-widest"
+                                maxLength={4}
+                                autoFocus
+                            />
+                            <motion.button
+                                whileTap={{ scale: 0.95 }}
+                                type="submit"
+                                disabled={roomCode.length !== 4}
+                                className="w-full bg-game-primary text-white font-bold text-xl py-6 rounded-2xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_50px_rgba(217,70,239,0.5)] transition-all disabled:opacity-50 disabled:shadow-none"
+                            >
+                                NEXT
+                            </motion.button>
+                        </motion.form>
+                    ) : (
+                        <motion.form
+                            key="details-form"
+                            initial={{ x: 50, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -50, opacity: 0 }}
+                            onSubmit={handleJoin}
+                            className="space-y-6"
+                        >
+                            {/* Avatar Grid */}
+                            <div className="grid grid-cols-4 gap-2 mb-4">
+                                {AVATARS.map((a) => (
+                                    <button
+                                        key={a}
+                                        type="button"
+                                        onClick={() => setAvatar(a)}
+                                        className={`text-2xl p-3 rounded-xl transition-all ${avatar === a
+                                            ? 'bg-game-primary scale-110 shadow-lg'
+                                            : 'bg-white/5 hover:bg-white/10'
+                                            }`}
+                                    >
+                                        {a}
+                                    </button>
+                                ))}
+                            </div>
 
-                    <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        type="submit"
-                        className="w-full bg-game-primary text-white font-bold text-xl py-6 rounded-2xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_50px_rgba(217,70,239,0.5)] transition-all"
-                    >
-                        START
-                    </motion.button>
-                </form>
+                            <input
+                                type="text"
+                                placeholder="YOUR NAME"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full bg-game-surface border border-white/10 rounded-2xl px-6 py-4 text-center text-2xl font-bold focus:outline-none focus:border-game-primary/50 focus:bg-white/5 transition-all text-white placeholder-white/20"
+                                maxLength={10}
+                                autoFocus
+                            />
+
+                            <div className="flex gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setJoinStep('CODE')}
+                                    className="flex-1 py-4 bg-white/10 hover:bg-white/20 rounded-2xl font-bold text-lg text-white/50 hover:text-white transition-all"
+                                >
+                                    BACK
+                                </button>
+                                <motion.button
+                                    whileTap={{ scale: 0.95 }}
+                                    type="submit"
+                                    disabled={!name.trim()}
+                                    className="flex-[2] bg-game-primary text-white font-bold text-xl py-4 rounded-2xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_50px_rgba(217,70,239,0.5)] transition-all disabled:opacity-50"
+                                >
+                                    JOIN GAME
+                                </motion.button>
+                            </div>
+                        </motion.form>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

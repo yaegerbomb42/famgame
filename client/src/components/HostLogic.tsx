@@ -144,7 +144,7 @@ const HostLogic = () => {
                                             animate={{ scale: 1 }}
                                             className="glass-card p-4 md:p-6 rounded-2xl flex flex-col items-center justify-center aspect-square relative group"
                                         >
-                                            <div className="text-4xl md:text-6xl mb-2">👾</div>
+                                            <div className="text-4xl md:text-6xl mb-2">{player.avatar || '👾'}</div>
                                             <div className="font-bold text-lg md:text-2xl truncate w-full text-center">{player.name}</div>
                                             {player.isHost && <div className="text-xs text-yellow-400">👑 Host</div>}
                                             {!player.isHost && (

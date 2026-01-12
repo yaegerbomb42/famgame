@@ -185,7 +185,7 @@ io.on('connection', (socket: any) => {
         io.emit('gameState', gameState);
     });
 
-    socket.on('joinRoom', ({ name, code }: { name: string, code: string }) => {
+    socket.on('joinRoom', ({ name, code, avatar }: { name: string, code: string, avatar?: string }) => {
         if (code.toUpperCase() !== gameState.roomCode) {
             socket.emit('error', { message: 'Invalid room code' });
             return;
@@ -193,6 +193,7 @@ io.on('connection', (socket: any) => {
         gameState.players[socket.id] = {
             id: socket.id,
             name: name || `Player ${Object.keys(gameState.players).length + 1}`,
+            avatar: avatar || '🙂',
             score: 0,
             isHost: false
         };
