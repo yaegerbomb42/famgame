@@ -66,12 +66,16 @@ const HostLogic = () => {
                             exit={{ opacity: 0, scale: 1.1, filter: 'blur(20px)' }}
                             className="flex-1 flex flex-col items-center justify-center"
                         >
-                            <h2 className="text-5xl font-bold mb-16 text-center">
+                            <h2 className="text-6xl font-bold mb-8 text-center">
                                 <span className="text-white/40">Waiting for </span>
                                 <span className="gradient-text-primary">Players</span>
                             </h2>
 
-                            <div className="grid grid-cols-4 gap-6 w-full px-12 mb-16">
+                            <p className="text-2xl text-white/50 mb-16 font-mono">
+                                Join with code: <span className="text-white font-bold text-4xl">{gameState.roomCode}</span>
+                            </p>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full px-8 mb-16">
                                 <AnimatePresence>
                                     {Object.values(gameState.players).map((player) => (
                                         <motion.div
@@ -80,39 +84,60 @@ const HostLogic = () => {
                                             initial={{ scale: 0, rotate: -10 }}
                                             animate={{ scale: 1, rotate: 0 }}
                                             exit={{ scale: 0, rotate: 10 }}
-                                            className="glass-card p-6 rounded-2xl flex flex-col items-center justify-center aspect-square shadow-[0_0_30px_rgba(217,70,239,0.15)] group"
+                                            className="glass-card p-6 rounded-2xl flex flex-col items-center justify-center aspect-square shadow-[0_0_30px_rgba(217,70,239,0.15)] group relative"
                                         >
-                                            <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">👾</div>
-                                            <div className="font-bold text-xl truncate w-full text-center">{player.name}</div>
-                                            <div className="text-xs text-white/30 uppercase mt-2 font-bold tracking-wider">Ready</div>
+                                            <div className="text-7xl mb-4 group-hover:scale-110 transition-transform duration-300">👾</div>
+                                            <div className="font-bold text-2xl truncate w-full text-center">{player.name}</div>
+                                            <div className="text-sm text-white/30 uppercase mt-2 font-bold tracking-wider">
+                                                {player.isHost ? '👑 Host' : 'Ready'}
+                                            </div>
+                                            {/* Kick button (not for self/host) */}
+                                            {!player.isHost && (
+                                                <button
+                                                    onClick={() => socket?.emit('kickPlayer', player.id)}
+                                                    className="absolute top-2 right-2 w-8 h-8 bg-red-500/20 hover:bg-red-500 rounded-full flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    title="Kick player"
+                                                >
+                                                    ✕
+                                                </button>
+                                            )}
                                         </motion.div>
                                     ))}
 
-                                    {/* Ghost Cards for visual balance if few players */}
-                                    {Object.keys(gameState.players).length < 4 && (
+                                    {/* Ghost Cards for visual balance */}
+                                    {Object.keys(gameState.players).length < 4 &&
                                         Array.from({ length: 4 - Object.keys(gameState.players).length }).map((_, i) => (
                                             <div key={`ghost-${i}`} className="border-2 border-dashed border-white/5 rounded-2xl flex items-center justify-center aspect-square opacity-50">
-                                                <span className="font-mono text-xs text-white/20">WAITING...</span>
+                                                <span className="font-mono text-sm text-white/20">WAITING...</span>
                                             </div>
                                         ))
-                                    )}
+                                    }
                                 </AnimatePresence>
                             </div>
 
-                            {Object.keys(gameState.players).length > 0 ? (
-                                <motion.button
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={startGame}
-                                    className="px-12 py-5 bg-white text-black font-black text-2xl rounded-full tracking-widest hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all"
-                                >
-                                    START THE GAME
-                                </motion.button>
-                            ) : (
-                                <div className="text-white/20 font-mono animate-pulse">Join via phone</div>
-                            )}
+                            <div className="flex gap-6">
+                                {Object.keys(gameState.players).length > 0 ? (
+                                    <motion.button
+                                        initial={{ y: 20, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={startGame}
+                                        className="px-16 py-6 bg-white text-black font-black text-3xl rounded-full tracking-widest hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all"
+                                    >
+                                        START
+                                    </motion.button>
+                                ) : (
+                                    <div className="text-white/20 font-mono text-xl animate-pulse">Scan QR or visit gamewithfam.vercel.app</div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => socket?.emit('leaveRoom')}
+                                className="mt-8 text-white/30 hover:text-white/70 text-sm uppercase tracking-wider transition-colors"
+                            >
+                                Leave Room
+                            </button>
                         </motion.div>
                     )}
 
