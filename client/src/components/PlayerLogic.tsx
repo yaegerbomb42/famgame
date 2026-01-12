@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGame } from '../context/useGame';
 import { motion, AnimatePresence } from 'framer-motion';
 import TriviaPlayer from '../games/trivia/Player';
@@ -16,6 +16,8 @@ import ChainReactionPlayer from '../games/chain-reaction/Player';
 import MindMeldPlayer from '../games/mind-meld/Player';
 import CompetePlayer from '../games/compete/Player';
 
+const AVATARS = ['🙂', '😂', '😎', '🤔', '😍', '🤩', '🤯', '🥳', '👻', '👽', '🤖', '💩', '🐱', '🐶', '🦄', '🐲'];
+
 const PlayerLogic = () => {
     const { joinRoom, gameState, isConnected, socket } = useGame();
     const [joinStep, setJoinStep] = useState<'CODE' | 'DETAILS'>('CODE');
@@ -25,7 +27,19 @@ const PlayerLogic = () => {
     const [hasJoined, setHasJoined] = useState(false);
     const [hasAnswered, setHasAnswered] = useState(false);
 
-    const AVATARS = ['🙂', '😂', '😎', '🤔', '😍', '🤩', '🤯', '🥳', '👻', '👽', '🤖', '💩', '🐱', '🐶', '🦄', '🐲'];
+    const autoFillAttempted = useRef(false);
+
+    useEffect(() => {
+        if (autoFillAttempted.current) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        if (code && code.length === 4) {
+            setRoomCode(code.toUpperCase());
+            setJoinStep('DETAILS');
+            autoFillAttempted.current = true;
+        }
+    }, []);
 
     const handleCodeSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -90,8 +104,8 @@ const PlayerLogic = () => {
     const handleEmojiGuess = (guess: string) => socket?.emit('submitGuess', guess);
 
     // Bluff
-    const handleBluffClaim = (data: { claim: string, isTruth: boolean }) => socket?.emit('submitClaim', data);
-    const handleBluffVote = (isTruth: boolean) => socket?.emit('voteBluff', isTruth);
+    const handleBluffClaim = (data: { claim: string, isLying: boolean }) => socket?.emit('submitClaim', data);
+    const handleBluffVote = (thinkingLying: boolean) => socket?.emit('voteBluff', thinkingLying);
 
     // This or That
     const handleThisOrThatVote = (option: 'A' | 'B') => socket?.emit('voteOption', option);
@@ -252,7 +266,7 @@ const PlayerLogic = () => {
                                         isMyTurn={socket?.id === gameState.gameData.currentClaimerId}
                                         claim={gameState.gameData.claim}
                                         claimerName={gameState.players[gameState.gameData.currentClaimerId]?.name}
-                                        onSubmitClaim={(claim, isTruth) => handleBluffClaim({ claim, isTruth })}
+                                        onSubmitClaim={(claim, isLying) => handleBluffClaim({ claim, isLying })}
                                         onVote={handleBluffVote}
                                     />
                                 )}
@@ -382,16 +396,16 @@ const PlayerLogic = () => {
                             onSubmit={handleJoin}
                             className="space-y-6"
                         >
-                            {/* Avatar Grid */}
-                            <div className="grid grid-cols-4 gap-2 mb-4">
+                            {/* Avatar Grid - Larger and more prominent */}
+                            <div className="grid grid-cols-4 gap-4 mb-8">
                                 {AVATARS.map((a) => (
                                     <button
                                         key={a}
                                         type="button"
                                         onClick={() => setAvatar(a)}
-                                        className={`text-2xl p-3 rounded-xl transition-all ${avatar === a
-                                            ? 'bg-game-primary scale-110 shadow-lg'
-                                            : 'bg-white/5 hover:bg-white/10'
+                                        className={`text-4xl p-4 rounded-2xl transition-all duration-300 ${avatar === a
+                                            ? 'bg-game-primary scale-125 shadow-[0_0_30px_rgba(255,0,255,0.6)] ring-4 ring-white/50 z-10'
+                                            : 'bg-white/5 hover:bg-white/10 active:scale-95 opacity-50 grayscale-[0.5]'
                                             }`}
                                     >
                                         {a}
@@ -404,27 +418,27 @@ const PlayerLogic = () => {
                                 placeholder="YOUR NAME"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full bg-game-surface border border-white/10 rounded-2xl px-6 py-4 text-center text-2xl font-bold focus:outline-none focus:border-game-primary/50 focus:bg-white/5 transition-all text-white placeholder-white/20"
+                                className="w-full bg-game-surface border border-white/10 rounded-[2rem] px-8 py-8 text-center text-4xl font-black uppercase focus:outline-none focus:border-game-primary/50 focus:bg-white/5 transition-all text-white placeholder-white/10 mb-4"
                                 maxLength={10}
                                 autoFocus
                             />
 
-                            <div className="flex gap-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setJoinStep('CODE')}
-                                    className="flex-1 py-4 bg-white/10 hover:bg-white/20 rounded-2xl font-bold text-lg text-white/50 hover:text-white transition-all"
-                                >
-                                    BACK
-                                </button>
+                            <div className="flex flex-col gap-4">
                                 <motion.button
                                     whileTap={{ scale: 0.95 }}
                                     type="submit"
                                     disabled={!name.trim()}
-                                    className="flex-[2] bg-game-primary text-white font-bold text-xl py-4 rounded-2xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_50px_rgba(217,70,239,0.5)] transition-all disabled:opacity-50"
+                                    className="w-full bg-game-primary text-white font-black text-3xl py-8 rounded-[2rem] shadow-[0_0_40px_rgba(255,0,255,0.4)] hover:shadow-[0_0_60px_rgba(255,0,255,0.6)] transition-all disabled:opacity-50 uppercase"
                                 >
-                                    JOIN GAME
+                                    LET'S PLAY!
                                 </motion.button>
+                                <button
+                                    type="button"
+                                    onClick={() => setJoinStep('CODE')}
+                                    className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-bold text-xl text-white/30 hover:text-white transition-all uppercase tracking-widest"
+                                >
+                                    Wait, back
+                                </button>
                             </div>
                         </motion.form>
                     )}

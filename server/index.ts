@@ -794,6 +794,146 @@ io.on('connection', (socket: any) => {
         }
     });
 
+    // --- EMOJI STORY LOGIC ---
+    socket.on('emojiInput', (story: string) => {
+        if (gameState.currentGame !== 'EMOJI_STORY') return;
+        if (!gameState.gameData.inputs) gameState.gameData.inputs = {};
+        gameState.gameData.inputs[socket.id] = story;
+        const playerCount = Object.keys(gameState.players).length;
+        const inputCount = Object.keys(gameState.gameData.inputs).length;
+        if (inputCount >= playerCount) {
+            gameState.gameData.phase = 'VOTING';
+        }
+        io.emit('gameState', gameState);
+    });
+
+    socket.on('submitGuess', (guess: string) => {
+        if (gameState.currentGame !== 'EMOJI_STORY') return;
+        if (!gameState.gameData.guesses) gameState.gameData.guesses = {};
+        gameState.gameData.guesses[socket.id] = guess;
+        const playerCount = Object.keys(gameState.players).length;
+        const guessCount = Object.keys(gameState.gameData.guesses).length;
+        if (guessCount >= playerCount) {
+            gameState.gameData.phase = 'REVEAL';
+        }
+        io.emit('gameState', gameState);
+    });
+
+    // --- BLUFF LOGIC ---
+    socket.on('submitClaim', (data: { claim: string, isLying: boolean }) => {
+        if (gameState.currentGame !== 'BLUFF') return;
+        gameState.gameData.claim = data.claim;
+        gameState.gameData.isLying = data.isLying;
+        gameState.gameData.phase = 'VOTING';
+        gameState.gameData.votes = {};
+        io.emit('gameState', gameState);
+    });
+
+    socket.on('voteBluff', (thinkingLying: boolean) => {
+        if (gameState.currentGame !== 'BLUFF' || gameState.gameData.phase !== 'VOTING') return;
+        gameState.gameData.votes[socket.id] = thinkingLying;
+        const playerCount = Object.keys(gameState.players).length;
+        const voteCount = Object.keys(gameState.gameData.votes).length;
+        if (voteCount >= playerCount - 1) { // Everyone except the claimer
+            gameState.gameData.phase = 'REVEAL';
+            const actualIsLying = gameState.gameData.isLying;
+            const claimerId = gameState.gameData.currentClaimerId;
+
+            Object.entries(gameState.gameData.votes).forEach(([voterId, vote]: [string, any]) => {
+                if (vote === actualIsLying) {
+                    if (gameState.players[voterId]) gameState.players[voterId].score += 100;
+                } else {
+                    if (gameState.players[claimerId]) gameState.players[claimerId].score += 50;
+                }
+            });
+        }
+        io.emit('gameState', gameState);
+    });
+
+    // --- THIS OR THAT LOGIC ---
+    socket.on('voteOption', (option: 'A' | 'B') => {
+        if (gameState.currentGame !== 'THIS_OR_THAT') return;
+        if (!gameState.gameData.votes) gameState.gameData.votes = {};
+        gameState.gameData.votes[socket.id] = option;
+        const playerCount = Object.keys(gameState.players).length;
+        const voteCount = Object.keys(gameState.gameData.votes).length;
+        if (voteCount >= playerCount) {
+            gameState.gameData.phase = 'REVEAL';
+        }
+        io.emit('gameState', gameState);
+    });
+
+    // --- SPEED DRAW LOGIC ---
+    socket.on('submitDrawing', (drawing: string) => {
+        if (gameState.currentGame !== 'SPEED_DRAW') return;
+        gameState.gameData.drawings[socket.id] = drawing;
+        const playerCount = Object.keys(gameState.players).length;
+        const drawCount = Object.keys(gameState.gameData.drawings).length;
+        if (drawCount >= playerCount) {
+            gameState.gameData.phase = 'VOTING';
+        }
+        io.emit('gameState', gameState);
+    });
+
+    socket.on('voteDrawing', (targetId: string) => {
+        if (gameState.currentGame !== 'SPEED_DRAW' || gameState.gameData.phase !== 'VOTING') return;
+        gameState.gameData.votes[socket.id] = targetId;
+        const playerCount = Object.keys(gameState.players).length;
+        const voteCount = Object.keys(gameState.gameData.votes).length;
+        if (voteCount >= playerCount) {
+            gameState.gameData.phase = 'RESULTS';
+            Object.values(gameState.gameData.votes).forEach((tid: any) => {
+                if (gameState.players[tid]) gameState.players[tid].score += 100;
+            });
+        }
+        io.emit('gameState', gameState);
+    });
+
+    // --- CHAIN REACTION LOGIC ---
+    socket.on('submitChainWord', (word: string) => {
+        if (gameState.currentGame !== 'CHAIN_REACTION' || gameState.gameData.phase !== 'ACTIVE') return;
+        if (socket.id !== gameState.gameData.currentPlayerId) return;
+
+        gameState.gameData.chain.push({ word, playerId: socket.id });
+        if (gameState.players[socket.id]) gameState.players[socket.id].score += 10;
+
+        // Move to next player
+        const nextIdx = (gameState.gameData.currentPlayerIndex + 1) % gameState.gameData.playerOrder.length;
+        gameState.gameData.currentPlayerIndex = nextIdx;
+        gameState.gameData.currentPlayerId = gameState.gameData.playerOrder[nextIdx];
+
+        // Reset timer
+        startChainTimer();
+        io.emit('gameState', gameState);
+    });
+
+    // --- MIND MELD LOGIC ---
+    socket.on('submitMindMeldAnswer', (answer: string) => {
+        if (gameState.currentGame !== 'MIND_MELD' || gameState.gameData.phase !== 'ANSWERING') return;
+        gameState.gameData.answers[socket.id] = answer;
+        const playerCount = Object.keys(gameState.players).length;
+        const answerCount = Object.keys(gameState.gameData.answers).length;
+        if (answerCount >= playerCount) {
+            gameState.gameData.phase = 'MATCHING';
+            processMindMeldMatches();
+        }
+        io.emit('gameState', gameState);
+    });
+
+    // --- COMPETE LOGIC ---
+    socket.on('competeProgress', (progress: number) => {
+        if (gameState.currentGame !== 'COMPETE' || gameState.gameData.phase !== 'ACTIVE') return;
+        gameState.gameData.progress[socket.id] = progress;
+
+        const target = gameState.gameData.challenge.target;
+        if (progress >= (typeof target === 'number' ? target : target.length || 100)) {
+            gameState.gameData.phase = 'RESULTS';
+            gameState.gameData.winnerId = socket.id;
+            if (gameState.players[socket.id]) gameState.players[socket.id].score += 100;
+        }
+        io.emit('gameState', gameState);
+    });
+
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
         if (gameState.players[socket.id]) {

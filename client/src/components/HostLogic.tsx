@@ -118,113 +118,98 @@ const HostLogic = () => {
                                 <div className="text-3xl font-bold text-white/20">OR</div>
 
                                 {/* Room Code */}
-                                <div className="text-center">
-                                    <p className="text-xl md:text-2xl text-white/50 mb-2">Go to</p>
-                                    <p className="text-2xl md:text-3xl font-mono text-[#00ffff] mb-4">gamewithfam.vercel.app</p>
-                                    <p className="text-xl md:text-2xl text-white/50 mb-2">Enter code</p>
-                                    <div className="text-6xl md:text-8xl font-black tracking-[0.2em] text-white">
+                                <div className="text-center group">
+                                    <p className="text-2xl md:text-3xl text-white/50 mb-2 uppercase tracking-[0.5em]">Go to</p>
+                                    <p className="text-3xl md:text-4xl font-mono text-[#00ffff] mb-6 font-bold">gamewithfam.vercel.app</p>
+                                    <p className="text-2xl md:text-3xl text-white/50 mb-2 uppercase tracking-[0.5em]">Enter code</p>
+                                    <div className="text-8xl md:text-[10rem] font-black tracking-[0.2em] text-white animate-pulse-glow">
                                         {gameState.roomCode}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Players Grid */}
-                            <div className="w-full mb-8">
-                                <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">
+                            {/* Players Grid - Bigger avatars */}
+                            <div className="w-full mb-12">
+                                <h2 className="text-4xl md:text-5xl font-bold text-center mb-10 uppercase tracking-widest">
                                     <span className="text-white/40">Players </span>
                                     <span className="text-[#ff00ff]">({playerCount})</span>
                                 </h2>
 
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 md:gap-10">
                                     {Object.values(gameState.players).map((player) => (
                                         <motion.div
                                             key={player.id}
                                             layout
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
-                                            className="glass-card p-4 md:p-6 rounded-2xl flex flex-col items-center justify-center aspect-square relative group"
+                                            className="glass-card p-6 md:p-10 rounded-3xl flex flex-col items-center justify-center aspect-square relative group border-2 border-white/5"
                                         >
-                                            <div className="text-4xl md:text-6xl mb-2">{player.avatar || '👾'}</div>
-                                            <div className="font-bold text-lg md:text-2xl truncate w-full text-center">{player.name}</div>
-                                            {player.isHost && <div className="text-xs text-yellow-400">👑 Host</div>}
+                                            <div className="text-6xl md:text-8xl mb-4 transform group-hover:scale-110 transition-transform">{player.avatar || '👾'}</div>
+                                            <div className="font-bold text-xl md:text-3xl truncate w-full text-center">{player.name}</div>
+                                            {player.isHost && (
+                                                <div className="absolute -top-4 -right-4 bg-yellow-400 text-black px-4 py-1 rounded-full text-sm font-bold shadow-lg rotate-12">
+                                                    👑 HOST
+                                                </div>
+                                            )}
                                             {!player.isHost && (
                                                 <button
                                                     onClick={() => socket?.emit('kickPlayer', player.id)}
-                                                    className="absolute top-2 right-2 w-8 h-8 bg-red-500/20 hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                                    className="absolute -top-4 -right-4 w-10 h-10 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow-lg hover:bg-red-600"
                                                 >
                                                     ✕
                                                 </button>
                                             )}
                                         </motion.div>
                                     ))}
-
-                                    {playerCount === 0 && (
-                                        <div className="col-span-full text-center py-12 text-2xl text-white/30">
-                                            Waiting for players to join...
-                                        </div>
-                                    )}
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
-                            <div className="flex flex-col items-center gap-6">
-                                {playerCount > 0 && (
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={startGame}
-                                        className="px-12 md:px-20 py-5 md:py-7 bg-white text-black font-black text-2xl md:text-4xl rounded-full shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] transition-all"
-                                    >
-                                        START GAME
-                                    </motion.button>
-                                )}
-
-                                <button
-                                    onClick={leaveRoom}
-                                    className="text-lg md:text-xl text-white/40 hover:text-red-400 transition-colors"
+                            {playerCount > 0 && (
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => socket?.emit('lobbyReady')}
+                                    className="bg-game-primary text-white text-3xl md:text-5xl font-black px-16 py-8 rounded-full shadow-[0_0_50px_rgba(255,0,255,0.4)] hover:shadow-[0_0_80px_rgba(255,0,255,0.6)] animate-pulse-glow mb-10"
                                 >
-                                    Leave Room
-                                </button>
-                            </div>
+                                    START GAME
+                                </motion.button>
+                            )}
                         </motion.div>
                     )}
 
-                    {/* GAME SELECT STATE */}
+                    {/* GAME SELECTION STATE */}
                     {gameState.status === 'GAME_SELECT' && (
                         <motion.div
                             key="select"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="w-full max-w-6xl"
+                            className="flex-1 flex flex-col items-center p-8 w-full max-w-7xl"
                         >
-                            <h2 className="text-4xl md:text-6xl font-bold text-center mb-8 md:mb-12 text-transparent bg-clip-text bg-gradient-to-r from-[#ff00ff] to-[#00ffff]">
-                                SELECT A GAME
-                            </h2>
-
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                            <h1 className="text-6xl md:text-9xl font-black mb-12 text-glow gradient-text-primary uppercase tracking-tighter">
+                                Pick Your Battle
+                            </h1>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 w-full">
                                 {GAMES.map((game) => (
                                     <motion.button
                                         key={game.id}
-                                        whileHover={{ scale: 1.05, y: -5 }}
+                                        whileHover={{ scale: 1.05, y: -10 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => selectGame(game.id)}
-                                        className="glass-card p-6 md:p-8 rounded-2xl md:rounded-3xl text-center hover:border-white/30 transition-all"
-                                        style={{ borderColor: `${game.color}30` }}
+                                        className="glass-card p-10 rounded-[2.5rem] flex flex-col items-center justify-center space-y-6 transition-all hover:border-game-primary border-4 border-white/5 group relative overflow-hidden"
+                                        style={{ borderColor: `${game.color}40` }}
                                     >
-                                        <div className="text-4xl md:text-6xl mb-3">{game.icon}</div>
-                                        <h3 className="text-xl md:text-2xl font-bold">{game.name}</h3>
+                                        <div className="text-8xl md:text-[9rem] mb-4 drop-shadow-2xl transform group-hover:rotate-12 transition-transform">
+                                            {game.icon}
+                                        </div>
+                                        <div className="text-3xl md:text-4xl font-black uppercase tracking-widest text-white/90 group-hover:text-white group-hover:text-glow">
+                                            {game.name}
+                                        </div>
+                                        <div className="bg-white/10 px-8 py-3 rounded-full text-xl font-black text-white/40 uppercase tracking-[0.2em] group-hover:bg-game-primary group-hover:text-white transition-colors">
+                                            SELECT
+                                        </div>
                                     </motion.button>
                                 ))}
-                            </div>
-
-                            <div className="flex justify-center mt-8">
-                                <button
-                                    onClick={backToLobby}
-                                    className="text-lg text-white/40 hover:text-white/70 transition-colors"
-                                >
-                                    ← Back to Lobby
-                                </button>
                             </div>
                         </motion.div>
                     )}

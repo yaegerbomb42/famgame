@@ -9,9 +9,9 @@ export default {
       colors: {
         game: {
           bg: '#0a0518', // Darker, richer black/blue
-          primary: '#d946ef', // Fuchsia 500 - Electric Pink
-          secondary: '#06b6d4', // Cyan 500 - Electric Blue
-          accent: '#f59e0b', // Amber 500 - Gold/Energy
+          primary: '#ff00ff', // Vivid Magenta
+          secondary: '#00ffff', // Vivid Cyan
+          accent: '#ffff00', // Vivid Yellow
           surface: 'rgba(255, 255, 255, 0.08)',
           'surface-hover': 'rgba(255, 255, 255, 0.12)',
         },
