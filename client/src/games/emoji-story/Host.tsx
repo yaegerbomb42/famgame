@@ -17,7 +17,7 @@ const EmojiStoryHost = ({ phase, currentStory, inputs, guesses, players, correct
                     <p className="text-xl text-white/50 mb-8">Players are writing emoji stories...</p>
                     <div className="text-8xl mb-8">📖✍️🎭</div>
                     <div className="flex flex-wrap justify-center gap-4">
-                        {Object.entries(inputs).map(([id, story]) => (
+                        {Object.entries(inputs).map(([id]) => (
                             <div key={id} className="glass-card px-6 py-3 rounded-xl">
                                 <span className="text-green-400">✓</span> {players[id]?.name || 'Player'} submitted
                             </div>

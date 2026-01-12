@@ -44,7 +44,7 @@ interface GameState {
     hostId: string | null;
     players: Record<string, Player>;
     status: 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS';
-    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION';
+    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION' | 'EMOJI_STORY' | 'BLUFF' | 'THIS_OR_THAT' | 'SPEED_DRAW';
     gameData?: any;
     gameVotes: Record<string, number>;
     timer?: number;
@@ -281,6 +281,59 @@ io.on('connection', (socket: any) => {
                 fakeOut: false
             };
             startReactionRound();
+        } else if (gameId === 'EMOJI_STORY') {
+            const emojiPrompts = ['Your morning routine', 'A movie plot', 'Your biggest fear', 'Your dream vacation', 'A love story', 'A horror story', 'Your last meal'];
+            gameState.gameData = {
+                phase: 'INPUT',
+                prompt: emojiPrompts[Math.floor(Math.random() * emojiPrompts.length)],
+                inputs: {},
+                currentStoryIndex: 0,
+                currentStory: null,
+                guesses: {},
+            };
+        } else if (gameId === 'BLUFF') {
+            const playerIds = Object.keys(gameState.players);
+            gameState.gameData = {
+                phase: 'CLAIM',
+                currentClaimerId: playerIds[Math.floor(Math.random() * playerIds.length)],
+                claim: null,
+                isLying: null,
+                votes: {},
+            };
+        } else if (gameId === 'THIS_OR_THAT') {
+            const choices = [
+                ['🍕 Pizza', '🍔 Burger'],
+                ['🏖️ Beach', '⛰️ Mountains'],
+                ['🎬 Movies', '📺 TV Shows'],
+                ['☕ Coffee', '🍵 Tea'],
+                ['🌅 Morning', '🌃 Night'],
+                ['💰 Rich & Lonely', '💕 Poor & Loved'],
+                ['🦸 Fly', '🧠 Read Minds'],
+                ['🔮 Past', '🚀 Future'],
+            ];
+            const choice = choices[Math.floor(Math.random() * choices.length)];
+            gameState.gameData = {
+                phase: 'CHOOSING',
+                optionA: choice[0],
+                optionB: choice[1],
+                votes: {},
+            };
+        } else if (gameId === 'SPEED_DRAW') {
+            const prompts = ['Cat', 'House', 'Car', 'Sun', 'Tree', 'Pizza', 'Robot', 'Ghost', 'Dragon', 'Rocket'];
+            gameState.gameData = {
+                phase: 'DRAWING',
+                prompt: prompts[Math.floor(Math.random() * prompts.length)],
+                drawings: {},
+                votes: {},
+                timer: 30,
+            };
+            // Start timer
+            startTimer(30, () => {
+                if (gameState.currentGame === 'SPEED_DRAW') {
+                    gameState.gameData.phase = 'VOTING';
+                    io.emit('gameState', gameState);
+                }
+            });
         }
         io.emit('gameState', gameState);
     });
