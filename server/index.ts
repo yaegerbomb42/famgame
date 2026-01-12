@@ -20,26 +20,74 @@ const io = new Server(httpServer, {
 
 const PORT = process.env.PORT || 3000;
 
+// Helper: Generate random room code
+function generateRoomCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < 4; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return code;
+}
+
 interface Player {
     id: string;
     name: string;
     score: number;
-    bannedUntil?: number; // For Buzz In Penalty
+    bannedUntil?: number;
+    isHost?: boolean;
+    gameVote?: string;
 }
 
 interface GameState {
     roomCode: string;
+    hostId: string | null;
     players: Record<string, Player>;
     status: 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS';
     currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION';
     gameData?: any;
+    gameVotes: Record<string, number>;
+    timer?: number;
+    leaderboard: { name: string; score: number }[];
 }
 
 let gameState: GameState = {
-    roomCode: 'ABCD',
+    roomCode: generateRoomCode(),
+    hostId: null,
     players: {},
     status: 'LOBBY',
+    gameVotes: {},
+    leaderboard: [],
 };
+
+// Timer management
+let currentTimer: NodeJS.Timeout | null = null;
+
+function startTimer(seconds: number, onComplete: () => void) {
+    if (currentTimer) clearTimeout(currentTimer);
+    gameState.timer = seconds;
+    io.emit('gameState', gameState);
+
+    const tick = () => {
+        if (gameState.timer && gameState.timer > 0) {
+            gameState.timer--;
+            io.emit('timer', gameState.timer);
+            if (gameState.timer > 0) {
+                currentTimer = setTimeout(tick, 1000);
+            } else {
+                onComplete();
+            }
+        }
+    };
+    currentTimer = setTimeout(tick, 1000);
+}
+
+function updateLeaderboard() {
+    gameState.leaderboard = Object.values(gameState.players)
+        .map(p => ({ name: p.name, score: p.score }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10);
+}
 
 // --- CONTENT LIBRARIES ---
 const TRIVIA_QUESTIONS = [
@@ -90,17 +138,83 @@ io.on('connection', (socket: any) => {
 
     socket.emit('gameState', gameState);
 
+    // CREATE ROOM (Host)
+    socket.on('createRoom', ({ name }: { name: string }) => {
+        gameState.roomCode = generateRoomCode();
+        gameState.hostId = socket.id;
+        gameState.players = {};
+        gameState.players[socket.id] = {
+            id: socket.id,
+            name: name || 'Host',
+            score: 0,
+            isHost: true
+        };
+        gameState.status = 'LOBBY';
+        gameState.gameVotes = {};
+        io.emit('gameState', gameState);
+    });
+
     socket.on('joinRoom', ({ name, code }: { name: string, code: string }) => {
+        if (code.toUpperCase() !== gameState.roomCode) {
+            socket.emit('error', { message: 'Invalid room code' });
+            return;
+        }
         gameState.players[socket.id] = {
             id: socket.id,
             name: name || `Player ${Object.keys(gameState.players).length + 1}`,
-            score: 0
+            score: 0,
+            isHost: false
         };
         io.emit('gameState', gameState);
     });
 
+    // KICK PLAYER (Host only)
+    socket.on('kickPlayer', (playerId: string) => {
+        if (socket.id === gameState.hostId && gameState.players[playerId]) {
+            delete gameState.players[playerId];
+            io.to(playerId).emit('kicked');
+            io.emit('gameState', gameState);
+        }
+    });
+
+    // LEAVE ROOM
+    socket.on('leaveRoom', () => {
+        delete gameState.players[socket.id];
+        if (socket.id === gameState.hostId) {
+            // Reset room if host leaves
+            gameState = {
+                roomCode: generateRoomCode(),
+                hostId: null,
+                players: {},
+                status: 'LOBBY',
+                gameVotes: {},
+                leaderboard: [],
+            };
+        }
+        io.emit('gameState', gameState);
+    });
+
+    // VOTE FOR GAME (Players)
+    socket.on('voteGame', (gameId: string) => {
+        if (gameState.players[socket.id]) {
+            gameState.players[socket.id].gameVote = gameId;
+            // Count votes
+            const votes: Record<string, number> = {};
+            Object.values(gameState.players).forEach(p => {
+                if (p.gameVote) {
+                    votes[p.gameVote] = (votes[p.gameVote] || 0) + 1;
+                }
+            });
+            gameState.gameVotes = votes;
+            io.emit('gameState', gameState);
+        }
+    });
+
     socket.on('startGame', () => {
         gameState.status = 'GAME_SELECT';
+        // Clear previous votes
+        Object.values(gameState.players).forEach(p => { p.gameVote = undefined; });
+        gameState.gameVotes = {};
         io.emit('gameState', gameState);
     });
 
