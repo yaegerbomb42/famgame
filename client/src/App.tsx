@@ -85,10 +85,14 @@ function GameContent() {
   );
 }
 
+import { SoundProvider } from './context/SoundContext';
+
 function App() {
   return (
     <GameProvider>
-      <GameContent />
+      <SoundProvider>
+        <GameContent />
+      </SoundProvider>
     </GameProvider>
   );
 }
