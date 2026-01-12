@@ -57,7 +57,7 @@ const TwoTruthsHost: React.FC<TwoTruthsHostProps> = ({ phase, inputs, currentSub
             <div className="grid grid-cols-1 gap-6 w-full max-w-4xl">
                 {statements.map((stmt: string, i: number) => {
                     // Calculate how many votes this statement got
-                    const voteCount = Object.values(votes).filter(v => v === i).length;
+                    // Calculate how many votes this statement got
                     const isLie = i === lieIndex;
 
                     return (
@@ -67,8 +67,8 @@ const TwoTruthsHost: React.FC<TwoTruthsHostProps> = ({ phase, inputs, currentSub
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ delay: i * 0.2 }}
                             className={`p-8 rounded-2xl border-2 flex items-center justify-between text-3xl font-bold relative overflow-hidden transition-all duration-500 ${showLie
-                                    ? (isLie ? 'bg-red-500/20 border-red-500 text-red-100' : 'bg-green-500/10 border-green-500/50 text-white/50')
-                                    : 'bg-white/5 border-white/10'
+                                ? (isLie ? 'bg-red-500/20 border-red-500 text-red-100' : 'bg-green-500/10 border-green-500/50 text-white/50')
+                                : 'bg-white/5 border-white/10'
                                 }`}
                         >
                             <div className="flex items-center gap-6 z-10">

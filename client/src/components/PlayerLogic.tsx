@@ -176,7 +176,7 @@ const PlayerLogic = () => {
 
                                 {gameState.currentGame === 'WORD_RACE' && (
                                     <WordRacePlayer
-                                        category={gameState.gameData.category}
+                                        category={gameState.gameData.category || ''}
                                         onSubmit={handleWordSubmit}
                                     />
                                 )}

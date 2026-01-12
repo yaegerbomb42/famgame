@@ -7,7 +7,7 @@ interface WordRaceHostProps {
     players: any;
 }
 
-const WordRaceHost: React.FC<WordRaceHostProps> = ({ category, words, scores, players }) => {
+const WordRaceHost: React.FC<WordRaceHostProps> = ({ category, words, players }) => {
 
     // Get last 15 words
     const recentWords = words.slice(-15).reverse();

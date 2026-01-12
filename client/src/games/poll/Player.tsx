@@ -9,7 +9,7 @@ interface PollPlayerProps {
     myId: string;
 }
 
-const PollPlayer: React.FC<PollPlayerProps> = ({ phase, prompt, players, onVote, myId }) => {
+const PollPlayer: React.FC<PollPlayerProps> = ({ phase, prompt, players, onVote }) => {
     const [voted, setVoted] = useState(false);
 
     if (phase === 'VOTING') {

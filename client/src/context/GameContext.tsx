@@ -14,6 +14,7 @@ interface GameState {
     players: Record<string, Player>;
     status: 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS';
     currentGame?: string;
+    gameData?: any;
 }
 
 interface GameContextType {

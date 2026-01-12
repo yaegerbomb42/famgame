@@ -37,7 +37,7 @@ const HotTakesHost: React.FC<HotTakesHostProps> = ({ phase, prompt, inputs, play
                 <h2 className="text-3xl font-bold mb-12 text-white/50">{prompt}</h2>
 
                 <div className="grid grid-cols-2 gap-6 w-full max-w-6xl">
-                    {Object.entries(inputs).map(([pid, text]: [string, any], i) => {
+                    {Object.entries(inputs).map(([pid, text]: [string, any]) => {
                         // Calculate votes
                         const myVotes = Object.values(votes).filter(v => v === pid).length;
                         const isWinner = phase === 'RESULTS' && myVotes > 0 && myVotes === Math.max(...Object.values(inputs).map((pid) => Object.values(votes).filter(v => v === pid).length));

@@ -6,6 +6,10 @@ import cors from 'cors';
 const app = express();
 app.use(cors());
 
+app.get('/', (req, res) => {
+    res.send('FamGame Server is Running! 🚀');
+});
+
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
@@ -483,5 +487,5 @@ io.on('connection', (socket: any) => {
 });
 
 httpServer.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server listening on internal port ${PORT}`);
 });
