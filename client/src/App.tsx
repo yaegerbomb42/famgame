@@ -26,9 +26,9 @@ function GameContent() {
       <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-game-primary rounded-full blur-[150px] opacity-20 animate-float" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-game-secondary rounded-full blur-[150px] opacity-20 animate-float" style={{ animationDelay: '-3s' }} />
 
-      {/* Main Content - Simplified without Framer Motion for debugging */}
+      {/* Main Content */}
       {role === 'NONE' && (
-        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-4">
+        <div className="absolute inset-0 z-40 w-full h-full flex flex-col items-center justify-center p-4">
           <div className="mb-12 text-center">
             <h1 className="text-7xl md:text-9xl font-display font-black tracking-tighter mb-2">
               FAM<span className="text-transparent bg-clip-text bg-gradient-to-r from-game-primary to-game-secondary">GAME</span>
