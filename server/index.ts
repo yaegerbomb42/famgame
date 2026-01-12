@@ -20,6 +20,34 @@ const io = new Server(httpServer, {
 
 const PORT = process.env.PORT || 3000;
 
+// Gemini API for Mind Meld similarity checking
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyBF6fAuMhaokjQyw9tLH6ETc61mA0FVbRc';
+
+async function checkSimilarity(answer1: string, answer2: string): Promise<number> {
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: `Rate the semantic similarity between these two answers on a scale of 0 to 1, where 1 means identical meaning and 0 means completely unrelated. Only respond with a number between 0 and 1.\n\nAnswer 1: "${answer1}"\nAnswer 2: "${answer2}"\n\nSimilarity score:`
+                    }]
+                }],
+                generationConfig: { temperature: 0.1, maxOutputTokens: 10 }
+            })
+        });
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '0';
+        const score = parseFloat(text.match(/[\d.]+/)?.[0] || '0');
+        return Math.min(1, Math.max(0, score));
+    } catch (error) {
+        console.error('Gemini API error:', error);
+        // Fallback: simple text matching
+        return answer1.toLowerCase().trim() === answer2.toLowerCase().trim() ? 1 : 0;
+    }
+}
+
 // Helper: Generate random room code
 function generateRoomCode(): string {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -44,7 +72,7 @@ interface GameState {
     hostId: string | null;
     players: Record<string, Player>;
     status: 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS';
-    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION' | 'EMOJI_STORY' | 'BLUFF' | 'THIS_OR_THAT' | 'SPEED_DRAW';
+    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION' | 'EMOJI_STORY' | 'BLUFF' | 'THIS_OR_THAT' | 'SPEED_DRAW' | 'CHAIN_REACTION' | 'MIND_MELD' | 'COMPETE';
     gameData?: any;
     gameVotes: Record<string, number>;
     timer?: number;
@@ -334,6 +362,68 @@ io.on('connection', (socket: any) => {
                     io.emit('gameState', gameState);
                 }
             });
+        } else if (gameId === 'CHAIN_REACTION') {
+            const startWords = ['Happy', 'Fire', 'Water', 'Music', 'Dream', 'Light', 'Star', 'Love', 'Power', 'Magic'];
+            const playerIds = Object.keys(gameState.players);
+            gameState.gameData = {
+                phase: 'ACTIVE',
+                chain: [{ word: startWords[Math.floor(Math.random() * startWords.length)], playerId: 'system' }],
+                currentPlayerIndex: 0,
+                currentPlayerId: playerIds[0] || null,
+                timer: 5,
+                playerOrder: playerIds,
+            };
+            // Start chain timer
+            startChainTimer();
+        } else if (gameId === 'MIND_MELD') {
+            const prompts = [
+                'Name a pizza topping',
+                'Name a superhero',
+                'Name a country',
+                'Name something yellow',
+                'Name a movie genre',
+                'Name a breakfast food',
+                'Name something you find at the beach',
+                'Name a sport',
+            ];
+            gameState.gameData = {
+                phase: 'ANSWERING',
+                prompt: prompts[Math.floor(Math.random() * prompts.length)],
+                answers: {},
+                matches: [],
+                timer: 15,
+            };
+            startTimer(15, async () => {
+                if (gameState.currentGame === 'MIND_MELD') {
+                    gameState.gameData.phase = 'MATCHING';
+                    io.emit('gameState', gameState);
+                    // Process similarity matches
+                    await processMindMeldMatches();
+                }
+            });
+        } else if (gameId === 'COMPETE') {
+            const playerIds = Object.keys(gameState.players);
+            const challengers = playerIds.sort(() => Math.random() - 0.5).slice(0, 2);
+            const challenges = [
+                { type: 'TAP', target: 30 },
+                { type: 'TYPE', target: 'The quick brown fox' },
+                { type: 'SEQUENCE', target: { sequence: [1, 2, 3, 4, 5, 6, 7, 8, 9] } },
+            ];
+            gameState.gameData = {
+                phase: 'COUNTDOWN',
+                challenger1Id: challengers[0] || '',
+                challenger2Id: challengers[1] || challengers[0] || '',
+                challenge: challenges[Math.floor(Math.random() * challenges.length)],
+                progress: {},
+                timer: 3,
+            };
+            // 3-second countdown then start
+            setTimeout(() => {
+                if (gameState.currentGame === 'COMPETE') {
+                    gameState.gameData.phase = 'ACTIVE';
+                    io.emit('gameState', gameState);
+                }
+            }, 3000);
         }
         io.emit('gameState', gameState);
     });
@@ -386,6 +476,60 @@ io.on('connection', (socket: any) => {
             }, Math.random() * 3000 + 2000);
         }
     }
+
+    // Helper for Chain Reaction
+    const startChainTimer = () => {
+        if (currentTimer) clearInterval(currentTimer);
+        let time = 5;
+        gameState.gameData.timer = time;
+        io.emit('gameState', gameState);
+
+        currentTimer = setInterval(() => {
+            time--;
+            gameState.gameData.timer = time;
+
+            if (time <= 0) {
+                if (currentTimer) clearInterval(currentTimer);
+                // Time's up! Chain broken
+                gameState.gameData.phase = 'RESULTS';
+                gameState.gameData.failedPlayerId = gameState.gameData.currentPlayerId;
+                io.emit('gameState', gameState);
+            } else {
+                io.emit('timerUpdate', time);
+            }
+        }, 1000);
+    };
+
+    // Helper for Mind Meld processing
+    const processMindMeldMatches = async () => {
+        const answers = gameState.gameData.answers;
+        const playerIds = Object.keys(answers);
+        const matches: { player1Id: string; player2Id: string; similarity: number }[] = [];
+
+        // Compare every pair
+        for (let i = 0; i < playerIds.length; i++) {
+            for (let j = i + 1; j < playerIds.length; j++) {
+                const p1 = playerIds[i];
+                const p2 = playerIds[j];
+                const sim = await checkSimilarity(answers[p1], answers[p2]);
+
+                if (sim > 0.6) { // Threshold for a match
+                    matches.push({ player1Id: p1, player2Id: p2, similarity: sim });
+                    // Award points
+                    const points = Math.round(sim * 100);
+                    gameState.players[p1].score += points;
+                    gameState.players[p2].score += points;
+                }
+            }
+        }
+
+        // Wait a bit for dramatic matching effect
+        setTimeout(() => {
+            gameState.gameData.phase = 'RESULTS';
+            gameState.gameData.matches = matches;
+            io.emit('gameState', gameState);
+        }, 3000);
+    };
 
     // GAME FLOW CONTROLS
     socket.on('nextRound', () => {

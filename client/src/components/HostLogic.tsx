@@ -11,6 +11,9 @@ import EmojiStoryHost from '../games/emoji-story/Host';
 import BluffHost from '../games/bluff/Host';
 import ThisOrThatHost from '../games/this-or-that/Host';
 import SpeedDrawHost from '../games/speed-draw/Host';
+import ChainReactionHost from '../games/chain-reaction/Host';
+import MindMeldHost from '../games/mind-meld/Host';
+import CompeteHost from '../games/compete/Host';
 
 // QR Code component using Google Charts API
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
@@ -37,6 +40,9 @@ const GAMES = [
     { id: 'BLUFF', name: 'Bluff', icon: '🎭', color: '#5f27cd' },
     { id: 'THIS_OR_THAT', name: 'This or That', icon: '⚖️', color: '#ff9ff3' },
     { id: 'SPEED_DRAW', name: 'Speed Draw', icon: '🎨', color: '#00d2d3' },
+    { id: 'CHAIN_REACTION', name: 'Chain Reaction', icon: '⛓️', color: '#ff4757' },
+    { id: 'MIND_MELD', name: 'Mind Meld', icon: '🧠', color: '#70a1ff' },
+    { id: 'COMPETE', name: 'Compete', icon: '⚔️', color: '#eccc68' },
 ];
 
 const HostLogic = () => {
@@ -334,6 +340,41 @@ const HostLogic = () => {
                                 />
                             )}
 
+                            {gameState.currentGame === 'CHAIN_REACTION' && (
+                                <ChainReactionHost
+                                    phase={gameState.gameData.phase}
+                                    chain={gameState.gameData.chain}
+                                    currentPlayerId={gameState.gameData.currentPlayerId}
+                                    players={gameState.players}
+                                    timer={gameState.gameData.timer}
+                                    failedPlayerId={gameState.gameData.failedPlayerId}
+                                />
+                            )}
+
+                            {gameState.currentGame === 'MIND_MELD' && (
+                                <MindMeldHost
+                                    phase={gameState.gameData.phase}
+                                    prompt={gameState.gameData.prompt}
+                                    answers={gameState.gameData.answers}
+                                    matches={gameState.gameData.matches}
+                                    players={gameState.players}
+                                    timer={gameState.gameData.timer}
+                                />
+                            )}
+
+                            {gameState.currentGame === 'COMPETE' && (
+                                <CompeteHost
+                                    phase={gameState.gameData.phase}
+                                    challenger1Id={gameState.gameData.challenger1Id}
+                                    challenger2Id={gameState.gameData.challenger2Id}
+                                    challenge={gameState.gameData.challenge}
+                                    progress={gameState.gameData.progress}
+                                    players={gameState.players}
+                                    winnerId={gameState.gameData.winnerId}
+                                    timer={gameState.gameData.timer}
+                                />
+                            )}
+
                             {/* Next Button */}
                             <motion.button
                                 initial={{ y: 50, opacity: 0 }}
@@ -367,8 +408,8 @@ const HostLogic = () => {
                                             animate={{ x: 0, opacity: 1 }}
                                             transition={{ delay: i * 0.1 }}
                                             className={`p-6 rounded-2xl flex items-center justify-between ${i === 0
-                                                    ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50'
-                                                    : 'glass-card'
+                                                ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50'
+                                                : 'glass-card'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-4 md:gap-6">

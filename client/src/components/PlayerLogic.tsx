@@ -8,6 +8,13 @@ import PollPlayer from '../games/poll/Player';
 import BuzzPlayer from '../games/buzz/Player';
 import WordRacePlayer from '../games/word-race/Player';
 import ReactionPlayer from '../games/reaction/Player';
+import EmojiStoryPlayer from '../games/emoji-story/Player';
+import BluffPlayer from '../games/bluff/Player';
+import ThisOrThatPlayer from '../games/this-or-that/Player';
+import SpeedDrawPlayer from '../games/speed-draw/Player';
+import ChainReactionPlayer from '../games/chain-reaction/Player';
+import MindMeldPlayer from '../games/mind-meld/Player';
+import CompetePlayer from '../games/compete/Player';
 
 const PlayerLogic = () => {
     const { joinRoom, gameState, isConnected, socket } = useGame();
@@ -65,6 +72,30 @@ const PlayerLogic = () => {
     const handleReactionTap = () => {
         socket?.emit('reactionClick');
     }
+
+    // Emoji Story
+    const handleEmojiSubmit = (story: string) => socket?.emit('emojiInput', story);
+    const handleEmojiGuess = (guess: string) => socket?.emit('submitGuess', guess);
+
+    // Bluff
+    const handleBluffClaim = (data: { claim: string, isTruth: boolean }) => socket?.emit('submitClaim', data);
+    const handleBluffVote = (isTruth: boolean) => socket?.emit('voteBluff', isTruth);
+
+    // This or That
+    const handleThisOrThatVote = (option: 'A' | 'B') => socket?.emit('voteOption', option);
+
+    // Speed Draw
+    const handleDrawingSubmit = (drawing: string) => socket?.emit('submitDrawing', drawing);
+    const handleDrawingVote = (id: string) => socket?.emit('voteDrawing', id);
+
+    // Chain Reaction
+    const handleChainSubmit = (word: string) => socket?.emit('submitChainWord', word);
+
+    // Mind Meld
+    const handleMindMeldSubmit = (answer: string) => socket?.emit('submitMindMeldAnswer', answer);
+
+    // Compete
+    const handleCompeteProgress = (progress: number) => socket?.emit('competeProgress', progress);
 
     if (!isConnected) {
         return (
@@ -185,6 +216,80 @@ const PlayerLogic = () => {
                                     <ReactionPlayer
                                         phase={gameState.gameData.phase}
                                         onTap={handleReactionTap}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'EMOJI_STORY' && (
+                                    <EmojiStoryPlayer
+                                        phase={gameState.gameData.phase}
+                                        prompt={gameState.gameData.prompt}
+                                        currentEmojis={gameState.gameData.currentEmojis}
+                                        isMyStory={socket?.id === gameState.gameData.currentStorytellerId}
+                                        onSubmitStory={handleEmojiSubmit}
+                                        onSubmitGuess={handleEmojiGuess}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'BLUFF' && (
+                                    <BluffPlayer
+                                        phase={gameState.gameData.phase}
+                                        isMyTurn={socket?.id === gameState.gameData.currentClaimerId}
+                                        claim={gameState.gameData.claim}
+                                        claimerName={gameState.players[gameState.gameData.currentClaimerId]?.name}
+                                        onSubmitClaim={(claim, isTruth) => handleBluffClaim({ claim, isTruth })}
+                                        onVote={handleBluffVote}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'THIS_OR_THAT' && (
+                                    <ThisOrThatPlayer
+                                        phase={gameState.gameData.phase}
+                                        optionA={gameState.gameData.optionA}
+                                        optionB={gameState.gameData.optionB}
+                                        onVote={handleThisOrThatVote}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'SPEED_DRAW' && (
+                                    <SpeedDrawPlayer
+                                        phase={gameState.gameData.phase}
+                                        prompt={gameState.gameData.prompt}
+                                        drawings={gameState.gameData.drawings}
+                                        players={gameState.players}
+                                        timer={gameState.gameData.timer}
+                                        onSubmitDrawing={handleDrawingSubmit}
+                                        onVote={handleDrawingVote}
+                                        myId={socket?.id || ''}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'CHAIN_REACTION' && (
+                                    <ChainReactionPlayer
+                                        phase={gameState.gameData.phase}
+                                        lastWord={gameState.gameData.chain && gameState.gameData.chain.length ? gameState.gameData.chain[gameState.gameData.chain.length - 1].word : ''}
+                                        isMyTurn={socket?.id === gameState.gameData.currentPlayerId}
+                                        onSubmitWord={handleChainSubmit}
+                                        timer={gameState.gameData.timer}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'MIND_MELD' && (
+                                    <MindMeldPlayer
+                                        phase={gameState.gameData.phase}
+                                        prompt={gameState.gameData.prompt}
+                                        onSubmitAnswer={handleMindMeldSubmit}
+                                        timer={gameState.gameData.timer}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'COMPETE' && (
+                                    <CompetePlayer
+                                        phase={gameState.gameData.phase}
+                                        challenge={gameState.gameData.challenge}
+                                        isCompeting={socket?.id === gameState.gameData.challenger1Id || socket?.id === gameState.gameData.challenger2Id}
+                                        timer={gameState.gameData.timer}
+                                        onProgress={handleCompeteProgress}
+                                        amWinner={socket?.id === gameState.gameData.winnerId}
                                     />
                                 )}
                             </>
