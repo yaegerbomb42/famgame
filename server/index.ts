@@ -20,6 +20,7 @@ interface Player {
     id: string;
     name: string;
     score: number;
+    bannedUntil?: number; // For Buzz In Penalty
 }
 
 interface GameState {
@@ -36,11 +37,23 @@ let gameState: GameState = {
     status: 'LOBBY',
 };
 
+// --- CONTENT LIBRARIES ---
 const TRIVIA_QUESTIONS = [
     { q: "Who is most likely to trip over nothing?", a: ["Dad", "Mom", "The Dog", "Grandma"], correct: 0 },
     { q: "What is the capital of Australia?", a: ["Sydney", "Melbourne", "Canberra", "Perth"], correct: 2 },
     { q: "Which planet is known as the Red Planet?", a: ["Venus", "Jupiter", "Mars", "Saturn"], correct: 2 },
-    { q: "What does HTML stand for?", a: ["Hyper Text Markup Language", "High Tech Modern Life", "Hyperlinks and Text Markup Language", "Home Tool Markup Language"], correct: 0 }
+    { q: "What does HTML stand for?", a: ["Hyper Text Markup Language", "High Tech Modern Life", "Hyperlinks and Text Markup Language", "Home Tool Markup Language"], correct: 0 },
+    { q: "Where is the Eiffel Tower located?", a: ["London", "Berlin", "Paris", "Rome"], correct: 2 },
+    { q: "Which is the largest ocean?", a: ["Atlantic", "Indian", "Arctic", "Pacific"], correct: 3 },
+    { q: "What comes after Trillion?", a: ["Quadrillion", "Billion", "Quintillion", "Zillion"], correct: 0 },
+    { q: "How many legs does a spider have?", a: ["6", "8", "10", "12"], correct: 1 },
+    { q: "Which element has the chemical symbol 'O'?", a: ["Gold", "Silver", "Oxygen", "Iron"], correct: 2 },
+    { q: "Who painted the Mona Lisa?", a: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2 },
+    { q: "What is the fastest land animal?", a: ["Cheetah", "Lion", "Horse", "Eagle"], correct: 0 },
+    { q: "What year did the Titanic sink?", a: ["1912", "1905", "1920", "1899"], correct: 0 },
+    { q: "Which fruit has its seeds on the outside?", a: ["Apple", "Banana", "Strawberry", "Kiwi"], correct: 2 },
+    { q: "Which gas do plants absorb?", a: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Helium"], correct: 2 },
+    { q: "What is the hardest natural substance?", a: ["Gold", "Iron", "Diamond", "Platinum"], correct: 2 },
 ];
 
 const POLL_PROMPTS = [
@@ -51,11 +64,21 @@ const POLL_PROMPTS = [
     "Who would accidentally join a cult?",
     "Who has the best fashion sense?",
     "Who is the clumsiest?",
-    "Who talks the loudest?"
+    "Who talks the loudest?",
+    "Who is most likely to become famous?",
+    "Who gives the best advice?",
+    "Who is the pickiest eater?",
+    "Who would die first in a horror movie?",
+    "Who is most likely to forget their own birthday?",
+    "Who is the best cook?",
+    "Who laughs at the worst times?",
+    "Who is secretly a superhero?"
 ];
 
 const WORD_RACE_CATEGORIES = [
-    "Animals", "Fruits", "Countries", "Brands", "Movies", "Colors", "Sports"
+    "Animals", "Fruits", "Countries", "Brands", "Movies", "Colors", "Sports",
+    "Vegetables", "Cities", "Cars", "Body Parts", "Jobs", "Clothes",
+    "Furniture", "Tools", "Instruments", "Toys", "Drinks", "Flowers"
 ];
 
 io.on('connection', (socket: any) => {
@@ -82,6 +105,11 @@ io.on('connection', (socket: any) => {
         gameState.status = 'PLAYING';
         gameState.currentGame = gameId;
 
+        // Reset logic
+        Object.keys(gameState.players).forEach(pid => {
+            gameState.players[pid].bannedUntil = 0;
+        });
+
         if (gameId === 'TRIVIA') {
             gameState.gameData = {
                 questionIndex: 0,
@@ -92,7 +120,7 @@ io.on('connection', (socket: any) => {
             };
         } else if (gameId === '2TRUTHS') {
             gameState.gameData = {
-                phase: 'INPUT', // INPUT -> VOTING -> REVEAL
+                phase: 'INPUT',
                 inputs: {},
                 currentSubjectId: null,
                 votes: {},
@@ -100,7 +128,7 @@ io.on('connection', (socket: any) => {
             };
         } else if (gameId === 'HOT_TAKES') {
             gameState.gameData = {
-                phase: 'INPUT', // INPUT -> VOTING -> RESULTS
+                phase: 'INPUT',
                 prompt: "What is the worst pizza topping?",
                 inputs: {},
                 votes: {},
@@ -108,38 +136,76 @@ io.on('connection', (socket: any) => {
             };
         } else if (gameId === 'POLL') {
             gameState.gameData = {
-                phase: 'VOTING', // VOTING -> RESULTS
+                phase: 'VOTING',
                 prompt: POLL_PROMPTS[Math.floor(Math.random() * POLL_PROMPTS.length)],
                 votes: {},
             };
         } else if (gameId === 'BUZZ_IN') {
             gameState.gameData = {
-                phase: 'WAITING', // WAITING -> ACTIVE -> BUZZED
+                phase: 'WAITING',
                 winnerId: null,
             };
-            // Auto start after delay
-            setTimeout(() => {
-                if (gameState.currentGame === 'BUZZ_IN' && gameState.gameData.phase === 'WAITING') {
-                    gameState.gameData.phase = 'ACTIVE';
-                    io.emit('gameState', gameState);
-                }
-            }, 3000);
+            startBuzzRound();
 
         } else if (gameId === 'WORD_RACE') {
             gameState.gameData = {
                 category: WORD_RACE_CATEGORIES[Math.floor(Math.random() * WORD_RACE_CATEGORIES.length)],
-                words: [], // { playerId, word, timestamp }
-                scores: {}, // Round scores
-                endTime: Date.now() + 30000, // 30s
+                words: [],
+                scores: {},
+                endTime: Date.now() + 45000,
                 active: true
             };
         } else if (gameId === 'REACTION') {
             gameState.gameData = {
-                phase: 'WAITING', // WAITING -> GO -> END
+                phase: 'WAITING',
                 goTime: 0,
-                results: {} // { playerId: ms }
+                results: {},
+                fakeOut: false
             };
-            // Random delay 2-5s
+            startReactionRound();
+        }
+        io.emit('gameState', gameState);
+    });
+
+    // Helper for Buzz In Round Start
+    const startBuzzRound = () => {
+        setTimeout(() => {
+            if (gameState.currentGame === 'BUZZ_IN' && gameState.gameData.phase === 'WAITING') {
+                gameState.gameData.phase = 'ACTIVE';
+                io.emit('gameState', gameState);
+            }
+        }, Math.random() * 2000 + 2000); // Random 2-4s delay
+    }
+
+    // Helper for Reaction Round Start
+    const startReactionRound = () => {
+        // 30% chance of fakeout
+        const isFakeOut = Math.random() < 0.3;
+        gameState.gameData.fakeOut = false;
+
+        if (isFakeOut) {
+            setTimeout(() => {
+                if (gameState.currentGame === 'REACTION' && gameState.gameData.phase === 'WAITING') {
+                    gameState.gameData.fakeOut = true; // Trigger yellow flash
+                    io.emit('gameState', gameState);
+
+                    // Reset fakeout after 500ms and actually go green shortly after
+                    setTimeout(() => {
+                        gameState.gameData.fakeOut = false;
+                        io.emit('gameState', gameState);
+
+                        setTimeout(() => {
+                            if (gameState.currentGame === 'REACTION' && gameState.gameData.phase === 'WAITING') {
+                                gameState.gameData.phase = 'GO';
+                                gameState.gameData.goTime = Date.now();
+                                io.emit('gameState', gameState);
+                            }
+                        }, Math.random() * 1000 + 500);
+
+                    }, 800);
+                }
+            }, Math.random() * 2000 + 1000);
+        } else {
             setTimeout(() => {
                 if (gameState.currentGame === 'REACTION' && gameState.gameData.phase === 'WAITING') {
                     gameState.gameData.phase = 'GO';
@@ -148,38 +214,40 @@ io.on('connection', (socket: any) => {
                 }
             }, Math.random() * 3000 + 2000);
         }
-        io.emit('gameState', gameState);
-    });
+    }
 
     // GAME FLOW CONTROLS
     socket.on('nextRound', () => {
-        // (Simplified: for most games just reset or go to scoreboard)
-        if (gameState.currentGame === 'BUZZ_IN') {
+        if (gameState.currentGame === 'TRIVIA') {
+            const nextIdx = gameState.gameData.questionIndex + 1;
+            if (nextIdx < TRIVIA_QUESTIONS.length) {
+                gameState.gameData.questionIndex = nextIdx;
+                gameState.gameData.question = TRIVIA_QUESTIONS[nextIdx];
+                gameState.gameData.showResult = false;
+                gameState.gameData.answers = {};
+            } else {
+                gameState.status = 'RESULTS';
+            }
+            io.emit('gameState', gameState);
+
+        } else if (gameState.currentGame === 'BUZZ_IN') {
             gameState.gameData = {
                 phase: 'WAITING',
                 winnerId: null,
             };
             io.emit('gameState', gameState);
-            setTimeout(() => {
-                if (gameState.currentGame === 'BUZZ_IN' && gameState.gameData.phase === 'WAITING') {
-                    gameState.gameData.phase = 'ACTIVE';
-                    io.emit('gameState', gameState);
-                }
-            }, 3000);
+            startBuzzRound();
+
         } else if (gameState.currentGame === 'REACTION') {
             gameState.gameData = {
                 phase: 'WAITING',
                 goTime: 0,
-                results: {}
+                results: {},
+                fakeOut: false
             };
             io.emit('gameState', gameState);
-            setTimeout(() => {
-                if (gameState.currentGame === 'REACTION' && gameState.gameData.phase === 'WAITING') {
-                    gameState.gameData.phase = 'GO';
-                    gameState.gameData.goTime = Date.now();
-                    io.emit('gameState', gameState);
-                }
-            }, Math.random() * 3000 + 2000);
+            startReactionRound();
+
         } else if (gameState.currentGame === '2TRUTHS') {
             // ... (Previous logic for 2 Truths iteration)
             if (gameState.gameData.phase === 'REVEAL') {
@@ -211,9 +279,14 @@ io.on('connection', (socket: any) => {
                 gameState.gameData.prompt = POLL_PROMPTS[Math.floor(Math.random() * POLL_PROMPTS.length)];
             }
             io.emit('gameState', gameState);
+        } else if (gameState.currentGame === 'WORD_RACE') {
+            // New Category
+            gameState.gameData.category = WORD_RACE_CATEGORIES[Math.floor(Math.random() * WORD_RACE_CATEGORIES.length)];
+            gameState.gameData.words = [];
+            gameState.gameData.scores = {};
+            gameState.gameData.endTime = Date.now() + 45000;
+            io.emit('gameState', gameState);
         } else {
-            // Default fallthrough to results or lobby
-            // For Trivia/WordRace, just end game for now
             gameState.status = 'RESULTS';
             io.emit('gameState', gameState);
         }
@@ -331,25 +404,41 @@ io.on('connection', (socket: any) => {
         io.emit('gameState', gameState);
     });
 
-    // --- BUZZ IN LOGIC ---
+    // --- BUZZ IN LOGIC (WITH PENALTY) ---
     socket.on('buzz', () => {
-        if (gameState.currentGame !== 'BUZZ_IN' || gameState.gameData.phase !== 'ACTIVE') return;
+        if (gameState.currentGame !== 'BUZZ_IN') return;
 
-        gameState.gameData.phase = 'BUZZED';
-        gameState.gameData.winnerId = socket.id;
-        if (gameState.players[socket.id]) gameState.players[socket.id].score += 50;
-        io.emit('gameState', gameState);
+        // Check for ban
+        if (gameState.players[socket.id]?.bannedUntil && gameState.players[socket.id].bannedUntil! > Date.now()) {
+            return; // Ignore spam
+        }
+
+        if (gameState.gameData.phase === 'WAITING') {
+            // FALSE START!
+            gameState.players[socket.id].bannedUntil = Date.now() + 2000; // 2s ban
+            socket.emit('falseStart'); // Notify client
+            return;
+        }
+
+        if (gameState.gameData.phase === 'ACTIVE') {
+            gameState.gameData.phase = 'BUZZED';
+            gameState.gameData.winnerId = socket.id;
+            if (gameState.players[socket.id]) gameState.players[socket.id].score += 50;
+            io.emit('gameState', gameState);
+        }
     });
 
-    // --- WORD RACE LOGIC ---
+    // --- WORD RACE LOGIC (WITH VALIDATION) ---
     socket.on('submitWord', (word: string) => {
         if (gameState.currentGame !== 'WORD_RACE' || !gameState.gameData.active) return;
 
-        // Simple validation: starts with category letter? 
-        // For now, assume category is just a topic, accepts any length > 2
+        // Validation
         if (word.length < 3) return;
+        if (gameState.gameData.words.find((w: any) => w.word.toLowerCase() === word.toLowerCase() && w.playerId === socket.id)) return; // No duplicates for same player
 
+        // Simple category check (optional, hard to automate perfectly without AI, but we can do length/anti-spam)
         if (!gameState.gameData.scores[socket.id]) gameState.gameData.scores[socket.id] = 0;
+
         gameState.gameData.scores[socket.id] += 10;
         if (gameState.players[socket.id]) gameState.players[socket.id].score += 10;
 
@@ -361,12 +450,13 @@ io.on('connection', (socket: any) => {
         io.emit('gameState', gameState);
     });
 
-    // --- REACTION LOGIC ---
+    // --- REACTION LOGIC (WITH FAKEOUT) ---
     socket.on('reactionClick', () => {
         if (gameState.currentGame !== 'REACTION') return;
 
         if (gameState.gameData.phase === 'WAITING') {
-            // False start! Penalty?
+            // False start logic could go here too, but simple ignore is fine or penalty
+            if (gameState.players[socket.id]) gameState.players[socket.id].score -= 10; // Small penalty
             return;
         }
 
@@ -374,8 +464,6 @@ io.on('connection', (socket: any) => {
             const diff = Date.now() - gameState.gameData.goTime;
             gameState.gameData.results[socket.id] = diff;
 
-            // Score based on speed (lower is better)
-            // < 300ms = 100pts
             if (diff < 300) {
                 if (gameState.players[socket.id]) gameState.players[socket.id].score += 100;
             } else if (diff < 500) {
