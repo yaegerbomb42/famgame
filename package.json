@@ -4,7 +4,9 @@
     "scripts": {
         "dev": "concurrently \"npm run server\" \"npm run client\"",
         "client": "cd client && npm run dev",
-        "server": "cd server && npx nodemon --exec npx ts-node index.ts"
+        "server": "cd server && npx nodemon --exec npx ts-node index.ts",
+        "build": "cd client && npm install && npm run build",
+        "vercel-build": "cd client && npm install && npm run build"
     },
     "dependencies": {
         "@types/cors": "^2.8.19",
