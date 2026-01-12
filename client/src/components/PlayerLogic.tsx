@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/useGame';
 import { motion, AnimatePresence } from 'framer-motion';
 import TriviaPlayer from '../games/trivia/Player';
 import TwoTruthsPlayer from '../games/two-truths/Player';
@@ -153,7 +153,7 @@ const PlayerLogic = () => {
                                         inputs={gameState.gameData.inputs}
                                         onSubmit={handleSubmitTake}
                                         onVote={handleVoteTake}
-                                        myId={socket?.id}
+                                        myId={socket?.id || ''}
                                     />
                                 )}
 
@@ -163,7 +163,7 @@ const PlayerLogic = () => {
                                         prompt={gameState.gameData.prompt}
                                         players={gameState.players}
                                         onVote={handlePollVote}
-                                        myId={socket?.id}
+                                        myId={socket?.id || ''}
                                     />
                                 )}
 

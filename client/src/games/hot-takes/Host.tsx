@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 interface HotTakesHostProps {
     phase: 'INPUT' | 'VOTING' | 'RESULTS';
     prompt: string;
-    inputs: any; // { playerId: text }
-    players: any;
-    votes: any;
+    inputs: Record<string, string>; // { playerId: text }
+    players: Record<string, { name: string }>;
+    votes: Record<string, string>;
 }
 
 const HotTakesHost: React.FC<HotTakesHostProps> = ({ phase, prompt, inputs, players, votes }) => {
@@ -54,7 +54,7 @@ const HotTakesHost: React.FC<HotTakesHostProps> = ({ phase, prompt, inputs, play
 
                                 {/* Vote Bubbles */}
                                 <div className="flex gap-2 min-h-[20px] flex-wrap justify-center">
-                                    {Object.entries(votes).filter(([_, target]) => target === pid).map(([voterId, _]) => (
+                                    {Object.entries(votes).filter(([, target]) => target === pid).map(([voterId]) => (
                                         <motion.div
                                             key={voterId}
                                             initial={{ scale: 0 }}

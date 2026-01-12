@@ -2,10 +2,10 @@ import { motion } from 'framer-motion';
 
 interface TwoTruthsHostProps {
     phase: 'INPUT' | 'VOTING' | 'REVEAL';
-    inputs: any; // Map of player inputs
+    inputs: Record<string, { statements: string[]; lieIndex: number }>; // Map of player inputs
     currentSubjectId: string | null;
-    players: any; // Player map
-    votes: any; // Vote map
+    players: Record<string, { id: string; name: string }>; // Player map
+    votes: Record<string, number>; // Vote map
     showLie: boolean;
 }
 
@@ -30,7 +30,7 @@ const TwoTruthsHost: React.FC<TwoTruthsHostProps> = ({ phase, inputs, currentSub
 
                 <div className="mt-12 flex gap-4">
                     {/* Visually show who has submitted */}
-                    {Object.values(players).map((p: any) => (
+                    {Object.values(players).map((p) => (
                         <div key={p.id} className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl border-2 transition-colors ${inputs[p.id] ? 'bg-green-500 border-green-400' : 'border-white/20'}`}>
                             {inputs[p.id] ? '✓' : '...'}
                         </div>
@@ -80,7 +80,7 @@ const TwoTruthsHost: React.FC<TwoTruthsHostProps> = ({ phase, inputs, currentSub
 
                             {/* Voting Pills */}
                             <div className="flex -space-x-3">
-                                {Object.entries(votes).filter(([_, v]) => v === i).map(([vid, _]) => (
+                                {Object.entries(votes).filter(([, v]) => v === i).map(([vid]) => (
                                     <div key={vid} className="w-10 h-10 rounded-full bg-game-secondary border-2 border-game-bg flex items-center justify-center text-xs font-bold" title={players[vid]?.name}>
                                         {players[vid]?.name?.charAt(0)}
                                     </div>

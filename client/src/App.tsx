@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GameProvider, useGame } from './context/GameContext';
+import { GameProvider } from './context/GameContext';
 import HostLogic from './components/HostLogic';
 import PlayerLogic from './components/PlayerLogic';
 import ParticleSystem from './components/ParticleSystem';

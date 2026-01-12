@@ -1,5 +1,15 @@
 import { useEffect, useRef } from 'react';
 
+interface Particle {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    size: number;
+    alpha: number;
+    color: string;
+}
+
 const ParticleSystem = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -9,7 +19,7 @@ const ParticleSystem = () => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        let particles: any[] = [];
+        const particles: Particle[] = [];
         let animationFrameId: number;
 
         const resize = () => {
@@ -66,8 +76,7 @@ const ParticleSystem = () => {
     return (
         <canvas
             ref={canvasRef}
-            className="absolute inset-0 pointer-events-none z-0"
-            style={{ mixBlendMode: 'screen' }}
+            className="absolute inset-0 pointer-events-none z-0 mix-blend-screen"
         />
     );
 };

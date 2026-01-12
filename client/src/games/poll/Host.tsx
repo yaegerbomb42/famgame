@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 interface PollHostProps {
     phase: 'VOTING' | 'RESULTS';
     prompt: string;
-    players: any;
-    votes: any;
+    players: Record<string, { id: string; name: string }>;
+    votes: Record<string, string>;
 }
 
 const PollHost: React.FC<PollHostProps> = ({ phase, prompt, players, votes }) => {
@@ -35,7 +35,7 @@ const PollHost: React.FC<PollHostProps> = ({ phase, prompt, players, votes }) =>
             <h2 className="text-3xl font-bold mb-12 text-white/50">{prompt}</h2>
 
             <div className="flex gap-8 items-end justify-center w-full h-[50vh]">
-                {Object.values(players).map((player: any) => {
+                {Object.values(players).map((player) => {
                     const voteCount = Object.values(votes).filter(v => v === player.id).length;
                     const percentage = totalCount > 0 ? (voteCount / totalCount) * 100 : 0;
 
@@ -53,7 +53,7 @@ const PollHost: React.FC<PollHostProps> = ({ phase, prompt, players, votes }) =>
 
                                 {/* Avatars of voters */}
                                 <div className="absolute inset-x-0 bottom-4 flex flex-col items-center gap-2">
-                                    {Object.entries(votes).filter(([_, target]) => target === player.id).map(([voterId, _]) => (
+                                    {Object.entries(votes).filter(([, target]) => target === player.id).map(([voterId]) => (
                                         <div key={voterId} className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center text-[10px] font-bold shadow-lg" title={players[voterId]?.name}>
                                             {players[voterId]?.name?.charAt(0)}
                                         </div>

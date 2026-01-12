@@ -2,9 +2,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface WordRaceHostProps {
     category: string;
-    words: any[];
-    scores: any;
-    players: any;
+    words: Array<{ word: string; timestamp: number; playerId: string }>;
+    scores?: Record<string, number>;
+    players: Record<string, { name: string }>;
 }
 
 const WordRaceHost: React.FC<WordRaceHostProps> = ({ category, words, players }) => {

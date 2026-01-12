@@ -1,4 +1,4 @@
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/useGame';
 import { motion, AnimatePresence } from 'framer-motion';
 import TriviaHost from '../games/trivia/Host';
 import TwoTruthsHost from '../games/two-truths/Host';

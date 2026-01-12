@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 interface PollPlayerProps {
     phase: 'VOTING' | 'RESULTS';
     prompt: string;
-    players: any;
+    players: Record<string, { id: string; name: string }>;
     onVote: (targetId: string) => void;
     myId: string;
 }
@@ -30,7 +30,7 @@ const PollPlayer: React.FC<PollPlayerProps> = ({ phase, prompt, players, onVote 
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                    {Object.values(players).map((p: any) => (
+                    {Object.values(players).map((p) => (
                         <motion.button
                             key={p.id}
                             whileTap={{ scale: 0.95 }}
