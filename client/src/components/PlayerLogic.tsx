@@ -411,16 +411,16 @@ const PlayerLogic = () => {
                             onSubmit={handleJoin}
                             className="space-y-6"
                         >
-                            {/* Avatar Grid - EXPLOSIVE SIZES */}
-                            <div className="grid grid-cols-4 gap-6 mb-12">
+                            {/* Avatar Grid - OBVIOUS SELECTION */}
+                            <div className="grid grid-cols-4 gap-4 mb-10">
                                 {AVATARS.map((a) => (
                                     <button
                                         key={a}
                                         type="button"
                                         onClick={() => setAvatar(a)}
-                                        className={`text-6xl p-6 rounded-[2.5rem] transition-all duration-300 transform ${avatar === a
-                                            ? 'bg-gradient-to-br from-pink-500 to-purple-600 scale-125 shadow-[0_0_60px_rgba(255,0,255,1)] ring-8 ring-white z-20 border-4 border-white'
-                                            : 'bg-white/5 hover:bg-white/10 active:scale-90 opacity-30 hover:opacity-100 border-2 border-transparent'
+                                        className={`text-5xl p-4 rounded-2xl transition-all duration-200 transform ${avatar === a
+                                            ? 'bg-yellow-400 scale-110 shadow-[0_0_40px_rgba(250,204,21,1)] border-4 border-white'
+                                            : 'bg-white/5 hover:bg-white/20 opacity-40 hover:opacity-100 border-2 border-transparent'
                                             }`}
                                     >
                                         {a}

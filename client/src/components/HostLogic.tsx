@@ -133,35 +133,28 @@ const HostLogic = () => {
                                         <p className="text-4xl font-black uppercase tracking-widest">Waiting for players...</p>
                                     </div>
                                 ) : (
-                                    <div className="flex-1 overflow-y-auto px-4 pb-12 custom-scrollbar">
-                                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 md:gap-12">
-                                            {Object.values(gameState.players).map((player) => (
+                                    <div className="flex-1 overflow-y-auto px-4 pb-8 custom-scrollbar">
+                                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8">
+                                            {Object.values(gameState.players).filter(p => !p.isHost).map((player) => (
                                                 <motion.div
                                                     key={player.id}
                                                     layout
                                                     initial={{ scale: 0, rotate: -10 }}
                                                     animate={{ scale: 1, rotate: 0 }}
-                                                    className="glass-card p-10 md:p-14 rounded-[3.5rem] flex flex-col items-center justify-center aspect-square relative group border-4 border-white/5 shadow-2xl"
+                                                    className="glass-card p-6 md:p-8 rounded-[2rem] flex flex-col items-center justify-center relative group border-4 border-white/10 shadow-2xl"
                                                 >
-                                                    <div className="text-8xl md:text-[10rem] mb-6 transform group-hover:scale-125 transition-transform drop-shadow-2xl">
+                                                    <div className="text-6xl md:text-7xl mb-4 transform group-hover:scale-110 transition-transform drop-shadow-2xl">
                                                         {player.avatar || '👾'}
                                                     </div>
-                                                    <div className="font-black text-2xl md:text-4xl truncate w-full text-center uppercase tracking-tighter">
+                                                    <div className="font-black text-xl md:text-2xl truncate w-full text-center uppercase tracking-tight text-white">
                                                         {player.name}
                                                     </div>
-                                                    {player.isHost && (
-                                                        <div className="absolute -top-6 -right-6 bg-yellow-400 text-black px-6 py-2 rounded-full text-xl font-black shadow-[0_10px_30px_rgba(250,204,21,0.4)] rotate-12 uppercase">
-                                                            Host
-                                                        </div>
-                                                    )}
-                                                    {!player.isHost && (
-                                                        <button
-                                                            onClick={() => socket?.emit('kickPlayer', player.id)}
-                                                            className="absolute -top-6 -right-6 w-14 h-14 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-xl hover:bg-red-600 hover:scale-110"
-                                                        >
-                                                            <span className="text-3xl font-black">✕</span>
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        onClick={() => socket?.emit('kickPlayer', player.id)}
+                                                        className="absolute -top-3 -right-3 w-10 h-10 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-xl hover:bg-red-600 hover:scale-110"
+                                                    >
+                                                        <span className="text-2xl font-black">✕</span>
+                                                    </button>
                                                 </motion.div>
                                             ))}
                                         </div>
@@ -169,18 +162,21 @@ const HostLogic = () => {
                                 )}
                             </div>
 
-                            {playerCount > 0 && (
-                                <div className="py-12 shrink-0">
-                                    <motion.button
-                                        whileHover={{ scale: 1.1, y: -5 }}
-                                        whileTap={{ scale: 0.9 }}
-                                        onClick={() => socket?.emit('startGame')}
-                                        className="bg-game-primary text-white text-4xl md:text-7xl font-black px-24 py-12 rounded-[3rem] shadow-[0_0_80px_rgba(255,0,255,0.5)] hover:shadow-[0_0_120px_rgba(255,0,255,0.8)] animate-pulse-glow uppercase tracking-widest border-t-8 border-white/20"
-                                    >
-                                        Start Game
-                                    </motion.button>
-                                </div>
-                            )}
+                            {/* Start Button - ALWAYS VISIBLE */}
+                            <div className="py-8 shrink-0">
+                                <motion.button
+                                    whileHover={{ scale: 1.1, y: -5 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => socket?.emit('startGame')}
+                                    disabled={playerCount === 0}
+                                    className={`text-white text-4xl md:text-6xl font-black px-16 md:px-24 py-8 md:py-10 rounded-[3rem] uppercase tracking-widest border-t-8 border-white/20 transition-all ${playerCount === 0
+                                            ? 'bg-white/10 opacity-30 cursor-not-allowed'
+                                            : 'bg-game-primary shadow-[0_0_80px_rgba(255,0,255,0.5)] hover:shadow-[0_0_120px_rgba(255,0,255,0.8)] animate-pulse-glow'
+                                        }`}
+                                >
+                                    {playerCount === 0 ? 'Waiting...' : 'Start Game'}
+                                </motion.button>
+                            </div>
                         </motion.div>
                     )}
 
