@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 interface SpeedDrawPlayerProps {
     phase: 'DRAWING' | 'VOTING' | 'RESULTS';
@@ -85,33 +86,39 @@ const SpeedDrawPlayer = ({ phase, prompt, timer, drawings, players, myId, onSubm
     };
 
     return (
-        <div className="flex-1 flex flex-col items-center justify-center p-4">
+        <div className="flex-1 flex flex-col items-center justify-center p-8 w-full max-w-4xl mx-auto">
             {phase === 'DRAWING' && !hasSubmitted && (
-                <div className="w-full max-w-sm">
-                    <div className="flex justify-between items-center mb-3">
-                        <span className="text-lg font-bold">Draw: {prompt}</span>
-                        <span className="text-2xl font-mono text-game-accent">{timer}s</span>
+                <div className="w-full space-y-8">
+                    <div className="flex justify-between items-end mb-4 border-b-4 border-white/5 pb-6">
+                        <div className="text-left">
+                            <span className="text-2xl uppercase tracking-[0.5em] font-black text-game-accent block mb-2">Draw:</span>
+                            <h2 className="text-5xl font-black uppercase tracking-tighter leading-none">{prompt}</h2>
+                        </div>
+                        <div className="text-5xl font-black font-mono text-game-secondary animate-pulse">{timer}s</div>
                     </div>
 
-                    <canvas
-                        ref={canvasRef}
-                        width={300}
-                        height={300}
-                        className="w-full aspect-square bg-white rounded-xl touch-none"
-                        onMouseDown={startDraw}
-                        onMouseMove={draw}
-                        onMouseUp={endDraw}
-                        onMouseLeave={endDraw}
-                        onTouchStart={startDraw}
-                        onTouchMove={draw}
-                        onTouchEnd={endDraw}
-                    />
+                    <div className="relative group">
+                        <div className="absolute -inset-4 bg-gradient-to-br from-game-primary to-game-secondary rounded-[3.5rem] blur-2xl opacity-20 transition-all group-hover:opacity-40" />
+                        <canvas
+                            ref={canvasRef}
+                            width={600}
+                            height={600}
+                            className="w-full aspect-square bg-white rounded-[3rem] touch-none shadow-2xl relative z-10 border-8 border-white/10"
+                            onMouseDown={startDraw}
+                            onMouseMove={draw}
+                            onMouseUp={endDraw}
+                            onMouseLeave={endDraw}
+                            onTouchStart={startDraw}
+                            onTouchMove={draw}
+                            onTouchEnd={endDraw}
+                        />
+                    </div>
 
                     <button
                         onClick={submitDrawing}
-                        className="w-full mt-4 py-4 bg-game-primary rounded-xl font-bold text-xl"
+                        className="w-full py-12 bg-game-primary rounded-[3.5rem] font-black text-4xl shadow-[0_20px_50px_rgba(255,0,255,0.4)] transition-all uppercase tracking-widest border-t-8 border-white/20 active:scale-95"
                     >
-                        Submit Drawing
+                        FINISH MASTERPIECE 🎨
                     </button>
                 </div>
             )}
@@ -124,32 +131,38 @@ const SpeedDrawPlayer = ({ phase, prompt, timer, drawings, players, myId, onSubm
             )}
 
             {phase === 'VOTING' && (
-                <div className="w-full">
-                    <h2 className="text-xl font-bold text-center mb-4">Vote for the best!</h2>
-                    <div className="grid grid-cols-2 gap-3">
+                <div className="w-full space-y-10">
+                    <h2 className="text-5xl font-black text-center uppercase tracking-widest gradient-text-primary">Vote For the Best!</h2>
+                    <div className="grid grid-cols-2 gap-8">
                         {Object.entries(drawings)
                             .filter(([id]) => id !== myId)
                             .map(([id, dataUrl]) => (
-                                <button
+                                <motion.button
                                     key={id}
+                                    whileHover={{ scale: 1.05, y: -10 }}
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={() => handleVote(id)}
                                     disabled={hasVoted}
-                                    className={`glass-card p-2 rounded-xl ${hasVoted ? 'opacity-50' : 'hover:border-game-primary'}`}
+                                    className={`glass-card p-4 rounded-[3rem] border-4 transition-all flex flex-col items-center gap-4 ${hasVoted ? 'opacity-30' : 'border-white/5 hover:border-game-primary hover:shadow-[0_0_60px_rgba(255,0,255,0.3)]'}`}
                                 >
-                                    <img src={dataUrl} alt="" className="w-full aspect-square object-contain bg-white rounded-lg" />
-                                    <div className="text-sm mt-1">{players[id]?.name}</div>
-                                </button>
+                                    <img src={dataUrl} alt="" className="w-full aspect-square object-contain bg-white rounded-[2rem] border-4 border-black/5" />
+                                    <div className="text-2xl font-black uppercase tracking-widest text-white/60">{players[id]?.name}</div>
+                                </motion.button>
                             ))
                         }
                     </div>
-                    {hasVoted && <p className="text-center text-game-secondary mt-4">Vote submitted! ✓</p>}
+                    {hasVoted && (
+                        <div className="text-center animate-bounce">
+                            <p className="text-4xl font-black text-game-secondary uppercase tracking-[0.2em]">Vote Cast! ✓</p>
+                        </div>
+                    )}
                 </div>
             )}
 
             {phase === 'RESULTS' && (
-                <div className="text-center">
-                    <div className="text-6xl mb-4">🎨</div>
-                    <p className="text-xl">Check the TV!</p>
+                <div className="text-center space-y-8">
+                    <div className="text-huge">🎨</div>
+                    <p className="text-4xl font-black uppercase tracking-widest text-white/40">Check the TV gallery!</p>
                 </div>
             )}
         </div>

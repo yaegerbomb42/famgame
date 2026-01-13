@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 interface ChainReactionPlayerProps {
     phase: 'WAITING' | 'ACTIVE' | 'RESULTS';
@@ -21,31 +22,37 @@ const ChainReactionPlayer = ({ phase, isMyTurn, lastWord, timer, onSubmitWord }:
     };
 
     return (
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex-1 flex flex-col items-center justify-center p-8 w-full max-w-4xl mx-auto"
+        >
             {phase === 'WAITING' && (
-                <div className="text-center">
-                    <div className="text-6xl mb-4">⛓️</div>
-                    <h2 className="text-2xl font-bold">Chain Reaction</h2>
-                    <p className="text-white/50 mt-2">Get ready!</p>
+                <div className="text-center space-y-8">
+                    <div className="text-huge animate-pulse shadow-glow">⛓️</div>
+                    <h2 className="text-5xl font-black uppercase tracking-widest gradient-text-primary">Chain Reaction</h2>
+                    <p className="text-2xl font-black text-white/40 uppercase tracking-[0.3em] animate-bounce">Get ready!</p>
                 </div>
             )}
 
             {phase === 'ACTIVE' && isMyTurn && (
-                <div className="w-full max-w-sm text-center">
-                    <div className={`text-6xl font-black mb-4 ${timer <= 3 ? 'text-red-500 animate-pulse' : ''}`}>
+                <div className="w-full text-center space-y-10">
+                    <div className={`text-[12rem] leading-none font-black my-8 ${timer <= 3 ? 'text-red-500 animate-pulse' : 'text-game-primary'}`}>
                         {timer}
                     </div>
 
-                    <p className="text-xl text-white/50 mb-2">Connect to:</p>
-                    <div className="text-4xl font-bold mb-6 text-game-secondary">{lastWord}</div>
+                    <div className="space-y-4">
+                        <p className="text-2xl uppercase tracking-[0.5em] font-black text-white/30">Connect to:</p>
+                        <div className="text-6xl font-black uppercase tracking-tighter text-game-secondary drop-shadow-[0_0_30px_rgba(0,255,255,0.3)]">{lastWord}</div>
+                    </div>
 
                     <input
                         type="text"
                         value={word}
                         onChange={(e) => setWord(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                        placeholder="Type a connected word..."
-                        className="w-full p-4 text-xl bg-white/10 rounded-xl mb-4 text-center"
+                        placeholder="TYPE CONNECTED WORD..."
+                        className="w-full p-10 bg-white/5 border-4 border-white/10 rounded-[3rem] text-5xl font-black uppercase text-center focus:outline-none focus:border-game-primary transition-all placeholder:text-white/5 shadow-2xl"
                         autoFocus
                         autoComplete="off"
                     />
@@ -53,7 +60,7 @@ const ChainReactionPlayer = ({ phase, isMyTurn, lastWord, timer, onSubmitWord }:
                     <button
                         onClick={handleSubmit}
                         disabled={!word.trim()}
-                        className="w-full py-4 bg-game-primary rounded-xl font-bold text-xl disabled:opacity-50"
+                        className="w-full py-12 bg-game-primary rounded-[3.5rem] font-black text-4xl shadow-[0_20px_50px_rgba(255,0,255,0.4)] transition-all uppercase tracking-widest border-t-8 border-white/20 active:scale-95 disabled:opacity-20"
                     >
                         SUBMIT! ⚡
                     </button>
@@ -61,20 +68,21 @@ const ChainReactionPlayer = ({ phase, isMyTurn, lastWord, timer, onSubmitWord }:
             )}
 
             {phase === 'ACTIVE' && !isMyTurn && (
-                <div className="text-center">
-                    <div className="text-6xl mb-4">👀</div>
-                    <p className="text-xl text-white/50">Watch the chain grow...</p>
-                    <p className="text-lg text-white/30 mt-2">Wait for your turn!</p>
+                <div className="text-center space-y-8 opacity-40">
+                    <div className="text-huge animate-spin-slow">👀</div>
+                    <p className="text-4xl font-black text-white uppercase tracking-widest">Watching the chain...</p>
+                    <p className="text-2xl font-black text-white/40 uppercase tracking-[0.2em]">Your turn is coming!</p>
                 </div>
             )}
 
             {phase === 'RESULTS' && (
-                <div className="text-center">
-                    <div className="text-6xl mb-4">💥</div>
-                    <p className="text-xl">Chain broken! Check the TV!</p>
+                <div className="text-center space-y-8">
+                    <div className="text-huge animate-shake">💥</div>
+                    <p className="text-5xl font-black uppercase tracking-widest text-red-500">CHAIN BROKEN!</p>
+                    <p className="text-3xl font-black text-white/40 uppercase">Check the TV!</p>
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 };
 

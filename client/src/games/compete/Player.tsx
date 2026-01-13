@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 
 interface CompetePlayerProps {
     phase: 'SELECTING' | 'COUNTDOWN' | 'ACTIVE' | 'RESULTS';
@@ -53,21 +54,25 @@ const CompetePlayer = ({ phase, isCompeting, challenge, timer, onProgress, amWin
     }
 
     return (
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex-1 flex flex-col items-center justify-center p-8 w-full max-w-4xl mx-auto"
+        >
             {phase === 'COUNTDOWN' && (
-                <div className="text-center">
-                    <div className="text-[8rem] font-black text-white animate-pulse">{timer}</div>
-                    <p className="text-2xl text-game-accent">GET READY!</p>
+                <div className="text-center space-y-8">
+                    <div className="text-[15rem] font-black text-white animate-bounce leading-none">{timer}</div>
+                    <p className="text-5xl font-black text-game-accent uppercase tracking-[0.5em] animate-pulse">GET READY!</p>
                 </div>
             )}
 
             {phase === 'ACTIVE' && challenge?.type === 'TAP' && (
-                <div className="w-full max-w-sm text-center">
-                    <div className="text-2xl text-white/50 mb-2">Tap {TAP_TARGET} times!</div>
-                    <div className="text-6xl font-black mb-8">{tapCount}/{TAP_TARGET}</div>
+                <div className="w-full text-center space-y-10">
+                    <div className="text-4xl font-black text-white/40 uppercase tracking-widest">Tap {TAP_TARGET} times!</div>
+                    <div className="text-[12rem] font-black leading-none text-game-primary drop-shadow-[0_0_50px_rgba(255,0,255,0.4)]">{tapCount}/{TAP_TARGET}</div>
                     <button
                         onClick={handleTap}
-                        className="w-full h-64 bg-gradient-to-b from-red-500 to-orange-600 rounded-3xl text-6xl font-black active:scale-95 transition-transform"
+                        className="w-full py-20 bg-gradient-to-b from-red-500 to-orange-600 rounded-[4rem] text-[8rem] font-black active:scale-90 transition-all shadow-[0_30px_60px_rgba(239,68,68,0.5)] border-t-8 border-white/30"
                     >
                         TAP! 👆
                     </button>
@@ -75,16 +80,17 @@ const CompetePlayer = ({ phase, isCompeting, challenge, timer, onProgress, amWin
             )}
 
             {phase === 'ACTIVE' && challenge?.type === 'TYPE' && (
-                <div className="w-full max-w-sm text-center">
-                    <p className="text-lg text-white/50 mb-2">Type this:</p>
-                    <div className="glass-card p-4 rounded-xl mb-4">
-                        <p className="text-xl font-mono">{challenge.target}</p>
+                <div className="w-full text-center space-y-10">
+                    <p className="text-3xl font-black text-white/40 uppercase tracking-widest leading-none">Type this precisely:</p>
+                    <div className="glass-card p-12 rounded-[3.5rem] border-4 border-white/20 shadow-2xl">
+                        <p className="text-5xl font-black font-mono text-game-secondary tracking-tighter uppercase">{challenge.target}</p>
                     </div>
                     <input
                         type="text"
                         value={typedText}
                         onChange={(e) => setTypedText(e.target.value)}
-                        className="w-full p-4 text-xl bg-white/10 rounded-xl text-center font-mono"
+                        className="w-full p-12 text-5xl bg-white/5 border-4 border-white/10 rounded-[3.5rem] text-center font-black font-mono focus:outline-none focus:border-game-primary transition-all shadow-2xl uppercase placeholder:text-white/5"
+                        placeholder="TYPE HERE..."
                         autoFocus
                         autoComplete="off"
                         autoCorrect="off"
@@ -94,16 +100,16 @@ const CompetePlayer = ({ phase, isCompeting, challenge, timer, onProgress, amWin
             )}
 
             {phase === 'ACTIVE' && challenge?.type === 'SEQUENCE' && (
-                <div className="w-full max-w-sm text-center">
-                    <p className="text-lg text-white/50 mb-4">Tap in order: 1, 2, 3...</p>
-                    <div className="grid grid-cols-3 gap-3">
+                <div className="w-full text-center space-y-10">
+                    <p className="text-3xl font-black text-white/40 uppercase tracking-[0.3em]">Tap in sequence!</p>
+                    <div className="grid grid-cols-3 gap-6">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                             <button
                                 key={num}
                                 onClick={() => handleSequenceTap(num)}
-                                className={`aspect-square text-3xl font-black rounded-xl transition-all ${sequence.indexOf(num) < sequenceIndex
-                                        ? 'bg-green-500'
-                                        : 'bg-white/10 active:bg-white/30'
+                                className={`aspect-square text-6xl font-black rounded-[2.5rem] transition-all transform active:scale-90 border-4 ${sequence.indexOf(num) < sequenceIndex
+                                    ? 'bg-green-500 border-white/40 shadow-[0_0_40px_rgba(34,197,94,0.5)]'
+                                    : 'bg-white/5 border-white/10 hover:bg-white/10'
                                     }`}
                             >
                                 {num}
@@ -114,21 +120,21 @@ const CompetePlayer = ({ phase, isCompeting, challenge, timer, onProgress, amWin
             )}
 
             {phase === 'RESULTS' && (
-                <div className="text-center">
+                <div className="text-center space-y-12">
                     {amWinner ? (
-                        <>
-                            <div className="text-8xl mb-4">🏆</div>
-                            <p className="text-3xl font-bold text-yellow-400">YOU WON!</p>
-                        </>
+                        <div className="space-y-6">
+                            <div className="text-[12rem] animate-bounce drop-shadow-huge">🏆</div>
+                            <p className="text-7xl font-black text-yellow-400 uppercase tracking-tight shadow-glow-yellow">YOU WON!</p>
+                        </div>
                     ) : (
-                        <>
-                            <div className="text-8xl mb-4">😢</div>
-                            <p className="text-3xl text-white/50">Better luck next time!</p>
-                        </>
+                        <div className="space-y-6">
+                            <div className="text-[12rem] animate-shake opacity-40">😢</div>
+                            <p className="text-5xl font-black text-white/30 uppercase tracking-widest">Better luck next time!</p>
+                        </div>
                     )}
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 };
 

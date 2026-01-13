@@ -30,16 +30,17 @@ const PlayerLogic = () => {
     const autoFillAttempted = useRef(false);
 
     useEffect(() => {
-        if (autoFillAttempted.current) return;
-
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
-        if (code && code.length === 4) {
-            setRoomCode(code.toUpperCase());
-            setJoinStep('DETAILS');
+        if (code && code.length === 4 && !autoFillAttempted.current) {
             autoFillAttempted.current = true;
+            // Use setTimeout to avoid cascading render warning in dev
+            setTimeout(() => {
+                setRoomCode(code.toUpperCase());
+                setJoinStep('DETAILS');
+            }, 0);
         }
-    }, []);
+    }, [setRoomCode]);
 
     const handleCodeSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -371,20 +372,21 @@ const PlayerLogic = () => {
                         >
                             <input
                                 type="text"
-                                placeholder="ABCD"
+                                placeholder="4-LETTER CODE"
                                 value={roomCode}
                                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                                className="w-full bg-game-surface border border-white/10 rounded-2xl px-6 py-6 text-center text-4xl font-mono font-bold focus:outline-none focus:border-game-primary/50 focus:bg-white/5 transition-all text-white placeholder-white/20 tracking-widest"
+                                className="w-full bg-white/5 border-4 border-white/10 rounded-[2.5rem] px-10 py-12 text-center text-7xl font-black uppercase tracking-[0.5em] focus:outline-none focus:border-game-primary shadow-2xl transition-all placeholder:text-white/5"
                                 maxLength={4}
                                 autoFocus
                             />
                             <motion.button
+                                whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 type="submit"
                                 disabled={roomCode.length !== 4}
-                                className="w-full bg-game-primary text-white font-bold text-xl py-6 rounded-2xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_50px_rgba(217,70,239,0.5)] transition-all disabled:opacity-50 disabled:shadow-none"
+                                className="w-full bg-game-primary text-white font-black text-4xl py-10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(255,0,255,0.4)] disabled:opacity-20 disabled:grayscale transition-all uppercase tracking-widest"
                             >
-                                NEXT
+                                Next ➔
                             </motion.button>
                         </motion.form>
                     ) : (
@@ -396,16 +398,16 @@ const PlayerLogic = () => {
                             onSubmit={handleJoin}
                             className="space-y-6"
                         >
-                            {/* Avatar Grid - Larger and more prominent */}
-                            <div className="grid grid-cols-4 gap-4 mb-8">
+                            {/* Avatar Grid - EXPLOSIVE SIZES */}
+                            <div className="grid grid-cols-4 gap-6 mb-12">
                                 {AVATARS.map((a) => (
                                     <button
                                         key={a}
                                         type="button"
                                         onClick={() => setAvatar(a)}
-                                        className={`text-4xl p-4 rounded-2xl transition-all duration-300 ${avatar === a
-                                            ? 'bg-game-primary scale-125 shadow-[0_0_30px_rgba(255,0,255,0.6)] ring-4 ring-white/50 z-10'
-                                            : 'bg-white/5 hover:bg-white/10 active:scale-95 opacity-50 grayscale-[0.5]'
+                                        className={`text-6xl p-6 rounded-[2.5rem] transition-all duration-300 transform ${avatar === a
+                                            ? 'bg-game-primary scale-125 shadow-[0_0_50px_rgba(255,0,255,0.8)] ring-8 ring-white/50 z-20'
+                                            : 'bg-white/5 hover:bg-white/10 active:scale-90 opacity-40 hover:opacity-100'
                                             }`}
                                     >
                                         {a}
@@ -418,26 +420,27 @@ const PlayerLogic = () => {
                                 placeholder="YOUR NAME"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full bg-game-surface border border-white/10 rounded-[2rem] px-8 py-8 text-center text-4xl font-black uppercase focus:outline-none focus:border-game-primary/50 focus:bg-white/5 transition-all text-white placeholder-white/10 mb-4"
+                                className="w-full bg-white/5 border-4 border-white/10 rounded-[2.5rem] px-10 py-10 text-center text-6xl font-black uppercase focus:outline-none focus:border-game-secondary shadow-2xl transition-all text-white placeholder:text-white/5 mb-8 tracking-tighter"
                                 maxLength={10}
                                 autoFocus
                             />
 
-                            <div className="flex flex-col gap-4">
+                            <div className="flex flex-col gap-6">
                                 <motion.button
+                                    whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     type="submit"
                                     disabled={!name.trim()}
-                                    className="w-full bg-game-primary text-white font-black text-3xl py-8 rounded-[2rem] shadow-[0_0_40px_rgba(255,0,255,0.4)] hover:shadow-[0_0_60px_rgba(255,0,255,0.6)] transition-all disabled:opacity-50 uppercase"
+                                    className="w-full bg-game-secondary text-[#0a0518] font-black text-4xl py-10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,255,255,0.4)] disabled:opacity-20 transition-all uppercase tracking-widest"
                                 >
-                                    LET'S PLAY!
+                                    Jump In! 🎮
                                 </motion.button>
                                 <button
                                     type="button"
                                     onClick={() => setJoinStep('CODE')}
-                                    className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-bold text-xl text-white/30 hover:text-white transition-all uppercase tracking-widest"
+                                    className="w-full py-6 text-2xl font-black text-white/20 uppercase tracking-widest hover:text-white transition-colors"
                                 >
-                                    Wait, back
+                                    Back
                                 </button>
                             </div>
                         </motion.form>
