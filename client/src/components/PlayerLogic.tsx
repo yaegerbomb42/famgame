@@ -42,6 +42,19 @@ const PlayerLogic = () => {
         }
     }, [setRoomCode]);
 
+    // Listen for server errors
+    useEffect(() => {
+        if (!socket) return;
+        const handleError = (err: { message: string }) => {
+            console.error('Server error:', err.message);
+            alert(`Error: ${err.message}`);
+        };
+        socket.on('error', handleError);
+        return () => {
+            socket.off('error', handleError);
+        };
+    }, [socket]);
+
     const handleCodeSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (roomCode.length === 4) {
@@ -406,8 +419,8 @@ const PlayerLogic = () => {
                                         type="button"
                                         onClick={() => setAvatar(a)}
                                         className={`text-6xl p-6 rounded-[2.5rem] transition-all duration-300 transform ${avatar === a
-                                            ? 'bg-game-primary scale-125 shadow-[0_0_50px_rgba(255,0,255,0.8)] ring-8 ring-white/50 z-20'
-                                            : 'bg-white/5 hover:bg-white/10 active:scale-90 opacity-40 hover:opacity-100'
+                                            ? 'bg-gradient-to-br from-pink-500 to-purple-600 scale-125 shadow-[0_0_60px_rgba(255,0,255,1)] ring-8 ring-white z-20 border-4 border-white'
+                                            : 'bg-white/5 hover:bg-white/10 active:scale-90 opacity-30 hover:opacity-100 border-2 border-transparent'
                                             }`}
                                     >
                                         {a}
