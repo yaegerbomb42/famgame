@@ -7,7 +7,8 @@
 
 ## Workflow Steps
 
-### [ ] Step: Requirements
+### [x] Step: Requirements
+<!-- chat-id: 0ba26181-f482-46f6-a429-dcb2edbe356b -->
 
 Create a Product Requirements Document (PRD) based on the feature description.
 
@@ -19,7 +20,7 @@ Create a Product Requirements Document (PRD) based on the feature description.
 
 Save the PRD to `{@artifacts_path}/requirements.md`.
 
-### [ ] Step: Technical Specification
+### [x] Step: Technical Specification
 
 Create a technical specification based on the PRD in `{@artifacts_path}/requirements.md`.
 
@@ -34,7 +35,7 @@ Save to `{@artifacts_path}/spec.md` with:
 - Delivery phases (incremental, testable milestones)
 - Verification approach using project lint/test commands
 
-### [ ] Step: Planning
+### [x] Step: Planning
 
 Create a detailed implementation plan based on `{@artifacts_path}/spec.md`.
 
@@ -48,8 +49,29 @@ If the feature is trivial and doesn't warrant full specification, update this wo
 
 Save to `{@artifacts_path}/plan.md`.
 
-### [ ] Step: Implementation
+### [x] Step: Implementation: Foundation
+- Install dependencies (Zustand, Howler, Lucide, etc.)
+- Refactor server for Multi-Room support
+- Setup Zustand store on client
+- Configure Tailwind with new theme and fonts
 
-This step should be replaced with detailed implementation tasks from the Planning step.
+### [x] Step: Implementation: Core UI & Shared Components
+- Implement new Lobby and Game Selection screens
+- Create shared game components (Timer, PlayerList, Leaderboard)
+- Setup SoundService and basic BGM
 
-If Planning didn't replace this step, execute the tasks in `{@artifacts_path}/plan.md`, updating checkboxes as you go. Run planned tests/lint and record results in plan.md.
+### [x] Step: Implementation: Game Refactor (Part 1)
+- Refactor Trivia, 2 Truths, Hot Takes, Poll Party, Buzz In, Word Race, Reaction
+
+### [x] Step: Implementation: Game Refactor (Part 2)
+- Refactor Emoji Story, Bluff, This or That, Speed Draw, Chain Reaction, Mind Meld, Compete
+
+### [x] Step: Implementation: Voice Chat & Polish
+- Integrate WebRTC for Voice Chat
+- Add confetti, animations, and final UX polish
+- Final bug fixes and edge case handling
+
+### [x] Step: Verification & Deployment
+- Run linting and type checks
+- Create Playwright test script
+- Prepare Vercel deployment guide

@@ -1,13 +1,15 @@
-// This or That - Quick-fire preference choices
+import { motion, AnimatePresence } from 'framer-motion';
+
 interface ThisOrThatHostProps {
-    phase: 'CHOOSING' | 'RESULTS';
+    phase: 'CHOOSING' | 'REVEAL';
     optionA: string;
     optionB: string;
     votes: Record<string, 'A' | 'B'>;
-    players: Record<string, { id: string; name: string }>;
+    players: Record<string, { id: string; name: string; avatar?: string; isHost?: boolean }>;
 }
 
 const ThisOrThatHost = ({ phase, optionA, optionB, votes, players }: ThisOrThatHostProps) => {
+    const participants = Object.values(players).filter(p => !p.isHost);
     const votesA = Object.values(votes).filter(v => v === 'A').length;
     const votesB = Object.values(votes).filter(v => v === 'B').length;
     const total = votesA + votesB;
@@ -15,80 +17,101 @@ const ThisOrThatHost = ({ phase, optionA, optionB, votes, players }: ThisOrThatH
     const percentB = total ? Math.round((votesB / total) * 100) : 50;
 
     return (
-        <div className="flex-1 flex flex-col items-center justify-center p-8">
-            <h2 className="text-4xl font-display mb-12 gradient-text-primary">This or That?</h2>
+        <div className="flex flex-col h-full w-full max-w-7xl justify-center items-center px-8 relative overflow-hidden">
+            <motion.h2 
+                initial={{ y: -50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="text-7xl font-black mb-20 tracking-tighter uppercase italic text-center"
+            >
+                This <span className="text-game-primary">or</span> That?
+            </motion.h2>
 
-            <div className="flex gap-8 w-full max-w-4xl">
+            <div className="flex flex-col lg:flex-row gap-12 w-full items-center relative">
                 {/* Option A */}
-                <div className="flex-1 relative">
-                    <div
-                        className="glass-card p-8 rounded-3xl text-center transition-all duration-500"
-                        style={{
-                            borderColor: phase === 'RESULTS' && percentA > percentB ? '#ff00ff' : 'transparent',
-                            borderWidth: '3px',
-                            boxShadow: phase === 'RESULTS' && percentA > percentB ? '0 0 40px rgba(255,0,255,0.4)' : 'none'
-                        }}
-                    >
-                        <div className="text-6xl mb-4">{optionA.split(' ')[0]}</div>
-                        <h3 className="text-3xl font-bold mb-4">{optionA}</h3>
-                        {phase === 'RESULTS' && (
-                            <>
-                                <div className="text-6xl font-black text-game-primary">{percentA}%</div>
-                                <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                    {Object.entries(votes)
-                                        .filter(([_, v]) => v === 'A')
-                                        .map(([id]) => (
-                                            <span key={id} className="text-sm bg-white/10 px-2 py-1 rounded">
-                                                {players[id]?.name}
-                                            </span>
-                                        ))
-                                    }
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
+                <motion.div
+                    initial={{ x: -100, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    className={`flex-1 w-full bg-white/5 p-12 rounded-[4rem] border-4 transition-all duration-700 relative overflow-hidden flex flex-col items-center gap-8 ${
+                        phase === 'REVEAL' && percentA >= percentB ? 'border-game-primary shadow-[0_0_80px_rgba(255,0,255,0.4)] scale-105 z-10' : 'border-white/10 opacity-60'
+                    }`}
+                >
+                    <div className="text-[10rem] drop-shadow-2xl">{optionA.split(' ')[0]}</div>
+                    <h3 className="text-5xl font-black uppercase tracking-tight text-center">{optionA}</h3>
+                    
+                    {phase === 'REVEAL' && (
+                        <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="text-8xl font-black text-game-primary font-mono"
+                        >
+                            {percentA}%
+                        </motion.div>
+                    )}
 
-                <div className="flex items-center">
-                    <span className="text-5xl font-black text-white/20">VS</span>
-                </div>
+                    <div className="flex flex-wrap justify-center gap-3">
+                        {Object.entries(votes).filter(([, v]) => v === 'A').map(([id]) => (
+                            <motion.span 
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                key={id} 
+                                className="text-3xl"
+                            >
+                                {players[id]?.avatar}
+                            </motion.span>
+                        ))}
+                    </div>
+                </motion.div>
+
+                <div className="text-6xl font-black text-white/10 italic z-20">VS</div>
 
                 {/* Option B */}
-                <div className="flex-1 relative">
-                    <div
-                        className="glass-card p-8 rounded-3xl text-center transition-all duration-500"
-                        style={{
-                            borderColor: phase === 'RESULTS' && percentB > percentA ? '#00ffff' : 'transparent',
-                            borderWidth: '3px',
-                            boxShadow: phase === 'RESULTS' && percentB > percentA ? '0 0 40px rgba(0,255,255,0.4)' : 'none'
-                        }}
-                    >
-                        <div className="text-6xl mb-4">{optionB.split(' ')[0]}</div>
-                        <h3 className="text-3xl font-bold mb-4">{optionB}</h3>
-                        {phase === 'RESULTS' && (
-                            <>
-                                <div className="text-6xl font-black text-game-secondary">{percentB}%</div>
-                                <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                    {Object.entries(votes)
-                                        .filter(([_, v]) => v === 'B')
-                                        .map(([id]) => (
-                                            <span key={id} className="text-sm bg-white/10 px-2 py-1 rounded">
-                                                {players[id]?.name}
-                                            </span>
-                                        ))
-                                    }
-                                </div>
-                            </>
-                        )}
+                <motion.div
+                    initial={{ x: 100, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    className={`flex-1 w-full bg-white/5 p-12 rounded-[4rem] border-4 transition-all duration-700 relative overflow-hidden flex flex-col items-center gap-8 ${
+                        phase === 'REVEAL' && percentB > percentA ? 'border-game-secondary shadow-[0_0_80px_rgba(0,255,255,0.4)] scale-105 z-10' : 'border-white/10 opacity-60'
+                    }`}
+                >
+                    <div className="text-[10rem] drop-shadow-2xl">{optionB.split(' ')[0]}</div>
+                    <h3 className="text-5xl font-black uppercase tracking-tight text-center">{optionB}</h3>
+                    
+                    {phase === 'REVEAL' && (
+                        <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="text-8xl font-black text-game-secondary font-mono"
+                        >
+                            {percentB}%
+                        </motion.div>
+                    )}
+
+                    <div className="flex flex-wrap justify-center gap-3">
+                        {Object.entries(votes).filter(([, v]) => v === 'B').map(([id]) => (
+                            <motion.span 
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                key={id} 
+                                className="text-3xl"
+                            >
+                                {players[id]?.avatar}
+                            </motion.span>
+                        ))}
                     </div>
-                </div>
+                </motion.div>
             </div>
 
-            {phase === 'CHOOSING' && (
-                <div className="mt-12 text-2xl text-white/50">
-                    {Object.keys(votes).length} / {Object.keys(players).length} voted
-                </div>
-            )}
+            <AnimatePresence>
+                {phase === 'CHOOSING' && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 50 }}
+                        className="mt-20 text-3xl font-black text-white/20 uppercase tracking-[0.5em]"
+                    >
+                        {Object.keys(votes).length} / {participants.length} DECISIONS MADE
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

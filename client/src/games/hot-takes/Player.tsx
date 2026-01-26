@@ -1,104 +1,137 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGameStore } from '../../store/useGameStore';
+import { useSound } from '../../context/SoundContext';
 
-interface HotTakesPlayerProps {
-    phase: 'INPUT' | 'VOTING' | 'RESULTS';
-    prompt: string;
-    inputs: Record<string, string>; // { playerId: text }
-    onSubmit: (text: string) => void;
-    onVote: (targetId: string) => void;
-    myId: string;
-}
-
-const HotTakesPlayer: React.FC<HotTakesPlayerProps> = ({ phase, prompt, inputs, onSubmit, onVote, myId }) => {
+const HotTakesPlayer = () => {
+    const { socket, gameState } = useGameStore();
+    const { playClick, playSuccess, playError } = useSound();
+    
     const [take, setTake] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const [voted, setVoted] = useState(false);
 
-    // --- INPUT PHASE ---
-    if (phase === 'INPUT') {
-        if (submitted) {
-            return (
-                <div className="flex-1 flex items-center justify-center flex-col text-center p-12 space-y-8">
-                    <div className="text-huge animate-bounce">🔥</div>
-                    <h3 className="text-5xl font-black gradient-text-secondary uppercase">TAKE SERVED.</h3>
-                    <p className="text-white/40 text-2xl uppercase tracking-widest">Waiting for more heat...</p>
-                </div>
-            )
+    const phase = gameState?.gameData?.phase || 'INPUT';
+    const prompt = gameState?.gameData?.prompt || '';
+    const inputs = gameState?.gameData?.inputs || {};
+    const myId = socket?.id || '';
+
+    const handleSubmit = () => {
+        if (!take.trim()) {
+            playError();
+            return;
         }
+        socket?.emit('submitTake', take);
+        setSubmitted(true);
+        playSuccess();
+    };
 
-        return (
-            <div className="flex-1 flex flex-col p-8 space-y-8">
-                <div className="text-center space-y-2">
-                    <span className="text-2xl uppercase tracking-[0.5em] font-black text-game-accent">Hot Topic</span>
-                    <h3 className="text-4xl font-black leading-tight uppercase tracking-tighter">{prompt}</h3>
-                </div>
+    const handleVote = (pid: string) => {
+        if (voted) return;
+        socket?.emit('voteTake', pid);
+        setVoted(true);
+        playClick();
+    };
 
-                <textarea
-                    value={take}
-                    onChange={(e) => setTake(e.target.value)}
-                    placeholder="DROP YOUR BOLD TAKE HERE..."
-                    className="w-full flex-1 bg-white/5 border-4 border-white/10 rounded-[3rem] p-10 text-4xl font-black focus:outline-none focus:border-game-primary resize-none placeholder:text-white/10"
-                    maxLength={100}
-                    autoFocus
-                />
+    return (
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <AnimatePresence mode="wait">
+                {phase === 'INPUT' && (
+                    <motion.div
+                        key="input"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex-1 flex flex-col p-4 space-y-6"
+                    >
+                        {submitted ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8">
+                                <div className="text-[10rem] animate-bounce">🔥</div>
+                                <h3 className="text-4xl font-black uppercase tracking-tighter italic">TAKE SERVED!</h3>
+                                <p className="text-white/40 text-xl font-black uppercase tracking-[0.3em] animate-pulse">Wait for the fire...</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="text-center space-y-2">
+                                    <span className="text-xs uppercase tracking-[0.4em] font-black text-game-primary">Hot Topic</span>
+                                    <h3 className="text-3xl font-black leading-tight tracking-tight italic">"{prompt}"</h3>
+                                </div>
 
-                <button
-                    onClick={() => { onSubmit(take); setSubmitted(true); }}
-                    disabled={!take.trim()}
-                    className="w-full py-12 bg-game-primary rounded-[3rem] font-black text-4xl shadow-[0_20px_50px_rgba(255,0,255,0.4)] disabled:opacity-20 transition-all uppercase tracking-widest"
-                >
-                    POST THE TRUTH 🚀
-                </button>
-            </div>
-        )
-    }
+                                <textarea
+                                    value={take}
+                                    onChange={(e) => setTake(e.target.value)}
+                                    placeholder="DROP THE TRUTH..."
+                                    className="w-full flex-1 bg-white/5 border-4 border-white/10 rounded-[2.5rem] p-8 text-3xl font-black focus:outline-none focus:border-game-primary resize-none placeholder:text-white/5 uppercase"
+                                    maxLength={100}
+                                    autoFocus
+                                />
 
-    // --- VOTING PHASE ---
-    if (phase === 'VOTING') {
-        if (voted) {
-            return (
-                <div className="flex-1 flex items-center justify-center flex-col text-center p-12 space-y-8">
-                    <div className="text-huge animate-pulse">🗳️</div>
-                    <h3 className="text-5xl font-black gradient-text-primary uppercase">VOTE LOCKED.</h3>
-                </div>
-            )
-        }
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={handleSubmit}
+                                    disabled={!take.trim()}
+                                    className="w-full py-8 bg-game-primary rounded-[2rem] font-black text-3xl shadow-2xl disabled:opacity-20 transition-all uppercase tracking-widest border-t-4 border-white/20"
+                                >
+                                    SHIP IT! 🚀
+                                </motion.button>
+                            </>
+                        )}
+                    </motion.div>
+                )}
 
-        return (
-            <div className="flex-1 flex flex-col p-6 overflow-y-auto pb-32 custom-scrollbar">
-                <h3 className="text-center text-3xl font-black mb-12 text-white/40 uppercase tracking-widest">Pick the Best Take</h3>
-                <div className="space-y-6">
-                    {Object.entries(inputs).map(([pid, text]: [string, string]) => {
-                        if (pid === myId) return null; // Don't vote for yourself
+                {phase === 'VOTING' && (
+                    <motion.div
+                        key="voting"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex-1 flex flex-col p-4 overflow-hidden"
+                    >
+                        {voted ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8">
+                                <div className="text-[10rem] animate-pulse">🗳️</div>
+                                <h3 className="text-5xl font-black text-game-secondary uppercase tracking-tighter">VOTE CAST!</h3>
+                                <p className="text-white/40 text-xl font-bold uppercase tracking-widest">Which take was the hottest?</p>
+                            </div>
+                        ) : (
+                            <>
+                                <h3 className="text-center text-2xl font-black mb-6 text-white/40 uppercase tracking-[0.2em]">Pick the spicyest take</h3>
+                                <div className="space-y-4 overflow-y-auto pb-10 custom-scrollbar pr-2">
+                                    {Object.entries(inputs).map(([pid, text]: [string, any]) => {
+                                        if (pid === myId) return null;
+                                        return (
+                                            <motion.button
+                                                key={pid}
+                                                whileHover={{ scale: 0.98 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => handleVote(pid)}
+                                                className="w-full p-8 bg-white/5 rounded-[2rem] border-4 border-white/10 text-left font-black text-2xl hover:border-game-primary hover:bg-game-primary/10 transition-all active:scale-95"
+                                            >
+                                                <span className="block leading-tight uppercase italic">"{text}"</span>
+                                            </motion.button>
+                                        )
+                                    })}
+                                </div>
+                            </>
+                        )}
+                    </motion.div>
+                )}
 
-                        return (
-                            <motion.button
-                                key={pid}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => { onVote(pid); setVoted(true); }}
-                                className="w-full p-10 bg-white/5 rounded-[2.5rem] border-4 border-white/5 text-left font-black text-3xl hover:bg-white/10 hover:border-game-primary hover:shadow-[0_0_40px_rgba(255,0,255,0.3)] transition-all"
-                            >
-                                <span className="block leading-tight uppercase tracking-tight">"{text}"</span>
-                            </motion.button>
-                        )
-                    })}
-                </div>
-            </div>
-        )
-    }
-
-    // --- RESULTS PHASE ---
-    if (phase === 'RESULTS') {
-        return (
-            <div className="flex-1 flex items-center justify-center flex-col text-center p-8">
-                <h3 className="text-2xl font-bold">Check the Big Screen!</h3>
-            </div>
-        )
-    }
-
-    return null;
+                {phase === 'RESULTS' && (
+                    <motion.div
+                        key="results"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-8"
+                    >
+                        <div className="text-[10rem] animate-bounce">🎖️</div>
+                        <h3 className="text-4xl font-black uppercase tracking-tighter text-game-accent">RESULTS ARE IN!</h3>
+                        <p className="text-white/30 text-xl font-bold uppercase tracking-widest">Look at the TV!</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
 };
 
 export default HotTakesPlayer;

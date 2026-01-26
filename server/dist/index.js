@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -51,17 +62,15 @@ function checkSimilarity(answer1, answer2) {
             });
             const data = yield response.json();
             const text = ((_e = (_d = (_c = (_b = (_a = data.candidates) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.content) === null || _c === void 0 ? void 0 : _c.parts) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e.text) || '0';
-            const score = parseFloat(((_f = text.match(/[\d.]+/)) === null || _f === void 0 ? void 0 : _f[0]) || '0');
+            const score = parseFloat(((_f = text.match(/["d.]+/)) === null || _f === void 0 ? void 0 : _f[0]) || '0');
             return Math.min(1, Math.max(0, score));
         }
         catch (error) {
             console.error('Gemini API error:', error);
-            // Fallback: simple text matching
             return answer1.toLowerCase().trim() === answer2.toLowerCase().trim() ? 1 : 0;
         }
     });
 }
-// Helper: Generate random room code
 function generateRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
     let code = '';
@@ -70,40 +79,43 @@ function generateRoomCode() {
     }
     return code;
 }
-let gameState = {
-    roomCode: generateRoomCode(),
-    hostId: null,
-    players: {},
-    status: 'LOBBY',
-    gameVotes: {},
-    leaderboard: [],
-};
-// Timer management
-let currentTimer = null;
-function startTimer(seconds, onComplete) {
-    if (currentTimer)
-        clearTimeout(currentTimer);
-    gameState.timer = seconds;
-    io.emit('gameState', gameState);
+// MULTI-ROOM STORAGE
+const rooms = {};
+const socketToRoom = {};
+function getGameState(socket) {
+    const roomCode = socketToRoom[socket.id];
+    return rooms[roomCode] || null;
+}
+function emitState(roomCode) {
+    const state = rooms[roomCode];
+    if (state) {
+        // Don't emit the Timeout object
+        const { currentTimer } = state, publicState = __rest(state, ["currentTimer"]);
+        io.to(roomCode).emit('gameState', publicState);
+    }
+}
+function startRoomTimer(roomCode, seconds, onComplete) {
+    const state = rooms[roomCode];
+    if (!state)
+        return;
+    if (state.currentTimer)
+        clearTimeout(state.currentTimer);
+    state.timer = seconds;
+    emitState(roomCode);
     const tick = () => {
-        if (gameState.timer && gameState.timer > 0) {
-            gameState.timer--;
-            io.emit('timer', gameState.timer);
-            if (gameState.timer > 0) {
-                currentTimer = setTimeout(tick, 1000);
+        const currentState = rooms[roomCode];
+        if (currentState && currentState.timer && currentState.timer > 0) {
+            currentState.timer--;
+            io.to(roomCode).emit('timer', currentState.timer);
+            if (currentState.timer > 0) {
+                currentState.currentTimer = setTimeout(tick, 1000);
             }
             else {
                 onComplete();
             }
         }
     };
-    currentTimer = setTimeout(tick, 1000);
-}
-function updateLeaderboard() {
-    gameState.leaderboard = Object.values(gameState.players)
-        .map(p => ({ name: p.name, score: p.score }))
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 10);
+    state.currentTimer = setTimeout(tick, 1000);
 }
 // --- CONTENT LIBRARIES ---
 const TRIVIA_QUESTIONS = [
@@ -122,6 +134,11 @@ const TRIVIA_QUESTIONS = [
     { q: "Which fruit has its seeds on the outside?", a: ["Apple", "Banana", "Strawberry", "Kiwi"], correct: 2 },
     { q: "Which gas do plants absorb?", a: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Helium"], correct: 2 },
     { q: "What is the hardest natural substance?", a: ["Gold", "Iron", "Diamond", "Platinum"], correct: 2 },
+    { q: "What is the collective noun for crows?", a: ["A murder", "A flock", "A pack", "A swarm"], correct: 0 },
+    { q: "Which bone is the longest in the human body?", a: ["Femur", "Humerus", "Tibia", "Fibula"], correct: 0 },
+    { q: "What is the smallest prime number?", a: ["0", "1", "2", "3"], correct: 2 },
+    { q: "Who wrote 'Romeo and Juliet'?", a: ["Shakespeare", "Dickens", "Austen", "Twain"], correct: 0 },
+    { q: "What is the currency of Japan?", a: ["Yen", "Won", "Yuan", "Ringgit"], correct: 0 },
 ];
 const POLL_PROMPTS = [
     "Who would survive the longest in a zombie apocalypse?",
@@ -139,7 +156,11 @@ const POLL_PROMPTS = [
     "Who is most likely to forget their own birthday?",
     "Who is the best cook?",
     "Who laughs at the worst times?",
-    "Who is secretly a superhero?"
+    "Who is secretly a superhero?",
+    "Who is most likely to win a reality show?",
+    "Who has the best dance moves?",
+    "Who is most likely to get a tattoo on a whim?",
+    "Who is the best at keeping secrets?",
 ];
 const WORD_RACE_CATEGORIES = [
     "Animals", "Fruits", "Countries", "Brands", "Movies", "Colors", "Sports",
@@ -148,93 +169,106 @@ const WORD_RACE_CATEGORIES = [
 ];
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
-    socket.emit('gameState', gameState);
     // CREATE ROOM (Host)
     socket.on('createRoom', ({ name }) => {
-        gameState.roomCode = generateRoomCode();
-        gameState.hostId = socket.id;
-        gameState.players = {};
-        gameState.players[socket.id] = {
-            id: socket.id,
-            name: name || 'Host',
-            avatar: '📺',
-            score: 0,
-            isHost: true
+        const roomCode = generateRoomCode();
+        socket.join(roomCode);
+        socketToRoom[socket.id] = roomCode;
+        rooms[roomCode] = {
+            roomCode,
+            hostId: socket.id,
+            players: {
+                [socket.id]: {
+                    id: socket.id,
+                    name: name || 'Host',
+                    avatar: '📺',
+                    score: 0,
+                    isHost: true
+                }
+            },
+            status: 'LOBBY',
+            gameVotes: {},
+            leaderboard: [],
         };
-        gameState.status = 'LOBBY';
-        gameState.gameVotes = {};
-        io.emit('gameState', gameState);
+        emitState(roomCode);
     });
     socket.on('joinRoom', ({ name, code, avatar }) => {
-        if (code.toUpperCase() !== gameState.roomCode) {
+        const roomCode = code.toUpperCase();
+        if (!rooms[roomCode]) {
             socket.emit('error', { message: 'Invalid room code' });
             return;
         }
-        gameState.players[socket.id] = {
+        socket.join(roomCode);
+        socketToRoom[socket.id] = roomCode;
+        rooms[roomCode].players[socket.id] = {
             id: socket.id,
-            name: name || `Player ${Object.keys(gameState.players).length + 1}`,
+            name: name || `Player ${Object.keys(rooms[roomCode].players).length + 1}`,
             avatar: avatar || '🙂',
             score: 0,
             isHost: false
         };
-        io.emit('gameState', gameState);
+        emitState(roomCode);
     });
-    // KICK PLAYER (Host only)
     socket.on('kickPlayer', (playerId) => {
-        if (socket.id === gameState.hostId && gameState.players[playerId]) {
-            delete gameState.players[playerId];
+        const state = getGameState(socket);
+        if (state && socket.id === state.hostId && state.players[playerId]) {
+            delete state.players[playerId];
+            delete socketToRoom[playerId];
             io.to(playerId).emit('kicked');
-            io.emit('gameState', gameState);
+            emitState(state.roomCode);
         }
     });
-    // LEAVE ROOM
     socket.on('leaveRoom', () => {
-        delete gameState.players[socket.id];
-        if (socket.id === gameState.hostId) {
-            // Reset room if host leaves
-            gameState = {
-                roomCode: generateRoomCode(),
-                hostId: null,
-                players: {},
-                status: 'LOBBY',
-                gameVotes: {},
-                leaderboard: [],
-            };
+        const state = getGameState(socket);
+        if (state) {
+            delete state.players[socket.id];
+            delete socketToRoom[socket.id];
+            if (socket.id === state.hostId) {
+                if (state.currentTimer)
+                    clearTimeout(state.currentTimer);
+                delete rooms[state.roomCode];
+                io.to(state.roomCode).emit('roomClosed');
+            }
+            else {
+                emitState(state.roomCode);
+            }
         }
-        io.emit('gameState', gameState);
     });
-    // VOTE FOR GAME (Players)
     socket.on('voteGame', (gameId) => {
-        if (gameState.players[socket.id]) {
-            gameState.players[socket.id].gameVote = gameId;
-            // Count votes
+        const state = getGameState(socket);
+        if (state && state.players[socket.id]) {
+            state.players[socket.id].gameVote = gameId;
             const votes = {};
-            Object.values(gameState.players).forEach(p => {
+            Object.values(state.players).forEach(p => {
                 if (p.gameVote) {
                     votes[p.gameVote] = (votes[p.gameVote] || 0) + 1;
                 }
             });
-            gameState.gameVotes = votes;
-            io.emit('gameState', gameState);
+            state.gameVotes = votes;
+            emitState(state.roomCode);
         }
     });
     socket.on('startGame', () => {
-        gameState.status = 'GAME_SELECT';
-        // Clear previous votes
-        Object.values(gameState.players).forEach(p => { p.gameVote = undefined; });
-        gameState.gameVotes = {};
-        io.emit('gameState', gameState);
+        const state = getGameState(socket);
+        if (state) {
+            state.status = 'GAME_SELECT';
+            Object.values(state.players).forEach(p => { p.gameVote = undefined; });
+            state.gameVotes = {};
+            emitState(state.roomCode);
+        }
     });
-    // GAME SELECT
     socket.on('selectGame', (gameId) => {
-        gameState.status = 'PLAYING';
-        gameState.currentGame = gameId;
-        // Reset logic
-        Object.keys(gameState.players).forEach(pid => {
-            gameState.players[pid].bannedUntil = 0;
+        const state = getGameState(socket);
+        if (!state)
+            return;
+        state.status = 'PLAYING';
+        state.currentGame = gameId;
+        Object.keys(state.players).forEach(pid => {
+            state.players[pid].bannedUntil = 0;
         });
+        const roomCode = state.roomCode;
         if (gameId === 'TRIVIA') {
-            gameState.gameData = {
+            state.gameData = {
                 questionIndex: 0,
                 question: TRIVIA_QUESTIONS[0],
                 timer: 30,
@@ -243,207 +277,107 @@ io.on('connection', (socket) => {
             };
         }
         else if (gameId === '2TRUTHS') {
-            gameState.gameData = {
-                phase: 'INPUT',
-                inputs: {},
-                currentSubjectId: null,
-                votes: {},
-                timer: 60
-            };
+            state.gameData = { phase: 'INPUT', inputs: {}, currentSubjectId: null, votes: {}, timer: 60 };
         }
         else if (gameId === 'HOT_TAKES') {
-            gameState.gameData = {
-                phase: 'INPUT',
-                prompt: "What is the worst pizza topping?",
-                inputs: {},
-                votes: {},
-                timer: 45
-            };
+            state.gameData = { phase: 'INPUT', prompt: "What is the worst pizza topping?", inputs: {}, votes: {}, timer: 45 };
         }
         else if (gameId === 'POLL') {
-            gameState.gameData = {
-                phase: 'VOTING',
-                prompt: POLL_PROMPTS[Math.floor(Math.random() * POLL_PROMPTS.length)],
-                votes: {},
-            };
+            state.gameData = { phase: 'VOTING', prompt: POLL_PROMPTS[Math.floor(Math.random() * POLL_PROMPTS.length)], votes: {} };
         }
         else if (gameId === 'BUZZ_IN') {
-            gameState.gameData = {
-                phase: 'WAITING',
-                winnerId: null,
-            };
-            startBuzzRound();
+            state.gameData = { phase: 'WAITING', winnerId: null };
+            startBuzzRound(roomCode);
         }
         else if (gameId === 'WORD_RACE') {
-            gameState.gameData = {
-                category: WORD_RACE_CATEGORIES[Math.floor(Math.random() * WORD_RACE_CATEGORIES.length)],
-                words: [],
-                scores: {},
-                endTime: Date.now() + 45000,
-                active: true
-            };
+            state.gameData = { category: WORD_RACE_CATEGORIES[Math.floor(Math.random() * WORD_RACE_CATEGORIES.length)], words: [], scores: {}, endTime: Date.now() + 45000, active: true };
         }
         else if (gameId === 'REACTION') {
-            gameState.gameData = {
-                phase: 'WAITING',
-                goTime: 0,
-                results: {},
-                fakeOut: false
-            };
-            startReactionRound();
+            state.gameData = { phase: 'WAITING', goTime: 0, results: {}, fakeOut: false };
+            startReactionRound(roomCode);
         }
         else if (gameId === 'EMOJI_STORY') {
             const emojiPrompts = ['Your morning routine', 'A movie plot', 'Your biggest fear', 'Your dream vacation', 'A love story', 'A horror story', 'Your last meal'];
-            gameState.gameData = {
-                phase: 'INPUT',
-                prompt: emojiPrompts[Math.floor(Math.random() * emojiPrompts.length)],
-                inputs: {},
-                currentStoryIndex: 0,
-                currentStory: null,
-                guesses: {},
-            };
+            state.gameData = { phase: 'INPUT', prompt: emojiPrompts[Math.floor(Math.random() * emojiPrompts.length)], inputs: {}, currentStoryIndex: 0, currentStory: null, guesses: {} };
         }
         else if (gameId === 'BLUFF') {
-            const playerIds = Object.keys(gameState.players);
-            gameState.gameData = {
-                phase: 'CLAIM',
-                currentClaimerId: playerIds[Math.floor(Math.random() * playerIds.length)],
-                claim: null,
-                isLying: null,
-                votes: {},
-            };
+            const playerIds = Object.keys(state.players);
+            state.gameData = { phase: 'CLAIM', currentClaimerId: playerIds[Math.floor(Math.random() * playerIds.length)], claim: null, isLying: null, votes: {} };
         }
         else if (gameId === 'THIS_OR_THAT') {
-            const choices = [
-                ['🍕 Pizza', '🍔 Burger'],
-                ['🏖️ Beach', '⛰️ Mountains'],
-                ['🎬 Movies', '📺 TV Shows'],
-                ['☕ Coffee', '🍵 Tea'],
-                ['🌅 Morning', '🌃 Night'],
-                ['💰 Rich & Lonely', '💕 Poor & Loved'],
-                ['🦸 Fly', '🧠 Read Minds'],
-                ['🔮 Past', '🚀 Future'],
-            ];
+            const choices = [['🍕 Pizza', '🍔 Burger'], ['🏖️ Beach', '⛰️ Mountains'], ['☕ Coffee', '🍵 Tea'], ['🦸 Fly', '🧠 Read Minds']];
             const choice = choices[Math.floor(Math.random() * choices.length)];
-            gameState.gameData = {
-                phase: 'CHOOSING',
-                optionA: choice[0],
-                optionB: choice[1],
-                votes: {},
-            };
+            state.gameData = { phase: 'CHOOSING', optionA: choice[0], optionB: choice[1], votes: {} };
         }
         else if (gameId === 'SPEED_DRAW') {
-            const prompts = ['Cat', 'House', 'Car', 'Sun', 'Tree', 'Pizza', 'Robot', 'Ghost', 'Dragon', 'Rocket'];
-            gameState.gameData = {
-                phase: 'DRAWING',
-                prompt: prompts[Math.floor(Math.random() * prompts.length)],
-                drawings: {},
-                votes: {},
-                timer: 30,
-            };
-            // Start timer
-            startTimer(30, () => {
-                if (gameState.currentGame === 'SPEED_DRAW') {
-                    gameState.gameData.phase = 'VOTING';
-                    io.emit('gameState', gameState);
+            state.gameData = { phase: 'DRAWING', prompt: 'Robot', drawings: {}, votes: {}, timer: 30 };
+            startRoomTimer(roomCode, 30, () => {
+                const s = rooms[roomCode];
+                if (s && s.currentGame === 'SPEED_DRAW') {
+                    s.gameData.phase = 'VOTING';
+                    emitState(roomCode);
                 }
             });
         }
         else if (gameId === 'CHAIN_REACTION') {
-            const startWords = ['Happy', 'Fire', 'Water', 'Music', 'Dream', 'Light', 'Star', 'Love', 'Power', 'Magic'];
-            const playerIds = Object.keys(gameState.players);
-            gameState.gameData = {
-                phase: 'ACTIVE',
-                chain: [{ word: startWords[Math.floor(Math.random() * startWords.length)], playerId: 'system' }],
-                currentPlayerIndex: 0,
-                currentPlayerId: playerIds[0] || null,
-                timer: 5,
-                playerOrder: playerIds,
-            };
-            // Start chain timer
-            startChainTimer();
+            const playerIds = Object.keys(state.players);
+            state.gameData = { phase: 'ACTIVE', chain: [{ word: 'Start', playerId: 'system' }], currentPlayerIndex: 0, currentPlayerId: playerIds[0] || null, timer: 5, playerOrder: playerIds };
+            startChainTimer(roomCode);
         }
         else if (gameId === 'MIND_MELD') {
-            const prompts = [
-                'Name a pizza topping',
-                'Name a superhero',
-                'Name a country',
-                'Name something yellow',
-                'Name a movie genre',
-                'Name a breakfast food',
-                'Name something you find at the beach',
-                'Name a sport',
-            ];
-            gameState.gameData = {
-                phase: 'ANSWERING',
-                prompt: prompts[Math.floor(Math.random() * prompts.length)],
-                answers: {},
-                matches: [],
-                timer: 15,
-            };
-            startTimer(15, () => __awaiter(void 0, void 0, void 0, function* () {
-                if (gameState.currentGame === 'MIND_MELD') {
-                    gameState.gameData.phase = 'MATCHING';
-                    io.emit('gameState', gameState);
-                    // Process similarity matches
-                    yield processMindMeldMatches();
+            state.gameData = { phase: 'ANSWERING', prompt: 'Name a fruit', answers: {}, matches: [], timer: 15 };
+            startRoomTimer(roomCode, 15, () => __awaiter(void 0, void 0, void 0, function* () {
+                const s = rooms[roomCode];
+                if (s && s.currentGame === 'MIND_MELD') {
+                    s.gameData.phase = 'MATCHING';
+                    emitState(roomCode);
+                    yield processMindMeldMatches(roomCode);
                 }
             }));
         }
         else if (gameId === 'COMPETE') {
-            const playerIds = Object.keys(gameState.players);
+            const playerIds = Object.keys(state.players);
             const challengers = playerIds.sort(() => Math.random() - 0.5).slice(0, 2);
-            const challenges = [
-                { type: 'TAP', target: 30 },
-                { type: 'TYPE', target: 'The quick brown fox' },
-                { type: 'SEQUENCE', target: { sequence: [1, 2, 3, 4, 5, 6, 7, 8, 9] } },
-            ];
-            gameState.gameData = {
-                phase: 'COUNTDOWN',
-                challenger1Id: challengers[0] || '',
-                challenger2Id: challengers[1] || challengers[0] || '',
-                challenge: challenges[Math.floor(Math.random() * challenges.length)],
-                progress: {},
-                timer: 3,
-            };
-            // 3-second countdown then start
+            state.gameData = { phase: 'COUNTDOWN', challenger1Id: challengers[0] || '', challenger2Id: challengers[1] || '', challenge: { type: 'TAP', target: 30 }, progress: {}, timer: 3 };
             setTimeout(() => {
-                if (gameState.currentGame === 'COMPETE') {
-                    gameState.gameData.phase = 'ACTIVE';
-                    io.emit('gameState', gameState);
+                const s = rooms[roomCode];
+                if (s && s.currentGame === 'COMPETE') {
+                    s.gameData.phase = 'ACTIVE';
+                    emitState(roomCode);
                 }
             }, 3000);
         }
-        io.emit('gameState', gameState);
+        emitState(roomCode);
     });
-    // Helper for Buzz In Round Start
-    const startBuzzRound = () => {
+    const startBuzzRound = (roomCode) => {
         setTimeout(() => {
-            if (gameState.currentGame === 'BUZZ_IN' && gameState.gameData.phase === 'WAITING') {
-                gameState.gameData.phase = 'ACTIVE';
-                io.emit('gameState', gameState);
+            const state = rooms[roomCode];
+            if (state && state.currentGame === 'BUZZ_IN' && state.gameData.phase === 'WAITING') {
+                state.gameData.phase = 'ACTIVE';
+                emitState(roomCode);
             }
-        }, Math.random() * 2000 + 2000); // Random 2-4s delay
+        }, Math.random() * 2000 + 2000);
     };
-    // Helper for Reaction Round Start
-    const startReactionRound = () => {
-        // 30% chance of fakeout
+    const startReactionRound = (roomCode) => {
+        const state = rooms[roomCode];
+        if (!state)
+            return;
         const isFakeOut = Math.random() < 0.3;
-        gameState.gameData.fakeOut = false;
+        state.gameData.fakeOut = false;
         if (isFakeOut) {
             setTimeout(() => {
-                if (gameState.currentGame === 'REACTION' && gameState.gameData.phase === 'WAITING') {
-                    gameState.gameData.fakeOut = true; // Trigger yellow flash
-                    io.emit('gameState', gameState);
-                    // Reset fakeout after 500ms and actually go green shortly after
+                const s = rooms[roomCode];
+                if (s && s.currentGame === 'REACTION' && s.gameData.phase === 'WAITING') {
+                    s.gameData.fakeOut = true;
+                    emitState(roomCode);
                     setTimeout(() => {
-                        gameState.gameData.fakeOut = false;
-                        io.emit('gameState', gameState);
+                        s.gameData.fakeOut = false;
+                        emitState(roomCode);
                         setTimeout(() => {
-                            if (gameState.currentGame === 'REACTION' && gameState.gameData.phase === 'WAITING') {
-                                gameState.gameData.phase = 'GO';
-                                gameState.gameData.goTime = Date.now();
-                                io.emit('gameState', gameState);
+                            if (s.currentGame === 'REACTION' && s.gameData.phase === 'WAITING') {
+                                s.gameData.phase = 'GO';
+                                s.gameData.goTime = Date.now();
+                                emitState(roomCode);
                             }
                         }, Math.random() * 1000 + 500);
                     }, 800);
@@ -452,336 +386,217 @@ io.on('connection', (socket) => {
         }
         else {
             setTimeout(() => {
-                if (gameState.currentGame === 'REACTION' && gameState.gameData.phase === 'WAITING') {
-                    gameState.gameData.phase = 'GO';
-                    gameState.gameData.goTime = Date.now();
-                    io.emit('gameState', gameState);
+                const s = rooms[roomCode];
+                if (s && s.currentGame === 'REACTION' && s.gameData.phase === 'WAITING') {
+                    s.gameData.phase = 'GO';
+                    s.gameData.goTime = Date.now();
+                    emitState(roomCode);
                 }
             }, Math.random() * 3000 + 2000);
         }
     };
-    // Helper for Chain Reaction
-    const startChainTimer = () => {
-        if (currentTimer)
-            clearInterval(currentTimer);
+    const startChainTimer = (roomCode) => {
+        const state = rooms[roomCode];
+        if (!state)
+            return;
+        if (state.currentTimer)
+            clearInterval(state.currentTimer);
         let time = 5;
-        gameState.gameData.timer = time;
-        io.emit('gameState', gameState);
-        currentTimer = setInterval(() => {
+        state.gameData.timer = time;
+        emitState(roomCode);
+        state.currentTimer = setInterval(() => {
+            const s = rooms[roomCode];
+            if (!s)
+                return;
             time--;
-            gameState.gameData.timer = time;
+            s.gameData.timer = time;
             if (time <= 0) {
-                if (currentTimer)
-                    clearInterval(currentTimer);
-                // Time's up! Chain broken
-                gameState.gameData.phase = 'RESULTS';
-                gameState.gameData.failedPlayerId = gameState.gameData.currentPlayerId;
-                io.emit('gameState', gameState);
+                if (s.currentTimer)
+                    clearInterval(s.currentTimer);
+                s.gameData.phase = 'RESULTS';
+                s.gameData.failedPlayerId = s.gameData.currentPlayerId;
+                emitState(roomCode);
             }
             else {
-                io.emit('timerUpdate', time);
+                io.to(roomCode).emit('timerUpdate', time);
             }
         }, 1000);
     };
-    // Helper for Mind Meld processing
-    const processMindMeldMatches = () => __awaiter(void 0, void 0, void 0, function* () {
-        const answers = gameState.gameData.answers;
+    const processMindMeldMatches = (roomCode) => __awaiter(void 0, void 0, void 0, function* () {
+        const state = rooms[roomCode];
+        if (!state)
+            return;
+        const answers = state.gameData.answers;
         const playerIds = Object.keys(answers);
         const matches = [];
-        // Compare every pair
         for (let i = 0; i < playerIds.length; i++) {
             for (let j = i + 1; j < playerIds.length; j++) {
                 const p1 = playerIds[i];
                 const p2 = playerIds[j];
                 const sim = yield checkSimilarity(answers[p1], answers[p2]);
-                if (sim > 0.6) { // Threshold for a match
+                if (sim > 0.6) {
                     matches.push({ player1Id: p1, player2Id: p2, similarity: sim });
-                    // Award points
                     const points = Math.round(sim * 100);
-                    gameState.players[p1].score += points;
-                    gameState.players[p2].score += points;
+                    if (state.players[p1])
+                        state.players[p1].score += points;
+                    if (state.players[p2])
+                        state.players[p2].score += points;
                 }
             }
         }
-        // Wait a bit for dramatic matching effect
         setTimeout(() => {
-            gameState.gameData.phase = 'RESULTS';
-            gameState.gameData.matches = matches;
-            io.emit('gameState', gameState);
+            const s = rooms[roomCode];
+            if (s) {
+                s.gameData.phase = 'RESULTS';
+                s.gameData.matches = matches;
+                emitState(roomCode);
+            }
         }, 3000);
     });
-    // GAME FLOW CONTROLS
     socket.on('nextRound', () => {
-        if (gameState.currentGame === 'TRIVIA') {
-            const nextIdx = gameState.gameData.questionIndex + 1;
+        const state = getGameState(socket);
+        if (!state)
+            return;
+        if (state.currentGame === 'TRIVIA') {
+            const nextIdx = state.gameData.questionIndex + 1;
             if (nextIdx < TRIVIA_QUESTIONS.length) {
-                gameState.gameData.questionIndex = nextIdx;
-                gameState.gameData.question = TRIVIA_QUESTIONS[nextIdx];
-                gameState.gameData.showResult = false;
-                gameState.gameData.answers = {};
+                state.gameData.questionIndex = nextIdx;
+                state.gameData.question = TRIVIA_QUESTIONS[nextIdx];
+                state.gameData.showResult = false;
+                state.gameData.answers = {};
             }
             else {
-                gameState.status = 'RESULTS';
+                state.status = 'RESULTS';
             }
-            io.emit('gameState', gameState);
         }
-        else if (gameState.currentGame === 'BUZZ_IN') {
-            gameState.gameData = {
-                phase: 'WAITING',
-                winnerId: null,
-            };
-            io.emit('gameState', gameState);
-            startBuzzRound();
+        else if (state.currentGame === 'BUZZ_IN') {
+            state.gameData = { phase: 'WAITING', winnerId: null };
+            startBuzzRound(state.roomCode);
         }
-        else if (gameState.currentGame === 'REACTION') {
-            gameState.gameData = {
-                phase: 'WAITING',
-                goTime: 0,
-                results: {},
-                fakeOut: false
-            };
-            io.emit('gameState', gameState);
-            startReactionRound();
+        else if (state.currentGame === 'REACTION') {
+            state.gameData = { phase: 'WAITING', goTime: 0, results: {}, fakeOut: false };
+            startReactionRound(state.roomCode);
         }
-        else if (gameState.currentGame === '2TRUTHS') {
-            // ... (Previous logic for 2 Truths iteration)
-            if (gameState.gameData.phase === 'REVEAL') {
-                const playerIds = Object.keys(gameState.players);
+        else if (state.currentGame === '2TRUTHS') {
+            if (state.gameData.phase === 'REVEAL') {
+                const playerIds = Object.keys(state.players);
                 let nextIdx = 0;
-                if (gameState.gameData.currentSubjectId) {
-                    nextIdx = playerIds.indexOf(gameState.gameData.currentSubjectId) + 1;
+                if (state.gameData.currentSubjectId) {
+                    nextIdx = playerIds.indexOf(state.gameData.currentSubjectId) + 1;
                 }
                 if (nextIdx < playerIds.length) {
-                    gameState.gameData.phase = 'VOTING';
-                    gameState.gameData.currentSubjectId = playerIds[nextIdx];
-                    gameState.gameData.votes = {};
-                    gameState.gameData.showLie = false;
-                    if (playerIds.length === 1) {
-                        gameState.gameData.phase = 'REVEAL';
-                        gameState.gameData.showLie = true;
-                    }
+                    state.gameData.phase = 'VOTING';
+                    state.gameData.currentSubjectId = playerIds[nextIdx];
+                    state.gameData.votes = {};
+                    state.gameData.showLie = false;
                 }
                 else {
-                    gameState.status = 'RESULTS';
+                    state.status = 'RESULTS';
                 }
-                io.emit('gameState', gameState);
             }
-        }
-        else if (gameState.currentGame === 'POLL') {
-            if (gameState.gameData.phase === 'VOTING') {
-                gameState.gameData.phase = 'RESULTS';
-            }
-            else {
-                gameState.gameData.phase = 'VOTING';
-                gameState.gameData.votes = {};
-                gameState.gameData.prompt = POLL_PROMPTS[Math.floor(Math.random() * POLL_PROMPTS.length)];
-            }
-            io.emit('gameState', gameState);
-        }
-        else if (gameState.currentGame === 'WORD_RACE') {
-            // New Category
-            gameState.gameData.category = WORD_RACE_CATEGORIES[Math.floor(Math.random() * WORD_RACE_CATEGORIES.length)];
-            gameState.gameData.words = [];
-            gameState.gameData.scores = {};
-            gameState.gameData.endTime = Date.now() + 45000;
-            io.emit('gameState', gameState);
         }
         else {
-            gameState.status = 'RESULTS';
-            io.emit('gameState', gameState);
+            state.status = 'RESULTS';
         }
+        emitState(state.roomCode);
     });
     socket.on('backToLobby', () => {
-        gameState.status = 'GAME_SELECT';
-        gameState.currentGame = undefined;
-        gameState.gameData = undefined;
-        io.emit('gameState', gameState);
+        const state = getGameState(socket);
+        if (state) {
+            state.status = 'GAME_SELECT';
+            state.currentGame = undefined;
+            state.gameData = undefined;
+            emitState(state.roomCode);
+        }
     });
-    // --- TRIVIA LOGIC ---
     socket.on('submitAnswer', (answerIndex) => {
-        if (gameState.status === 'PLAYING' && gameState.currentGame === 'TRIVIA') {
-            if (!gameState.gameData.answers)
-                gameState.gameData.answers = {};
-            gameState.gameData.answers[socket.id] = answerIndex;
-            const playerCount = Object.keys(gameState.players).length;
-            const answerCount = Object.keys(gameState.gameData.answers).length;
-            if (answerCount >= playerCount) {
-                gameState.gameData.showResult = true;
-                Object.entries(gameState.gameData.answers).forEach(([pid, ans]) => {
-                    if (ans === gameState.gameData.question.correct) {
-                        if (gameState.players[pid])
-                            gameState.players[pid].score += 100;
+        const state = getGameState(socket);
+        if (state && state.currentGame === 'TRIVIA') {
+            state.gameData.answers[socket.id] = answerIndex;
+            const playerCount = Object.keys(state.players).length;
+            if (Object.keys(state.gameData.answers).length >= playerCount) {
+                state.gameData.showResult = true;
+                Object.entries(state.gameData.answers).forEach(([pid, ans]) => {
+                    if (ans === state.gameData.question.correct) {
+                        if (state.players[pid])
+                            state.players[pid].score += 100;
                     }
                 });
             }
-            io.emit('gameState', gameState);
+            emitState(state.roomCode);
         }
     });
-    // --- 2 TRUTHS LOGIC ---
-    socket.on('submitStatements', (data) => {
-        if (gameState.currentGame !== '2TRUTHS')
-            return;
-        gameState.gameData.inputs[socket.id] = data;
-        const playerCount = Object.keys(gameState.players).length;
-        const inputCount = Object.keys(gameState.gameData.inputs).length;
-        if (inputCount >= playerCount) {
-            gameState.gameData.phase = 'VOTING';
-            gameState.gameData.currentSubjectId = Object.keys(gameState.players)[0];
-            gameState.gameData.votes = {};
-            gameState.gameData.showLie = false;
-            if (playerCount === 1) {
-                gameState.gameData.phase = 'REVEAL';
-                gameState.gameData.showLie = true;
-            }
-        }
-        io.emit('gameState', gameState);
-    });
-    socket.on('voteLie', (statementIndex) => {
-        if (gameState.currentGame !== '2TRUTHS' || gameState.gameData.phase !== 'VOTING')
-            return;
-        gameState.gameData.votes[socket.id] = statementIndex;
-        const currentSubjectId = gameState.gameData.currentSubjectId;
-        const voters = Object.keys(gameState.players).filter(id => id !== currentSubjectId);
-        const currentVotes = Object.keys(gameState.gameData.votes).length;
-        if (currentVotes >= voters.length) {
-            gameState.gameData.showLie = true;
-            gameState.gameData.phase = 'REVEAL';
-            const actualLieIndex = gameState.gameData.inputs[currentSubjectId].lieIndex;
-            Object.entries(gameState.gameData.votes).forEach(([voterId, voteIdx]) => {
-                if (voteIdx === actualLieIndex) {
-                    if (gameState.players[voterId])
-                        gameState.players[voterId].score += 50;
-                }
-                else {
-                    if (gameState.players[currentSubjectId])
-                        gameState.players[currentSubjectId].score += 25;
-                }
-            });
-        }
-        io.emit('gameState', gameState);
-    });
-    // --- HOT TAKES LOGIC ---
-    socket.on('submitTake', (text) => {
-        if (gameState.currentGame !== 'HOT_TAKES')
-            return;
-        if (!gameState.gameData.inputs)
-            gameState.gameData.inputs = {};
-        gameState.gameData.inputs[socket.id] = text;
-        const playerCount = Object.keys(gameState.players).length;
-        const inputCount = Object.keys(gameState.gameData.inputs).length;
-        if (inputCount >= playerCount) {
-            gameState.gameData.phase = 'VOTING';
-            if (playerCount === 1) {
-                gameState.gameData.phase = 'RESULTS';
-            }
-        }
-        io.emit('gameState', gameState);
-    });
-    socket.on('voteTake', (targetPlayerId) => {
-        if (gameState.currentGame !== 'HOT_TAKES' || gameState.gameData.phase !== 'VOTING')
-            return;
-        if (!gameState.gameData.votes)
-            gameState.gameData.votes = {};
-        gameState.gameData.votes[socket.id] = targetPlayerId;
-        const playerCount = Object.keys(gameState.players).length;
-        const voteCount = Object.keys(gameState.gameData.votes).length;
-        if (voteCount >= playerCount) {
-            gameState.gameData.phase = 'RESULTS';
-            Object.values(gameState.gameData.votes).forEach((targetId) => {
-                if (gameState.players[targetId])
-                    gameState.players[targetId].score += 100;
-            });
-        }
-        io.emit('gameState', gameState);
-    });
-    // --- POLL LOGIC ---
-    socket.on('submitPollVote', (targetId) => {
-        if (gameState.currentGame !== 'POLL')
-            return;
-        if (!gameState.gameData.votes)
-            gameState.gameData.votes = {};
-        gameState.gameData.votes[socket.id] = targetId;
-        const playerCount = Object.keys(gameState.players).length;
-        const voteCount = Object.keys(gameState.gameData.votes).length;
-        if (voteCount >= playerCount) {
-            gameState.gameData.phase = 'RESULTS';
-        }
-        io.emit('gameState', gameState);
-    });
-    // --- BUZZ IN LOGIC (WITH PENALTY) ---
     socket.on('buzz', () => {
         var _a;
-        if (gameState.currentGame !== 'BUZZ_IN')
+        const state = getGameState(socket);
+        if (!state || state.currentGame !== 'BUZZ_IN')
             return;
-        // Check for ban
-        if (((_a = gameState.players[socket.id]) === null || _a === void 0 ? void 0 : _a.bannedUntil) && gameState.players[socket.id].bannedUntil > Date.now()) {
-            return; // Ignore spam
-        }
-        if (gameState.gameData.phase === 'WAITING') {
-            // FALSE START!
-            gameState.players[socket.id].bannedUntil = Date.now() + 2000; // 2s ban
-            socket.emit('falseStart'); // Notify client
+        if (((_a = state.players[socket.id]) === null || _a === void 0 ? void 0 : _a.bannedUntil) && state.players[socket.id].bannedUntil > Date.now())
+            return;
+        if (state.gameData.phase === 'WAITING') {
+            state.players[socket.id].bannedUntil = Date.now() + 2000;
+            socket.emit('falseStart');
             return;
         }
-        if (gameState.gameData.phase === 'ACTIVE') {
-            gameState.gameData.phase = 'BUZZED';
-            gameState.gameData.winnerId = socket.id;
-            if (gameState.players[socket.id])
-                gameState.players[socket.id].score += 50;
-            io.emit('gameState', gameState);
+        if (state.gameData.phase === 'ACTIVE') {
+            state.gameData.phase = 'BUZZED';
+            state.gameData.winnerId = socket.id;
+            if (state.players[socket.id])
+                state.players[socket.id].score += 50;
+            emitState(state.roomCode);
         }
     });
-    // --- WORD RACE LOGIC (WITH VALIDATION) ---
     socket.on('submitWord', (word) => {
-        if (gameState.currentGame !== 'WORD_RACE' || !gameState.gameData.active)
-            return;
-        // Validation
-        if (word.length < 3)
-            return;
-        if (gameState.gameData.words.find((w) => w.word.toLowerCase() === word.toLowerCase() && w.playerId === socket.id))
-            return; // No duplicates for same player
-        // Simple category check (optional, hard to automate perfectly without AI, but we can do length/anti-spam)
-        if (!gameState.gameData.scores[socket.id])
-            gameState.gameData.scores[socket.id] = 0;
-        gameState.gameData.scores[socket.id] += 10;
-        if (gameState.players[socket.id])
-            gameState.players[socket.id].score += 10;
-        gameState.gameData.words.push({
-            playerId: socket.id,
-            word: word,
-            timestamp: Date.now()
-        });
-        io.emit('gameState', gameState);
+        const state = getGameState(socket);
+        if (state && state.currentGame === 'WORD_RACE' && state.gameData.active) {
+            if (word.length < 3)
+                return;
+            if (!state.gameData.scores[socket.id])
+                state.gameData.scores[socket.id] = 0;
+            state.gameData.scores[socket.id] += 10;
+            if (state.players[socket.id])
+                state.players[socket.id].score += 10;
+            state.gameData.words.push({ playerId: socket.id, word, timestamp: Date.now() });
+            emitState(state.roomCode);
+        }
     });
-    // --- REACTION LOGIC (WITH FAKEOUT) ---
     socket.on('reactionClick', () => {
-        if (gameState.currentGame !== 'REACTION')
-            return;
-        if (gameState.gameData.phase === 'WAITING') {
-            // False start logic could go here too, but simple ignore is fine or penalty
-            if (gameState.players[socket.id])
-                gameState.players[socket.id].score -= 10; // Small penalty
-            return;
+        const state = getGameState(socket);
+        if (state && state.currentGame === 'REACTION' && state.gameData.phase === 'GO' && !state.gameData.results[socket.id]) {
+            const diff = Date.now() - state.gameData.goTime;
+            state.gameData.results[socket.id] = diff;
+            if (state.players[socket.id])
+                state.players[socket.id].score += diff < 300 ? 100 : 50;
+            emitState(state.roomCode);
         }
-        if (gameState.gameData.phase === 'GO' && !gameState.gameData.results[socket.id]) {
-            const diff = Date.now() - gameState.gameData.goTime;
-            gameState.gameData.results[socket.id] = diff;
-            if (diff < 300) {
-                if (gameState.players[socket.id])
-                    gameState.players[socket.id].score += 100;
-            }
-            else if (diff < 500) {
-                if (gameState.players[socket.id])
-                    gameState.players[socket.id].score += 50;
-            }
-            io.emit('gameState', gameState);
+    });
+    // --- VOICE CHAT SIGNALING ---
+    socket.on('joinVoice', () => {
+        const roomCode = socketToRoom[socket.id];
+        if (roomCode) {
+            // Tell others in room that this player joined voice
+            socket.to(roomCode).emit('userJoinedVoice', socket.id);
         }
+    });
+    socket.on('signal', ({ to, signal }) => {
+        io.to(to).emit('signal', { from: socket.id, signal });
     });
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
-        if (gameState.players[socket.id]) {
-            delete gameState.players[socket.id];
-            io.emit('gameState', gameState);
+        const roomCode = socketToRoom[socket.id];
+        if (roomCode && rooms[roomCode]) {
+            const state = rooms[roomCode];
+            delete state.players[socket.id];
+            delete socketToRoom[socket.id];
+            if (socket.id === state.hostId) {
+                if (state.currentTimer)
+                    clearTimeout(state.currentTimer);
+                delete rooms[roomCode];
+                io.to(roomCode).emit('roomClosed');
+            }
+            else {
+                emitState(roomCode);
+            }
         }
     });
 });
