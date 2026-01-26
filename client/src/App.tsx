@@ -96,18 +96,21 @@ function Home() {
 }
 
 import { VoiceChat } from './components/VoiceChat';
+import { PersonaProvider } from './context/PersonaContext';
 
 function App() {
   const role = useGameStore((state) => state.role);
 
   return (
     <SoundProvider>
-      <VoiceChat />
-      <AnimatePresence mode="wait">
-        {role === 'NONE' && <Home key="home" />}
-        {role === 'HOST' && <HostLogic key="host" />}
-        {role === 'PLAYER' && <PlayerLogic key="player" />}
-      </AnimatePresence>
+      <PersonaProvider>
+        <VoiceChat />
+        <AnimatePresence mode="wait">
+          {role === 'NONE' && <Home key="home" />}
+          {role === 'HOST' && <HostLogic key="host" />}
+          {role === 'PLAYER' && <PlayerLogic key="player" />}
+        </AnimatePresence>
+      </PersonaProvider>
     </SoundProvider>
   );
 }
