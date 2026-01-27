@@ -1,29 +1,77 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGameStore } from '../../store/useGameStore';
+import { useSound } from '../../context/SoundContext';
 
-interface ReactionPlayerProps {
-    phase: 'WAITING' | 'GO';
-    onTap: () => void;
-}
+const ReactionPlayer = () => {
+    const { socket, gameState } = useGameStore();
+    const { playSuccess, playError } = useSound();
 
-const ReactionPlayer: React.FC<ReactionPlayerProps> = ({ phase, onTap }) => {
+    const phase = gameState?.gameData?.phase || 'WAITING';
+    const result = gameState?.gameData?.results?.[socket?.id || ''];
+
+    const handleTap = () => {
+        if (phase === 'WAITING') {
+            playError();
+            if (navigator.vibrate) navigator.vibrate(200);
+            return;
+        }
+        if (phase === 'GO' && !result) {
+            socket?.emit('reactionClick');
+            playSuccess();
+            if (navigator.vibrate) navigator.vibrate([50, 50]);
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            onClick={onTap}
-            className={`flex-1 flex h-full items-center justify-center cursor-pointer transition-all duration-75 ${phase === 'GO' ? 'bg-green-500 shadow-[inset_0_0_100px_rgba(255,255,255,0.5)]' : 'bg-red-900 shadow-[inset_0_0_100px_rgba(0,0,0,0.5)]'}`}
+            onClick={handleTap}
+            className={`fixed inset-0 flex flex-col items-center justify-center cursor-pointer transition-colors duration-75 ${
+                phase === 'GO' ? 'bg-green-600' : 'bg-red-950'
+            }`}
         >
-            {phase === 'WAITING' ? (
-                <div className="text-center space-y-8 animate-pulse">
-                    <div className="text-[10rem]">🛑</div>
-                    <div className="text-6xl font-black uppercase tracking-[0.5em] text-red-400 drop-shadow-2xl">Wait for Green...</div>
-                </div>
-            ) : (
-                <div className="text-center space-y-8">
-                    <div className="text-[15rem] animate-bounce">🟢</div>
-                    <div className="text-[12rem] font-black uppercase tracking-tighter text-white drop-shadow-huge leading-none">TAP NOW!!!</div>
-                </div>
-            )}
+            <AnimatePresence mode="wait">
+                {result ? (
+                    <motion.div
+                        key="result"
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-center space-y-8"
+                    >
+                        <div className="text-[12rem] animate-bounce">⚡</div>
+                        <h2 className="text-7xl font-black text-white uppercase tracking-tighter italic">
+                            {result}ms
+                        </h2>
+                        <p className="text-white/40 text-2xl font-black uppercase tracking-widest">Check the Leaderboard</p>
+                    </motion.div>
+                ) : phase === 'WAITING' ? (
+                    <motion.div
+                        key="waiting"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="text-center space-y-12"
+                    >
+                        <div className="text-[12rem] animate-pulse">🛑</div>
+                        <h3 className="text-5xl font-black uppercase tracking-widest text-red-500 drop-shadow-[0_0_40px_rgba(239,68,68,0.4)]">
+                            WAIT FOR GREEN
+                        </h3>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="go"
+                        initial={{ scale: 1.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-center space-y-8"
+                    >
+                        <div className="text-[15rem] animate-ping absolute inset-0 flex items-center justify-center opacity-20">🟢</div>
+                        <div className="relative z-10 text-[12rem] font-black uppercase tracking-tighter text-white drop-shadow-[0_10px_50px_rgba(0,0,0,0.5)] leading-none italic">
+                            TAP!
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 };

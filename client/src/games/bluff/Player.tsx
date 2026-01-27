@@ -1,132 +1,162 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGameStore } from '../../store/useGameStore';
+import { useSound } from '../../context/SoundContext';
 
-interface BluffPlayerProps {
-    phase: 'CLAIM' | 'VOTING' | 'REVEAL';
-    isMyTurn: boolean;
-    claim?: string;
-    claimerName?: string;
-    onSubmitClaim: (claim: string, isLying: boolean) => void;
-    onVote: (thinkingLying: boolean) => void;
-}
-
-const BluffPlayer = ({ phase, isMyTurn, claim, claimerName, onSubmitClaim, onVote }: BluffPlayerProps) => {
+const BluffPlayer = () => {
+    const { socket, gameState } = useGameStore();
+    const { playClick, playSuccess, playError } = useSound();
+    
     const [myClaim, setMyClaim] = useState('');
     const [amLying, setAmLying] = useState(false);
     const [hasVoted, setHasVoted] = useState(false);
+    const [votedLying, setVotedLying] = useState<boolean | null>(null);
+
+    const phase = gameState?.gameData?.phase || 'CLAIM';
+    const isMyTurn = socket?.id === gameState?.gameData?.currentClaimerId;
+    const claim = gameState?.gameData?.claim || '';
+    const claimerName = gameState?.players[gameState?.gameData?.currentClaimerId || '']?.name || 'Player';
 
     const handleVote = (lying: boolean) => {
-        if (!hasVoted) {
-            setHasVoted(true);
-            onVote(lying);
+        if (hasVoted) return;
+        setHasVoted(true);
+        setVotedLying(lying);
+        socket?.emit('voteBluff', lying);
+        playClick();
+        playSuccess();
+    };
+
+    const handleSubmitClaim = () => {
+        if (!myClaim.trim()) {
+            playError();
+            return;
         }
+        socket?.emit('submitClaim', { claim: myClaim, isLying: amLying });
+        playSuccess();
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex-1 flex flex-col items-center justify-center p-8 w-full max-w-4xl mx-auto"
-        >
-            {phase === 'CLAIM' && isMyTurn && (
-                <div className="w-full space-y-10">
-                    <h2 className="text-5xl font-black text-center gradient-text-secondary uppercase tracking-widest">Make Your Claim!</h2>
-
-                    <textarea
-                        value={myClaim}
-                        onChange={(e) => setMyClaim(e.target.value)}
-                        placeholder="MAKE A BOLD STATEMENT ABOUT YOURSELF..."
-                        className="w-full p-10 bg-white/5 border-4 border-white/5 rounded-[3rem] text-4xl font-black placeholder:text-white/5 min-h-[250px] focus:outline-none focus:border-game-secondary transition-all shadow-2xl uppercase"
-                        autoFocus
-                    />
-
-                    <div className="flex gap-8">
-                        <button
-                            onClick={() => setAmLying(false)}
-                            className={`flex-1 py-12 rounded-[3rem] font-black text-3xl border-4 transition-all ${!amLying ? 'bg-green-500 border-white/50 scale-105 shadow-[0_0_60px_rgba(34,197,94,0.5)]' : 'bg-white/5 border-white/5 opacity-40 hover:opacity-100'}`}
-                        >
-                            ✅ TRUTH
-                        </button>
-                        <button
-                            onClick={() => setAmLying(true)}
-                            className={`flex-1 py-12 rounded-[3rem] font-black text-3xl border-4 transition-all ${amLying ? 'bg-red-500 border-white/50 scale-105 shadow-[0_0_60px_rgba(239,68,68,0.5)]' : 'bg-white/5 border-white/5 opacity-40 hover:opacity-100'}`}
-                        >
-                            🤥 BLUFF
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={() => onSubmitClaim(myClaim, amLying)}
-                        disabled={!myClaim.trim()}
-                        className="w-full py-12 bg-game-primary rounded-[3.5rem] font-black text-4xl shadow-[0_20px_60px_rgba(255,0,255,0.4)] disabled:opacity-20 transition-all uppercase tracking-widest border-t-8 border-white/20 active:scale-95"
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <AnimatePresence mode="wait">
+                {phase === 'CLAIM' && (
+                    <motion.div
+                        key="claim"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex-1 flex flex-col p-4 space-y-6"
                     >
-                        SUBMIT CLAIM 🚀
-                    </button>
-                </div>
-            )}
+                        {isMyTurn ? (
+                            <div className="flex-1 flex flex-col space-y-6">
+                                <h3 className="text-3xl font-black text-center uppercase tracking-tighter text-game-primary italic">Make Your Move</h3>
+                                <textarea
+                                    value={myClaim}
+                                    onChange={(e) => setMyClaim(e.target.value)}
+                                    placeholder="TELL A TRUTH... OR A LIE..."
+                                    className="w-full flex-1 bg-white/5 border-4 border-white/10 rounded-[2.5rem] p-8 text-3xl font-black focus:outline-none focus:border-game-primary resize-none placeholder:text-white/5 uppercase"
+                                    maxLength={100}
+                                    autoFocus
+                                />
 
-            {phase === 'CLAIM' && !isMyTurn && (
-                <div className="text-center space-y-10 opacity-60">
-                    <div className="text-huge animate-spin-slow">⏳</div>
-                    <p className="text-4xl text-white font-black uppercase tracking-[0.2em]">Witnessing a lie...</p>
-                </div>
-            )}
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={() => { playClick(); setAmLying(false); }}
+                                        className={`flex-1 py-6 rounded-2xl font-black text-lg transition-all border-4 ${!amLying ? 'bg-game-secondary border-white text-game-bg shadow-lg' : 'bg-white/5 border-white/10 opacity-40'}`}
+                                    >
+                                        ✅ TRUTH
+                                    </button>
+                                    <button
+                                        onClick={() => { playClick(); setAmLying(true); }}
+                                        className={`flex-1 py-6 rounded-2xl font-black text-lg transition-all border-4 ${amLying ? 'bg-red-500 border-white text-white shadow-lg' : 'bg-white/5 border-white/10 opacity-40'}`}
+                                    >
+                                        🤥 BLUFF
+                                    </button>
+                                </div>
 
-            {phase === 'VOTING' && !isMyTurn && (
-                <div className="w-full text-center space-y-12">
-                    <div className="space-y-4">
-                        <p className="text-3xl font-black text-white/40 uppercase tracking-widest">{claimerName} CLAIMS:</p>
-                        <div className="glass-card p-12 rounded-[4rem] border-4 border-game-secondary shadow-[0_0_60px_rgba(0,255,255,0.3)] bg-white/5">
-                            <p className="text-5xl font-black leading-tight uppercase tracking-tight">"{claim}"</p>
-                        </div>
-                    </div>
+                                <motion.button
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={handleSubmitClaim}
+                                    disabled={!myClaim.trim()}
+                                    className="w-full py-8 bg-game-primary rounded-[2rem] font-black text-3xl shadow-2xl disabled:opacity-20 transition-all uppercase tracking-widest border-t-4 border-white/20"
+                                >
+                                    DROP IT! ➔
+                                </motion.button>
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8">
+                                <div className="text-[10rem] animate-spin-slow">⏳</div>
+                                <h3 className="text-4xl font-black uppercase tracking-tighter italic">{claimerName}</h3>
+                                <p className="text-white/40 text-xl font-black uppercase tracking-[0.3em] animate-pulse">Is thinking of a story...</p>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
 
-                    {!hasVoted ? (
-                        <div className="flex gap-10">
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleVote(false)}
-                                className="flex-1 py-16 bg-green-500/10 hover:bg-green-500 border-4 border-white/10 hover:border-white/50 rounded-[3.5rem] font-black text-4xl transition-all shadow-huge-green flex flex-col items-center gap-4"
-                            >
-                                <span className="text-8xl">✅</span>
-                                <span>TRUTH</span>
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleVote(true)}
-                                className="flex-1 py-16 bg-red-500/10 hover:bg-red-500 border-4 border-white/10 hover:border-white/50 rounded-[3.5rem] font-black text-4xl transition-all shadow-huge-red flex flex-col items-center gap-4"
-                            >
-                                <span className="text-8xl">🤥</span>
-                                <span>BLUFF</span>
-                            </motion.button>
-                        </div>
-                    ) : (
-                        <div className="space-y-10">
-                            <div className="text-huge animate-bounce">📥</div>
-                            <div className="text-6xl font-black gradient-text-primary uppercase tracking-widest">VOTE SUBMITTED!</div>
-                        </div>
-                    )}
-                </div>
-            )}
+                {phase === 'VOTING' && (
+                    <motion.div
+                        key="voting"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex-1 flex flex-col p-4 space-y-8"
+                    >
+                        {isMyTurn ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8">
+                                <div className="text-[10rem] animate-pulse">😏</div>
+                                <h3 className="text-5xl font-black text-game-primary uppercase tracking-tighter italic">STAY COOL!</h3>
+                                <p className="text-white/40 text-xl font-bold uppercase tracking-widest">They are judging you...</p>
+                            </div>
+                        ) : hasVoted ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8">
+                                <div className="text-[10rem]">{votedLying ? '🤥' : '✅'}</div>
+                                <h3 className="text-5xl font-black uppercase tracking-tighter italic">VOTE LOCKED!</h3>
+                                <p className="text-white/40 text-xl font-bold uppercase tracking-widest">You think it's a {votedLying ? 'BLUFF' : 'TRUTH'}</p>
+                            </div>
+                        ) : (
+                            <div className="w-full h-full flex flex-col">
+                                <div className="text-center mb-6 space-y-2">
+                                    <span className="text-xs uppercase tracking-[0.4em] font-black text-white/20">{claimerName}'s Claim</span>
+                                    <div className="p-8 bg-white/5 rounded-[2.5rem] border-4 border-white/10 italic">
+                                        <p className="text-2xl font-black uppercase leading-tight italic">"{claim}"</p>
+                                    </div>
+                                </div>
 
-            {phase === 'VOTING' && isMyTurn && (
-                <div className="text-center space-y-10">
-                    <div className="text-huge animate-pulse shadow-glow">😏</div>
-                    <h3 className="text-5xl font-black uppercase tracking-tighter">STAY DEADPAN.</h3>
-                    <p className="text-3xl text-white/40 font-black uppercase tracking-[0.3em]">They're hunting for tells...</p>
-                </div>
-            )}
+                                <div className="flex flex-col gap-4 flex-1 justify-center">
+                                    <motion.button
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={() => handleVote(false)}
+                                        className="flex-1 bg-game-secondary/10 border-4 border-game-secondary rounded-[2.5rem] flex flex-col items-center justify-center gap-2 group"
+                                    >
+                                        <span className="text-8xl group-active:scale-125 transition-transform">✅</span>
+                                        <span className="text-3xl font-black text-game-secondary uppercase tracking-widest italic">TRUTH</span>
+                                    </motion.button>
+                                    <motion.button
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={() => handleVote(true)}
+                                        className="flex-1 bg-red-500/10 border-4 border-red-500 rounded-[2.5rem] flex flex-col items-center justify-center gap-2 group"
+                                    >
+                                        <span className="text-8xl group-active:scale-125 transition-transform">🤥</span>
+                                        <span className="text-3xl font-black text-red-500 uppercase tracking-widest italic">BLUFF</span>
+                                    </motion.button>
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
 
-            {phase === 'REVEAL' && (
-                <div className="text-center space-y-10">
-                    <div className="text-huge">👀</div>
-                    <h3 className="text-6xl font-black gradient-text-secondary uppercase">MOMENT OF TRUTH!</h3>
-                    <p className="text-4xl font-black uppercase tracking-widest animate-pulse text-white/40">Watch the big screen!</p>
-                </div>
-            )}
-        </motion.div>
+                {phase === 'REVEAL' && (
+                    <motion.div
+                        key="reveal"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-8"
+                    >
+                        <div className="text-[12rem] animate-bounce">🤭</div>
+                        <h3 className="text-5xl font-black text-game-accent uppercase tracking-tighter italic">MOMENT OF TRUTH!</h3>
+                        <p className="text-white/30 text-xl font-bold uppercase tracking-widest">Look at the TV!</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 };
 
