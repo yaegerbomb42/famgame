@@ -1,4 +1,11 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useRef, useState } from 'react';
+
+declare global {
+    interface Window {
+        webkitAudioContext: typeof AudioContext;
+    }
+}
 
 interface SoundContextType {
     playHover: () => void;
@@ -25,7 +32,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const getCtx = () => {
         if (!audioCtxRef.current) {
-            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtxRef.current = new AudioContext();
         }
         if (audioCtxRef.current.state === 'suspended') {
@@ -137,7 +144,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         // Simple procedural BGM loop
         const tempo = mode === 'LOBBY' ? 120 : 140;
-        
+
         const scheduleNote = (time: number, freq: number, duration: number) => {
             const osc = ctx.createOscillator();
             const g = ctx.createGain();
@@ -154,7 +161,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const playLoop = () => {
             const now = ctx.currentTime;
             const step = 60 / tempo / 2; // 8th notes
-            
+
             for (let i = 0; i < 16; i++) {
                 const t = now + i * step;
                 if (mode === 'LOBBY') {
