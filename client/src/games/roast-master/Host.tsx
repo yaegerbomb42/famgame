@@ -4,29 +4,6 @@ import { useGameStore } from '../../store/useGameStore';
 import type { GameStore } from '../../store/useGameStore';
 import { usePersona } from '../../context/PersonaContext';
 
-interface Assignment {
-    targetId: string;
-    persona: {
-        name: string;
-        trait: string;
-    };
-    roasts: Record<string, string>;
-}
-
-interface RoastToVote {
-    authorId: string;
-    targetId: string;
-    // Some backend versions send targetName/authorName, others rely on ID lookup.
-    // We will handle both safely.
-    targetName?: string;
-    authorName?: string;
-    text: string;
-    votes: number;
-    personaName: string;
-    spicyRating: number;
-    commentary?: string;
-}
-
 interface Reaction {
     id: number;
     emoji: string;
@@ -65,9 +42,8 @@ const EmojiShower: React.FC<{ reactions: Reaction[] }> = ({ reactions }) => {
 };
 
 const RoastMasterHost: React.FC = () => {
-    const { gameState, nextRound } = useGameStore((state: GameStore) => ({
-        gameState: state.gameState,
-        nextRound: state.nextRound
+    const { gameState } = useGameStore((state: GameStore) => ({
+        gameState: state.gameState
     }));
     const { speak } = usePersona();
     const gameData = gameState?.gameData;
@@ -294,11 +270,6 @@ const RoastMasterHost: React.FC = () => {
                                 </div>
                                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl w-full mx-auto">
                                     {Object.values(gameData.players as Record<string, any>).map((p) => {
-                                        const isDone = gameData.assignments?.[p.id]?.roasts?.[p.id as string]; // Simple heuristic or precise check needed? 
-                                        // Wait, assignments structure is assignments[playerId].roasts. But roasts are stored in submissions usually.
-                                        // Let's assume we can just check if *any* roast exists or check submissions directly if available.
-                                        // The original code used: gameData.assignments[p.id]?.roasts[p.id] in map? No, map was over *players*.
-                                        // Let's rely on standard 'submissions' or just check if assignments has count.
                                         const hasSubmitted = gameData.submissions && gameData.submissions[p.id];
                                         return (
                                             <div key={p.id} className={`transition-all duration-500 p-6 rounded-3xl border-2 flex items-center gap-6 ${hasSubmitted ? 'bg-green-900/40 border-green-500/50 scale-105' : 'bg-black/40 border-white/10 grayscale'}`}>

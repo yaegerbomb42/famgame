@@ -115,7 +115,7 @@ class Particle {
         this.rotSpeed = (Math.random() - 0.5) * 0.1;
     }
 
-    update(mouseX: number, mouseY: number) {
+    update(_mouseX: number, _mouseY: number) {
         this.life -= 0.01;
         this.x += this.vx;
         this.y += this.vy;

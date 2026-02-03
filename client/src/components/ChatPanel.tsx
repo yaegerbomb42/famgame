@@ -74,7 +74,7 @@ export const ChatPanel = ({ variant = 'player' }: ChatPanelProps) => {
                                         No messages yet
                                     </div>
                                 )}
-                                {messages.map((message) => (
+                                {messages.map((message: any) => (
                                     <motion.div
                                         key={message.id}
                                         initial={{ opacity: 0, y: 10 }}
@@ -82,13 +82,12 @@ export const ChatPanel = ({ variant = 'player' }: ChatPanelProps) => {
                                         className={`flex gap-2 ${message.isAi ? 'items-start' : 'items-start'}`}
                                     >
                                         <div className="text-xl">{message.avatar ?? (message.isAi ? aiPersona?.avatar ?? '🤖' : '👾')}</div>
-                                        <div className={`flex-1 rounded-2xl px-3 py-2 border ${
-                                            message.isAi
+                                        <div className={`flex-1 rounded-2xl px-3 py-2 border ${message.isAi
                                                 ? 'bg-game-primary/10 border-game-primary/30 text-white'
                                                 : message.isSystem
                                                     ? 'bg-white/5 border-white/10 text-white/60'
                                                     : 'bg-white/10 border-white/10 text-white'
-                                        }`}
+                                            }`}
                                         >
                                             <div className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-black">
                                                 {message.name}

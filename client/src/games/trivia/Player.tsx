@@ -9,7 +9,7 @@ const TriviaPlayer = () => {
     const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
     const gameData = gameState?.gameData;
-    const me = socket ? gameState?.players[socket.id] : null;
+    const me = socket?.id ? gameState?.players[socket.id] : null;
     const roundScore = gameData?.roundScores?.[socket?.id || ''];
 
     // Pattern: Adjust state during rendering to reset on round change

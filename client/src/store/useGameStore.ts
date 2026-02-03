@@ -19,6 +19,9 @@ interface GameState {
     currentGame?: string;
     gameData?: any;
     timer?: number;
+    chat?: any[];
+    aiPersona?: any;
+    gameVotes?: Record<string, number>;
 }
 
 export interface GameStore {
@@ -36,6 +39,7 @@ export interface GameStore {
     selectGame: (gameId: string) => void;
     voteGame: (gameId: string) => void;
     gameInput: (data: any) => void;
+    sendChat: (message: string) => void;
     nextRound: () => void;
     backToLobby: () => void;
 }
@@ -76,13 +80,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({ socket });
     },
 
-    setRole: (role) => set({ role }),
+    setRole: (role: 'NONE' | 'HOST' | 'PLAYER') => set({ role }),
 
-    createRoom: (name) => {
+    createRoom: (name: string) => {
         get().socket?.emit('createRoom', { name });
     },
 
-    joinRoom: (name, code, avatar) => {
+    joinRoom: (name: string, code: string, avatar?: string) => {
         get().socket?.emit('joinRoom', { name, code, avatar });
     },
 
@@ -90,16 +94,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
         get().socket?.emit('startGame');
     },
 
-    selectGame: (gameId) => {
+    selectGame: (gameId: string) => {
         get().socket?.emit('selectGame', gameId);
     },
 
-    voteGame: (gameId) => {
+    voteGame: (gameId: string) => {
         get().socket?.emit('voteGame', gameId);
     },
 
-    gameInput: (data) => {
+    gameInput: (data: any) => {
         get().socket?.emit('gameInput', data);
+    },
+
+    sendChat: (message: string) => {
+        get().socket?.emit('chatMessage', message);
     },
 
     nextRound: () => {

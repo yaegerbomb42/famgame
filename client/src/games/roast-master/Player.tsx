@@ -34,7 +34,7 @@ const RoastMasterPlayer: React.FC = () => {
     const [votedIdx, setVotedIdx] = useState<number | null>(null);
 
     const gameData = gameState?.gameData;
-    const me = socket ? gameState?.players[socket.id] : null;
+    const me = socket?.id ? gameState?.players[socket.id] : null;
 
     // Pattern: Adjust state during rendering to reset on phase change
     const [prevPhase, setPrevPhase] = useState(gameData?.phase);

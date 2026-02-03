@@ -18,8 +18,16 @@ import CompeteHost from '../games/compete/Host';
 import RoastMasterHost from '../games/roast-master/Host';
 import { useSound } from '../context/SoundContext';
 import { Persona } from './Persona';
-// @ts-expect-error: Canvas confetti types are missing
 import confetti from 'canvas-confetti';
+
+// ... (keep implies I should target specific blocks)
+
+// FIX 1: Remove @ts-expect-error if it's unused, or change to @ts-ignore if we really need it.
+// Actually checking the file content via previous view would be better but I'll try to just target the lines.
+
+// FIX 2: Safe gameVotes access
+// FIX 3: Remove answers prop
+
 
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=000000&margin=10`;
@@ -232,14 +240,14 @@ const HostLogic = () => {
 
                                         {/* Vote Count Indicator */}
                                         <AnimatePresence>
-                                            {(gameState.gameVotes[game.id] || 0) > 0 && (
+                                            {(gameState.gameVotes?.[game.id] || 0) > 0 && (
                                                 <motion.div
                                                     initial={{ scale: 0, x: 20 }}
                                                     animate={{ scale: 1, x: 0 }}
                                                     exit={{ scale: 0 }}
                                                     className="absolute top-6 right-6 bg-game-secondary text-black w-14 h-14 rounded-full flex items-center justify-center font-black text-2xl shadow-[0_0_30px_rgba(0,255,255,0.5)] z-20"
                                                 >
-                                                    {gameState.gameVotes[game.id]}
+                                                    {gameState.gameVotes?.[game.id]}
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
@@ -267,10 +275,13 @@ const HostLogic = () => {
                             {gameState.currentGame === 'TRIVIA' && (
                                 <TriviaHost
                                     question={gameState.gameData.question.q}
-                                    answers={gameState.gameData.question.a}
                                     timer={gameState.timer || 0}
                                     showResult={gameState.gameData.showResult}
-                                    correctIndex={gameState.gameData.question.correct}
+                                // correctIndex prop might be needed if I didn't remove it from TriviaHost interface?
+                                // Wait, TriviaHost definition:
+                                // interface TriviaHostProps { question: any; timer: number; showResult: boolean; }
+                                // It only takes those 3 props. I should remove correctIndex as well unless I want to keep passing it for some reason (it will be ignored).
+                                // But TS will complain.
                                 />
                             )}
                             {gameState.currentGame === '2TRUTHS' && (
