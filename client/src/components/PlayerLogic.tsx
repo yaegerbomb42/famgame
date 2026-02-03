@@ -3,9 +3,38 @@ import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import TriviaPlayer from '../games/trivia/Player';
 import BuzzPlayer from '../games/buzz/Player';
+import TwoTruthsPlayer from '../games/two-truths/Player';
+import HotTakesPlayer from '../games/hot-takes/Player';
+import PollPlayer from '../games/poll/Player';
+import WordRacePlayer from '../games/word-race/Player';
+import ReactionPlayer from '../games/reaction/Player';
+import EmojiStoryPlayer from '../games/emoji-story/Player';
+import BluffPlayer from '../games/bluff/Player';
+import ThisOrThatPlayer from '../games/this-or-that/Player';
+import SpeedDrawPlayer from '../games/speed-draw/Player';
+import ChainReactionPlayer from '../games/chain-reaction/Player';
+import MindMeldPlayer from '../games/mind-meld/Player';
+import CompetePlayer from '../games/compete/Player';
 import { useSound } from '../context/SoundContext';
+import { ChatPanel } from './ChatPanel';
 
 const AVATARS = ['🙂', '😂', '😎', '🤔', '😍', '🤩', '🤯', '🥳', '👻', '👽', '🤖', '💩', '🐱', '🐶', '🦄', '🐲'];
+const SUPPORTED_GAMES = [
+    'TRIVIA',
+    'BUZZ_IN',
+    '2TRUTHS',
+    'HOT_TAKES',
+    'POLL',
+    'WORD_RACE',
+    'REACTION',
+    'EMOJI_STORY',
+    'BLUFF',
+    'THIS_OR_THAT',
+    'SPEED_DRAW',
+    'CHAIN_REACTION',
+    'MIND_MELD',
+    'COMPETE',
+];
 
 const PlayerLogic = () => {
     const { gameState, isConnected, socket, joinRoom, initSocket } = useGameStore();
@@ -86,6 +115,8 @@ const PlayerLogic = () => {
                 </header>
 
                 <main className="flex-1 relative p-6 flex flex-col overflow-hidden">
+                    <div className="absolute -top-24 -right-24 w-64 h-64 bg-game-primary/20 blur-[80px] rounded-full animate-pulse" />
+                    <div className="absolute bottom-0 -left-32 w-72 h-72 bg-game-secondary/20 blur-[90px] rounded-full animate-pulse" />
                     <AnimatePresence mode='wait'>
                         {gameState.status === 'LOBBY' && (
                             <motion.div
@@ -138,8 +169,44 @@ const PlayerLogic = () => {
                                 {gameState.currentGame === 'BUZZ_IN' && (
                                     <BuzzPlayer />
                                 )}
+                                {gameState.currentGame === '2TRUTHS' && (
+                                    <TwoTruthsPlayer />
+                                )}
+                                {gameState.currentGame === 'HOT_TAKES' && (
+                                    <HotTakesPlayer />
+                                )}
+                                {gameState.currentGame === 'POLL' && (
+                                    <PollPlayer />
+                                )}
+                                {gameState.currentGame === 'WORD_RACE' && (
+                                    <WordRacePlayer />
+                                )}
+                                {gameState.currentGame === 'REACTION' && (
+                                    <ReactionPlayer />
+                                )}
+                                {gameState.currentGame === 'EMOJI_STORY' && (
+                                    <EmojiStoryPlayer />
+                                )}
+                                {gameState.currentGame === 'BLUFF' && (
+                                    <BluffPlayer />
+                                )}
+                                {gameState.currentGame === 'THIS_OR_THAT' && (
+                                    <ThisOrThatPlayer />
+                                )}
+                                {gameState.currentGame === 'SPEED_DRAW' && (
+                                    <SpeedDrawPlayer />
+                                )}
+                                {gameState.currentGame === 'CHAIN_REACTION' && (
+                                    <ChainReactionPlayer />
+                                )}
+                                {gameState.currentGame === 'MIND_MELD' && (
+                                    <MindMeldPlayer />
+                                )}
+                                {gameState.currentGame === 'COMPETE' && (
+                                    <CompetePlayer />
+                                )}
                                 
-                                {!['TRIVIA', 'BUZZ_IN'].includes(gameState.currentGame || '') && (
+                                {!SUPPORTED_GAMES.includes(gameState.currentGame || '') && (
                                     <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
                                         <div className="text-6xl grayscale opacity-50">🕹️</div>
                                         <h3 className="text-2xl font-black uppercase tracking-widest">{gameState.currentGame?.replace('_', ' ')}</h3>
@@ -169,6 +236,7 @@ const PlayerLogic = () => {
                         )}
                     </AnimatePresence>
                 </main>
+                <ChatPanel variant="player" />
             </div>
         )
     }
