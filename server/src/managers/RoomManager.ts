@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { GameState, Player, GameType, IGameLogic, ChatMessage } from '../types';
+import { GameState, GameType, IGameLogic, ChatMessage } from '../types';
 import { TriviaGame } from '../games/Trivia';
 import { TwoTruthsGame } from '../games/TwoTruths';
 import { HotTakesGame } from '../games/HotTakes';
