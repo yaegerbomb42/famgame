@@ -7,7 +7,7 @@ import RoastMasterPlayer from '../games/roast-master/Player';
 import { useSound } from '../context/SoundContext';
 
 const AVATARS = ['🙂', '😂', '😎', '🤔', '😍', '🤩', '🤯', '🥳', '👻', '👽', '🤖', '💩', '🐱', '🐶', '🦄', '🐲'];
-const GAMES = [
+/* const GAMES = [
     { id: 'TRIVIA', name: 'Trivia', icon: '🧠' },
     { id: '2TRUTHS', name: '2 Truths', icon: '🤥' },
     { id: 'HOT_TAKES', name: 'Hot Takes', icon: '🔥' },
@@ -23,10 +23,10 @@ const GAMES = [
     { id: 'MIND_MELD', name: 'Mind Meld', icon: '🧠' },
     { id: 'COMPETE', name: 'Compete', icon: '⚔️' },
     { id: 'ROAST_MASTER', name: 'Roast Master', icon: '🔥' },
-];
+]; */
 
 const PlayerLogic = () => {
-    const { gameState, isConnected, socket, joinRoom, initSocket, voteGame } = useGameStore();
+    const { gameState, isConnected, socket, joinRoom, initSocket } = useGameStore();
     const { playClick, playSuccess, playError } = useSound();
 
     const [joinStep, setJoinStep] = useState<'CODE' | 'DETAILS'>('CODE');
@@ -128,42 +128,26 @@ const PlayerLogic = () => {
                                 key="select"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="flex-1 flex flex-col p-4 overflow-hidden"
+                                className="flex-1 flex flex-col items-center justify-center p-4 text-center space-y-8"
                             >
-                                <div className="text-center mb-8">
-                                    <h2 className="text-4xl font-black uppercase tracking-tighter italic text-game-secondary">VOTE!</h2>
-                                    <p className="text-white/30 text-lg font-bold uppercase tracking-widest">Pick the next vibe</p>
+                                <div className="text-8xl animate-pulse grayscale opacity-50">🎙️</div>
+                                <div>
+                                    <h2 className="text-3xl font-black uppercase tracking-tighter text-game-secondary mb-2">Social Hub</h2>
+                                    <p className="text-white/40 text-lg font-medium">
+                                        Voice channels are open. <br />
+                                        <span className="text-white/60">Chat with the room!</span>
+                                    </p>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 overflow-y-auto pb-12 custom-scrollbar">
-                                    {GAMES.map((game) => {
-                                        const isVoted = me.gameVote === game.id;
-                                        return (
-                                            <motion.button
-                                                key={game.id}
-                                                whileHover={{ scale: 0.98 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={() => { playClick(); voteGame(game.id); }}
-                                                className={`p-6 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 border-4 transition-all relative overflow-hidden ${isVoted
-                                                    ? 'bg-game-primary border-white shadow-[0_0_40px_rgba(255,0,255,0.4)]'
-                                                    : 'bg-white/5 border-white/10 active:border-game-primary'
-                                                    }`}
-                                            >
-                                                <div className="text-6xl drop-shadow-2xl">{game.icon}</div>
-                                                <div className={`text-sm font-black uppercase tracking-widest text-center ${isVoted ? 'text-white' : 'text-white/60'}`}>
-                                                    {game.name}
-                                                </div>
-                                                {isVoted && (
-                                                    <motion.div
-                                                        layoutId="vote-check"
-                                                        className="absolute top-3 right-3 text-2xl"
-                                                    >
-                                                        ✅
-                                                    </motion.div>
-                                                )}
-                                            </motion.button>
-                                        );
-                                    })}
+                                <div className="w-full max-w-xs bg-white/5 rounded-2xl p-6 border border-white/10">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.8)]" />
+                                        <span className="text-xs font-black uppercase tracking-widest text-white/40">Status</span>
+                                    </div>
+                                    <div className="text-left space-y-2">
+                                        <p className="text-white font-bold">Connected to Room</p>
+                                        <p className="text-white/40 text-sm">Waiting for games to be installed...</p>
+                                    </div>
                                 </div>
                             </motion.div>
                         )}
