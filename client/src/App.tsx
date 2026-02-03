@@ -97,6 +97,7 @@ function Home() {
 
 import { VoiceChat } from './components/VoiceChat';
 import { PersonaProvider } from './context/PersonaContext';
+import { Persona } from './components/Persona';
 
 function App() {
   const role = useGameStore((state) => state.role);
@@ -104,6 +105,7 @@ function App() {
   return (
     <SoundProvider>
       <PersonaProvider>
+        <Persona />
         <VoiceChat />
         <AnimatePresence mode="wait">
           {role === 'NONE' && <Home key="home" />}

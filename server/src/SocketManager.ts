@@ -57,7 +57,12 @@ export class SocketManager {
             this.roomManager.state.status = 'GAME_SELECT';
             this.roomManager.state.currentGame = undefined;
             this.roomManager.state.gameData = undefined;
+            this.roomManager.state.chat = [];
             this.roomManager.broadcastState();
+        });
+
+        socket.on('sendChat', ({ text }: { text: string }) => {
+            this.roomManager.handleChat(socket.id, text);
         });
 
         // Game Specific Inputs

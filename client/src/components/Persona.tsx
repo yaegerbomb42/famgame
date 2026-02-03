@@ -27,7 +27,7 @@ export const Persona = () => {
                         }
                     }
                 }}
-                className="relative w-24 h-24"
+                className="relative w-16 h-16 md:w-24 md:h-24"
             >
                 {/* Body */}
                 <div className="absolute inset-0 bg-white rounded-full shadow-[0_0_30px_rgba(255,255,255,0.4)] border-4 border-game-primary flex items-center justify-center overflow-hidden">

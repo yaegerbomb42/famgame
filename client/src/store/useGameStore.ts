@@ -12,6 +12,17 @@ interface Player {
     gameVote?: string;
 }
 
+export interface ChatMessage {
+    id: string;
+    playerId: string | null;
+    name: string;
+    avatar?: string;
+    text: string;
+    timestamp: number;
+    isSystem?: boolean;
+    isAi?: boolean;
+}
+
 interface GameState {
     roomCode: string;
     players: Record<string, Player>;
@@ -19,6 +30,8 @@ interface GameState {
     currentGame?: string;
     gameData?: any;
     timer?: number;
+    chat?: ChatMessage[];
+    aiPersona?: { name: string; avatar: string };
 }
 
 interface GameStore {
@@ -36,6 +49,7 @@ interface GameStore {
     selectGame: (gameId: string) => void;
     nextRound: () => void;
     backToLobby: () => void;
+    sendChat: (text: string) => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -98,5 +112,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     backToLobby: () => {
         get().socket?.emit('backToLobby');
+    },
+    sendChat: (text: string) => {
+        get().socket?.emit('sendChat', { text });
     }
 }));

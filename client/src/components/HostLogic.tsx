@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import TriviaHost from '../games/trivia/Host';
@@ -17,6 +17,25 @@ import MindMeldHost from '../games/mind-meld/Host';
 import CompeteHost from '../games/compete/Host';
 import { useSound } from '../context/SoundContext';
 import confetti from 'canvas-confetti';
+import { usePersona } from '../context/PersonaContext';
+import { ChatPanel } from './ChatPanel';
+
+const GAME_PERSONA_KEYS: Record<string, string> = {
+    TRIVIA: 'TRIVIA_SELECT',
+    '2TRUTHS': 'TWO_TRUTHS_SELECT',
+    HOT_TAKES: 'HOT_TAKES_SELECT',
+    POLL: 'POLL_PARTY_SELECT',
+    BUZZ_IN: 'BUZZ_IN_SELECT',
+    WORD_RACE: 'WORD_RACE_SELECT',
+    REACTION: 'REACTION_SELECT',
+    EMOJI_STORY: 'EMOJI_STORY_SELECT',
+    BLUFF: 'BLUFF_SELECT',
+    THIS_OR_THAT: 'THIS_OR_THAT_SELECT',
+    SPEED_DRAW: 'SPEED_DRAW_SELECT',
+    CHAIN_REACTION: 'CHAIN_REACTION_SELECT',
+    MIND_MELD: 'MIND_MELD_SELECT',
+    COMPETE: 'COMPETE_SELECT',
+};
 
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=000000&margin=10`;
@@ -50,6 +69,10 @@ const GAMES = [
 const HostLogic = () => {
     const { gameState, createRoom, selectGame, nextRound, backToLobby, startGame } = useGameStore();
     const { playSuccess, setBGM } = useSound();
+    const { speak } = usePersona();
+    const lastStatus = useRef<string | null>(null);
+    const lastGame = useRef<string | null>(null);
+    const lastPlayerCount = useRef(0);
 
     useEffect(() => {
         if (gameState?.status === 'RESULTS') {
@@ -62,6 +85,33 @@ const HostLogic = () => {
             playSuccess();
         }
     }, [gameState?.status, playSuccess]);
+
+    useEffect(() => {
+        if (!gameState) return;
+        const playerCount = Object.values(gameState.players).filter(p => !p.isHost).length;
+
+        if (gameState.status !== lastStatus.current) {
+            if (gameState.status === 'GAME_SELECT') {
+                speak('GAME_START');
+            }
+            if (gameState.status === 'LOBBY') {
+                speak('LOBBY_WAITING');
+            }
+            lastStatus.current = gameState.status;
+        }
+
+        if (gameState.status === 'LOBBY' && playerCount > lastPlayerCount.current) {
+            speak('LOBBY_JOIN');
+        }
+
+        if (gameState.currentGame && gameState.currentGame !== lastGame.current) {
+            const key = GAME_PERSONA_KEYS[gameState.currentGame] ?? 'GAME_START';
+            speak(key as any);
+            lastGame.current = gameState.currentGame;
+        }
+
+        lastPlayerCount.current = playerCount;
+    }, [gameState, speak]);
 
     useEffect(() => {
         if (gameState?.status === 'LOBBY' || gameState?.status === 'GAME_SELECT') {
@@ -444,6 +494,7 @@ const HostLogic = () => {
                     )}
                 </AnimatePresence>
             </main>
+            <ChatPanel variant="host" />
         </div>
     );
 };
