@@ -4,7 +4,7 @@ import { useGameStore } from '../../store/useGameStore';
 import { useSound } from '../../context/SoundContext';
 
 const WordRacePlayer = () => {
-    const { socket, gameState } = useGameStore();
+    const { gameState, gameInput } = useGameStore();
     const { playClick, playSuccess } = useSound();
     const [input, setInput] = useState('');
 
@@ -14,7 +14,7 @@ const WordRacePlayer = () => {
         e.preventDefault();
         const trimmed = input.trim();
         if (trimmed.length > 2) {
-            socket?.emit('submitWord', trimmed);
+            gameInput({ word: trimmed });
             setInput('');
             playSuccess();
             if (navigator.vibrate) navigator.vibrate(50);
@@ -50,7 +50,7 @@ const WordRacePlayer = () => {
                             autoCorrect="off"
                             spellCheck="false"
                         />
-                        <motion.div 
+                        <motion.div
                             animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
                             transition={{ repeat: Infinity, duration: 2 }}
                             className="absolute -top-6 -right-2 text-5xl"

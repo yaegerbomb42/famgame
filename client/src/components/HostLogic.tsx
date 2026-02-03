@@ -15,7 +15,10 @@ import SpeedDrawHost from '../games/speed-draw/Host';
 import ChainReactionHost from '../games/chain-reaction/Host';
 import MindMeldHost from '../games/mind-meld/Host';
 import CompeteHost from '../games/compete/Host';
+import RoastMasterHost from '../games/roast-master/Host';
 import { useSound } from '../context/SoundContext';
+import { Persona } from './Persona';
+// @ts-expect-error: Canvas confetti types are missing
 import confetti from 'canvas-confetti';
 
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
@@ -45,6 +48,7 @@ const GAMES = [
     { id: 'CHAIN_REACTION', name: 'Chain Reaction', icon: '⛓️', color: '#ff4757' },
     { id: 'MIND_MELD', name: 'Mind Meld', icon: '🧠', color: '#70a1ff' },
     { id: 'COMPETE', name: 'Compete', icon: '⚔️', color: '#eccc68' },
+    { id: 'ROAST_MASTER', name: 'Roast Master', icon: '🔥', color: '#f0932b' },
 ];
 
 const HostLogic = () => {
@@ -81,20 +85,21 @@ const HostLogic = () => {
 
     if (!gameState) return (
         <div className="flex h-screen items-center justify-center bg-game-bg">
-            <motion.div 
+            <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-16 h-16 border-4 border-game-primary border-t-transparent rounded-full" 
+                className="w-16 h-16 border-4 border-game-primary border-t-transparent rounded-full"
             />
         </div>
     );
 
     const joinUrl = `${window.location.origin}?code=${gameState.roomCode}`;
-    const players = Object.values(gameState.players).filter(p => !p.isHost);
+    const players = Object.values(gameState.players).filter((p: any) => !p.isHost);
     const playerCount = players.length;
 
     return (
         <div className="min-h-screen flex flex-col bg-game-bg text-white overflow-hidden">
+            <Persona />
             {/* Header */}
             <header className="flex justify-between items-center p-6 z-20">
                 <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/10">
@@ -126,12 +131,14 @@ const HostLogic = () => {
                             className="w-full max-w-7xl flex flex-col items-center"
                         >
                             <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-32 mb-16 w-full">
-                                <motion.div 
+                                <motion.div
                                     whileHover={{ scale: 1.05, rotate: -2 }}
-                                    className="p-10 bg-white rounded-[3rem] border-[12px] border-white/10 shadow-[0_0_100px_rgba(255,255,255,0.1)]"
+                                    className="p-12 bg-white rounded-[4rem] border-[16px] border-white/5 shadow-[0_0_120px_rgba(255,255,255,0.15)] flex flex-col items-center"
                                 >
-                                    <QRCode url={joinUrl} size={280} />
-                                    <p className="mt-8 text-3xl font-black text-black text-center uppercase tracking-[0.2em]">Scan to join</p>
+                                    <div className="p-4 bg-white rounded-3xl">
+                                        <QRCode url={joinUrl} size={300} />
+                                    </div>
+                                    <p className="mt-8 text-4xl font-black text-black text-center uppercase tracking-[0.2em]">Scan to join</p>
                                 </motion.div>
 
                                 <div className="text-center">
@@ -157,22 +164,23 @@ const HostLogic = () => {
                                         <p className="text-3xl font-black uppercase tracking-widest text-white/20">Waiting for first player...</p>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
                                         {players.map((player, i) => (
                                             <motion.div
                                                 key={player.id}
-                                                initial={{ scale: 0, y: 20 }}
-                                                animate={{ scale: 1, y: 0 }}
-                                                transition={{ type: "spring", delay: i * 0.1 }}
-                                                className="bg-white/5 p-8 rounded-[2.5rem] flex flex-col items-center justify-center border-2 border-white/10 shadow-xl group relative overflow-hidden"
+                                                initial={{ scale: 0, y: 20, rotate: i % 2 === 0 ? -5 : 5 }}
+                                                animate={{ scale: 1, y: 0, rotate: 0 }}
+                                                transition={{ type: "spring", stiffness: 260, damping: 20, delay: i * 0.05 }}
+                                                className="bg-white/5 backdrop-blur-xl p-8 rounded-[3rem] flex flex-col items-center justify-center border-4 border-white/5 shadow-2xl group relative overflow-hidden"
                                             >
-                                                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-game-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <div className="text-7xl mb-4 transform group-hover:scale-110 group-hover:rotate-6 transition-transform z-10">
+                                                <div className="absolute inset-0 bg-gradient-to-br from-game-primary/20 via-transparent to-game-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                                <div className="text-8xl mb-6 transform group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 z-10 drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
                                                     {player.avatar || '👾'}
                                                 </div>
-                                                <div className="font-black text-xl truncate w-full text-center uppercase tracking-tight z-10">
+                                                <div className="font-black text-2xl truncate w-full text-center uppercase tracking-tighter z-10 text-white group-hover:text-game-secondary transition-colors">
                                                     {player.name}
                                                 </div>
+                                                <div className="absolute -bottom-2 w-full h-1 bg-gradient-to-r from-game-primary to-game-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                                             </motion.div>
                                         ))}
                                     </div>
@@ -185,11 +193,10 @@ const HostLogic = () => {
                                     whileTap={{ scale: 0.9 }}
                                     onClick={startGame}
                                     disabled={playerCount === 0}
-                                    className={`text-4xl md:text-6xl font-black px-20 py-8 rounded-[3rem] uppercase tracking-[0.2em] border-t-8 border-white/20 transition-all ${
-                                        playerCount === 0
-                                            ? 'bg-white/10 opacity-30 cursor-not-allowed'
-                                            : 'bg-game-primary shadow-[0_0_100px_rgba(255,0,255,0.4)] hover:shadow-[0_0_150px_rgba(255,0,255,0.7)]'
-                                    }`}
+                                    className={`text-4xl md:text-6xl font-black px-20 py-8 rounded-[3rem] uppercase tracking-[0.2em] border-t-8 border-white/20 transition-all ${playerCount === 0
+                                        ? 'bg-white/10 opacity-30 cursor-not-allowed'
+                                        : 'bg-game-primary shadow-[0_0_100px_rgba(255,0,255,0.4)] hover:shadow-[0_0_150px_rgba(255,0,255,0.7)]'
+                                        }`}
                                 >
                                     {playerCount === 0 ? 'Need Players' : 'LFG! 🚀'}
                                 </motion.button>
@@ -216,20 +223,35 @@ const HostLogic = () => {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.05 }}
-                                        whileHover={{ scale: 1.05, y: -8, borderColor: game.color }}
+                                        whileHover={{ scale: 1.05, y: -8 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => selectGame(game.id)}
-                                        className="bg-white/5 p-10 rounded-[3rem] flex flex-col items-center justify-center gap-6 border-4 border-white/5 transition-all group relative overflow-hidden"
+                                        className="bg-white/5 p-10 rounded-[4rem] flex flex-col items-center justify-center gap-6 border-4 border-white/5 transition-all group relative overflow-hidden h-[350px]"
                                     >
-                                        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <div className="text-8xl drop-shadow-2xl transform group-hover:rotate-12 transition-transform">
+                                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-game-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                        {/* Vote Count Indicator */}
+                                        <AnimatePresence>
+                                            {(gameState.gameVotes[game.id] || 0) > 0 && (
+                                                <motion.div
+                                                    initial={{ scale: 0, x: 20 }}
+                                                    animate={{ scale: 1, x: 0 }}
+                                                    exit={{ scale: 0 }}
+                                                    className="absolute top-6 right-6 bg-game-secondary text-black w-14 h-14 rounded-full flex items-center justify-center font-black text-2xl shadow-[0_0_30px_rgba(0,255,255,0.5)] z-20"
+                                                >
+                                                    {gameState.gameVotes[game.id]}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
+                                        <div className="text-[10rem] drop-shadow-2xl transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
                                             {game.icon}
                                         </div>
-                                        <div className="text-3xl font-black uppercase tracking-widest">
+                                        <div className="text-3xl font-black uppercase tracking-widest text-center">
                                             {game.name}
                                         </div>
-                                        <div 
-                                            className="px-8 py-3 rounded-full text-lg font-black uppercase tracking-widest transition-colors bg-white/10 group-hover:bg-white group-hover:text-black"
+                                        <div
+                                            className="px-10 py-4 rounded-full text-xl font-black uppercase tracking-widest transition-all bg-white/10 group-hover:bg-game-primary group-hover:text-white group-hover:shadow-[0_0_40px_rgba(255,0,255,0.5)]"
                                         >
                                             Play
                                         </div>
@@ -370,6 +392,7 @@ const HostLogic = () => {
                                     timer={gameState.timer || 0}
                                 />
                             )}
+                            {gameState.currentGame === 'ROAST_MASTER' && <RoastMasterHost />}
 
                             {/* Global Game Controls */}
                             <motion.button
@@ -396,19 +419,18 @@ const HostLogic = () => {
 
                             <div className="space-y-6">
                                 {Object.values(gameState.players)
-                                    .filter(p => !p.isHost)
-                                    .sort((a, b) => b.score - a.score)
-                                    .map((player, i) => (
+                                    .filter((p: any) => !p.isHost)
+                                    .sort((a: any, b: any) => b.score - a.score)
+                                    .map((player: any, i) => (
                                         <motion.div
                                             key={player.id}
                                             initial={{ x: -100, opacity: 0 }}
                                             animate={{ x: 0, opacity: 1 }}
                                             transition={{ delay: i * 0.1, type: "spring" }}
-                                            className={`p-8 rounded-[2.5rem] flex items-center justify-between border-4 ${
-                                                i === 0
-                                                    ? 'bg-yellow-500/10 border-yellow-500 shadow-[0_0_50px_rgba(234,179,8,0.2)]'
-                                                    : 'bg-white/5 border-white/5'
-                                            }`}
+                                            className={`p-8 rounded-[2.5rem] flex items-center justify-between border-4 ${i === 0
+                                                ? 'bg-yellow-500/10 border-yellow-500 shadow-[0_0_50px_rgba(234,179,8,0.2)]'
+                                                : 'bg-white/5 border-white/5'
+                                                }`}
                                         >
                                             <div className="flex items-center gap-8">
                                                 <span className={`text-5xl font-black ${i === 0 ? 'text-yellow-500' : 'text-white/20'}`}>

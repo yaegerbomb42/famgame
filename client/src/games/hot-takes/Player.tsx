@@ -4,9 +4,9 @@ import { useGameStore } from '../../store/useGameStore';
 import { useSound } from '../../context/SoundContext';
 
 const HotTakesPlayer = () => {
-    const { socket, gameState } = useGameStore();
+    const { socket, gameState, gameInput } = useGameStore();
     const { playClick, playSuccess, playError } = useSound();
-    
+
     const [take, setTake] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const [voted, setVoted] = useState(false);
@@ -21,14 +21,14 @@ const HotTakesPlayer = () => {
             playError();
             return;
         }
-        socket?.emit('submitTake', take);
+        gameInput({ text: take });
         setSubmitted(true);
         playSuccess();
     };
 
     const handleVote = (pid: string) => {
         if (voted) return;
-        socket?.emit('voteTake', pid);
+        gameInput({ targetId: pid });
         setVoted(true);
         playClick();
     };

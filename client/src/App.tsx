@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from './store/useGameStore';
+import type { GameStore } from './store/useGameStore';
 import HostLogic from './components/HostLogic';
 import PlayerLogic from './components/PlayerLogic';
 import { SoundProvider } from './context/SoundContext';
@@ -20,8 +21,8 @@ const GAME_MODES = [
 ];
 
 function Home() {
-  const setRole = useGameStore((state) => state.setRole);
-  const initSocket = useGameStore((state) => state.initSocket);
+  const setRole = useGameStore((state: GameStore) => state.setRole);
+  const initSocket = useGameStore((state: GameStore) => state.initSocket);
 
   useEffect(() => {
     initSocket();
@@ -30,13 +31,13 @@ function Home() {
   return (
     <div className="fixed inset-0 bg-game-bg text-white font-sans overflow-auto flex flex-col">
       {/* Animated gradient orbs */}
-      <div className="fixed -top-[20%] -left-[15%] w-[70vw] h-[70vw] max-w-[600px] max-h-[600px] bg-radial-gradient-purple blur-[60px] opacity-50 animate-float pointer-events-none z-0" 
-           style={{ background: 'radial-gradient(circle, rgba(255,0,255,0.4) 0%, transparent 70%)' }} />
+      <div className="fixed -top-[20%] -left-[15%] w-[70vw] h-[70vw] max-w-[600px] max-h-[600px] bg-radial-gradient-purple blur-[60px] opacity-50 animate-float pointer-events-none z-0"
+        style={{ background: 'radial-gradient(circle, rgba(255,0,255,0.4) 0%, transparent 70%)' }} />
       <div className="fixed -bottom-[20%] -right-[15%] w-[70vw] h-[70vw] max-w-[600px] max-h-[600px] bg-radial-gradient-cyan blur-[60px] opacity-50 animate-float-reverse pointer-events-none z-0"
-           style={{ background: 'radial-gradient(circle, rgba(0,255,255,0.4) 0%, transparent 70%)' }} />
+        style={{ background: 'radial-gradient(circle, rgba(0,255,255,0.4) 0%, transparent 70%)' }} />
 
       <main className="relative flex-1 flex flex-col items-center justify-center min-h-screen p-4 md:p-8 z-10">
-        <motion.h1 
+        <motion.h1
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="text-[clamp(3rem,12vw,10rem)] font-black mb-2 tracking-tighter text-center leading-none"
@@ -46,11 +47,11 @@ function Home() {
 
         <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-6 max-w-2xl px-2">
           {GAME_MODES.map((game, i) => (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              key={game.name} 
+              key={game.name}
               className="flex items-center gap-1 px-3 py-1 bg-white/5 rounded-full text-[clamp(0.65rem,1.8vw,0.9rem)] whitespace-nowrap border border-white/5"
             >
               <span>{game.icon}</span>
@@ -97,18 +98,33 @@ function Home() {
 
 import { VoiceChat } from './components/VoiceChat';
 import { PersonaProvider } from './context/PersonaContext';
+import LoadingScreen from './components/LoadingScreen';
 
 function App() {
-  const role = useGameStore((state) => state.role);
+  const role = useGameStore((state: GameStore) => state.role);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <SoundProvider>
       <PersonaProvider>
         <VoiceChat />
         <AnimatePresence mode="wait">
-          {role === 'NONE' && <Home key="home" />}
-          {role === 'HOST' && <HostLogic key="host" />}
-          {role === 'PLAYER' && <PlayerLogic key="player" />}
+          {loading ? (
+            <LoadingScreen key="loading" />
+          ) : (
+            <>
+              {role === 'NONE' && <Home key="home" />}
+              {role === 'HOST' && <HostLogic key="host" />}
+              {role === 'PLAYER' && <PlayerLogic key="player" />}
+            </>
+          )}
         </AnimatePresence>
       </PersonaProvider>
     </SoundProvider>

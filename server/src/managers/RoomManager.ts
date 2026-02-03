@@ -14,6 +14,7 @@ import { SpeedDrawGame } from '../games/SpeedDraw';
 import { ChainReactionGame } from '../games/ChainReaction';
 import { MindMeldGame } from '../games/MindMeld';
 import { CompeteGame } from '../games/Compete';
+import { RoastMasterGame } from '../games/RoastMaster';
 
 export class RoomManager {
     public state: GameState;
@@ -121,6 +122,7 @@ export class RoomManager {
             case 'CHAIN_REACTION': this.activeGame = new ChainReactionGame(); break;
             case 'MIND_MELD': this.activeGame = new MindMeldGame(); break;
             case 'COMPETE': this.activeGame = new CompeteGame(); break;
+            case 'ROAST_MASTER': this.activeGame = new RoastMasterGame(); break;
             default:
                 this.activeGame = null;
                 this.state.gameData = { phase: 'WIP' };

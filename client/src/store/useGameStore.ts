@@ -21,12 +21,12 @@ interface GameState {
     timer?: number;
 }
 
-interface GameStore {
+export interface GameStore {
     socket: Socket | null;
     gameState: GameState | null;
     isConnected: boolean;
     role: 'NONE' | 'HOST' | 'PLAYER';
-    
+
     // Actions
     initSocket: () => void;
     setRole: (role: 'NONE' | 'HOST' | 'PLAYER') => void;
@@ -34,6 +34,8 @@ interface GameStore {
     joinRoom: (name: string, code: string, avatar?: string) => void;
     startGame: () => void;
     selectGame: (gameId: string) => void;
+    voteGame: (gameId: string) => void;
+    gameInput: (data: any) => void;
     nextRound: () => void;
     backToLobby: () => void;
 }
@@ -90,6 +92,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     selectGame: (gameId) => {
         get().socket?.emit('selectGame', gameId);
+    },
+
+    voteGame: (gameId) => {
+        get().socket?.emit('voteGame', gameId);
+    },
+
+    gameInput: (data) => {
+        get().socket?.emit('gameInput', data);
     },
 
     nextRound: () => {

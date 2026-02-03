@@ -3,14 +3,32 @@ import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import TriviaPlayer from '../games/trivia/Player';
 import BuzzPlayer from '../games/buzz/Player';
+import RoastMasterPlayer from '../games/roast-master/Player';
 import { useSound } from '../context/SoundContext';
 
 const AVATARS = ['🙂', '😂', '😎', '🤔', '😍', '🤩', '🤯', '🥳', '👻', '👽', '🤖', '💩', '🐱', '🐶', '🦄', '🐲'];
+const GAMES = [
+    { id: 'TRIVIA', name: 'Trivia', icon: '🧠' },
+    { id: '2TRUTHS', name: '2 Truths', icon: '🤥' },
+    { id: 'HOT_TAKES', name: 'Hot Takes', icon: '🔥' },
+    { id: 'POLL', name: 'Poll Party', icon: '📊' },
+    { id: 'BUZZ_IN', name: 'Buzz In', icon: '🔔' },
+    { id: 'WORD_RACE', name: 'Word Race', icon: '⌨️' },
+    { id: 'REACTION', name: 'Reaction', icon: '⚡' },
+    { id: 'EMOJI_STORY', name: 'Emoji Story', icon: '📖' },
+    { id: 'BLUFF', name: 'Bluff', icon: '🎭' },
+    { id: 'THIS_OR_THAT', name: 'This or That', icon: '⚖️' },
+    { id: 'SPEED_DRAW', name: 'Speed Draw', icon: '🎨' },
+    { id: 'CHAIN_REACTION', name: 'Chain Reaction', icon: '⛓️' },
+    { id: 'MIND_MELD', name: 'Mind Meld', icon: '🧠' },
+    { id: 'COMPETE', name: 'Compete', icon: '⚔️' },
+    { id: 'ROAST_MASTER', name: 'Roast Master', icon: '🔥' },
+];
 
 const PlayerLogic = () => {
-    const { gameState, isConnected, socket, joinRoom, initSocket } = useGameStore();
+    const { gameState, isConnected, socket, joinRoom, initSocket, voteGame } = useGameStore();
     const { playClick, playSuccess, playError } = useSound();
-    
+
     const [joinStep, setJoinStep] = useState<'CODE' | 'DETAILS'>('CODE');
     const [roomCode, setRoomCode] = useState('');
     const [name, setName] = useState('');
@@ -49,7 +67,7 @@ const PlayerLogic = () => {
     if (!isConnected) {
         return (
             <div className="fixed inset-0 bg-game-bg flex flex-col items-center justify-center p-8 text-center space-y-6">
-                <motion.div 
+                <motion.div
                     animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
                     transition={{ repeat: Infinity, duration: 2 }}
                     className="text-6xl"
@@ -110,23 +128,48 @@ const PlayerLogic = () => {
                                 key="select"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="flex-1 flex flex-col items-center justify-center text-center space-y-6"
+                                className="flex-1 flex flex-col p-4 overflow-hidden"
                             >
-                                <motion.div 
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                    className="text-7xl"
-                                >
-                                    🎡
-                                </motion.div>
-                                <p className="text-2xl font-black uppercase tracking-widest text-white/30">
-                                    Host is picking a game...
-                                </p>
+                                <div className="text-center mb-8">
+                                    <h2 className="text-4xl font-black uppercase tracking-tighter italic text-game-secondary">VOTE!</h2>
+                                    <p className="text-white/30 text-lg font-bold uppercase tracking-widest">Pick the next vibe</p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 overflow-y-auto pb-12 custom-scrollbar">
+                                    {GAMES.map((game) => {
+                                        const isVoted = me.gameVote === game.id;
+                                        return (
+                                            <motion.button
+                                                key={game.id}
+                                                whileHover={{ scale: 0.98 }}
+                                                whileTap={{ scale: 0.9 }}
+                                                onClick={() => { playClick(); voteGame(game.id); }}
+                                                className={`p-6 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 border-4 transition-all relative overflow-hidden ${isVoted
+                                                    ? 'bg-game-primary border-white shadow-[0_0_40px_rgba(255,0,255,0.4)]'
+                                                    : 'bg-white/5 border-white/10 active:border-game-primary'
+                                                    }`}
+                                            >
+                                                <div className="text-6xl drop-shadow-2xl">{game.icon}</div>
+                                                <div className={`text-sm font-black uppercase tracking-widest text-center ${isVoted ? 'text-white' : 'text-white/60'}`}>
+                                                    {game.name}
+                                                </div>
+                                                {isVoted && (
+                                                    <motion.div
+                                                        layoutId="vote-check"
+                                                        className="absolute top-3 right-3 text-2xl"
+                                                    >
+                                                        ✅
+                                                    </motion.div>
+                                                )}
+                                            </motion.button>
+                                        );
+                                    })}
+                                </div>
                             </motion.div>
                         )}
 
                         {gameState.status === 'PLAYING' && (
-                            <motion.div 
+                            <motion.div
                                 key="playing"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -138,7 +181,10 @@ const PlayerLogic = () => {
                                 {gameState.currentGame === 'BUZZ_IN' && (
                                     <BuzzPlayer />
                                 )}
-                                
+                                {gameState.currentGame === 'ROAST_MASTER' && (
+                                    <RoastMasterPlayer />
+                                )}
+
                                 {!['TRIVIA', 'BUZZ_IN'].includes(gameState.currentGame || '') && (
                                     <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
                                         <div className="text-6xl grayscale opacity-50">🕹️</div>
@@ -150,21 +196,28 @@ const PlayerLogic = () => {
                         )}
 
                         {gameState.status === 'RESULTS' && (
-                            <motion.div 
+                            <motion.div
                                 key="results"
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="flex-1 flex flex-col items-center justify-center text-center space-y-8"
                             >
-                                <h2 className="text-6xl font-black text-game-accent uppercase tracking-tighter italic">FINISH!</h2>
-                                <div className="relative">
-                                    <div className="absolute inset-0 bg-game-secondary blur-3xl opacity-20 animate-pulse" />
-                                    <div className="bg-white/5 p-12 rounded-[4rem] flex flex-col items-center border-4 border-white/10 relative z-10">
-                                        <span className="text-xs font-black uppercase text-white/30 tracking-[0.3em] mb-4">Your Final Score</span>
-                                        <span className="text-8xl font-black tabular-nums drop-shadow-2xl">{me.score}</span>
+                                <div className="absolute inset-0 bg-gradient-to-t from-game-primary/20 via-transparent to-game-secondary/20 pointer-events-none" />
+                                <h2 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 uppercase tracking-tighter italic drop-shadow-glow">FINISH!</h2>
+                                <div className="relative group">
+                                    <div className="absolute inset-x-0 -inset-y-4 bg-gradient-to-r from-game-primary to-game-secondary blur-2xl opacity-40 group-hover:opacity-60 transition-opacity" />
+                                    <div className="bg-white/10 backdrop-blur-3xl p-12 rounded-[5rem] flex flex-col items-center border-[6px] border-white/20 relative z-10 shadow-2xl">
+                                        <span className="text-xs font-black uppercase text-white/40 tracking-[0.4em] mb-4">Total Score</span>
+                                        <motion.span
+                                            initial={{ scale: 0.5 }}
+                                            animate={{ scale: 1 }}
+                                            className="text-9xl font-black tabular-nums drop-shadow-[0_0_30px_rgba(255,255,255,0.3)] text-white"
+                                        >
+                                            {me.score.toLocaleString()}
+                                        </motion.span>
                                     </div>
                                 </div>
-                                <p className="text-white/40 font-medium">Wait for the Host to restart</p>
+                                <p className="text-white/50 font-black uppercase tracking-widest animate-pulse">Wait for the Host to go again</p>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -178,7 +231,7 @@ const PlayerLogic = () => {
         <div className="fixed inset-0 bg-game-bg flex flex-col items-center justify-center p-6 overflow-y-auto">
             <div className="w-full max-w-md space-y-12 py-12">
                 <header className="text-center space-y-2">
-                    <motion.h1 
+                    <motion.h1
                         initial={{ y: -20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         className="text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-game-secondary to-blue-500"
@@ -197,7 +250,7 @@ const PlayerLogic = () => {
                             initial={{ x: 50, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -50, opacity: 0 }}
-                            onSubmit={(e) => { e.preventDefault(); if(roomCode.length === 4) { playClick(); setJoinStep('DETAILS'); } }}
+                            onSubmit={(e) => { e.preventDefault(); if (roomCode.length === 4) { playClick(); setJoinStep('DETAILS'); } }}
                             className="space-y-8"
                         >
                             <input

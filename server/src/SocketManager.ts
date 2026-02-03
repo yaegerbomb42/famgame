@@ -65,6 +65,20 @@ export class SocketManager {
             this.roomManager.handleInput(socket.id, { answerIndex });
         });
 
+        socket.on('gameInput', (data: any) => {
+            this.roomManager.handleInput(socket.id, data);
+        });
+
+        // Backward compatibility for specific games until updated
+        socket.on('submitTake', (text: string) => this.roomManager.handleInput(socket.id, { text }));
+        socket.on('voteTake', (targetId: string) => this.roomManager.handleInput(socket.id, { targetId }));
+        socket.on('submitWord', (word: string) => this.roomManager.handleInput(socket.id, { word }));
+        socket.on('emojiInput', (emojis: string) => this.roomManager.handleInput(socket.id, { emojis }));
+        socket.on('submitGuess', (guess: string) => this.roomManager.handleInput(socket.id, { guess }));
+        socket.on('submitClaim', (data: any) => this.roomManager.handleInput(socket.id, data));
+        socket.on('voteBluff', (lying: boolean) => this.roomManager.handleInput(socket.id, { lying }));
+        socket.on('buzz', () => this.roomManager.handleInput(socket.id, { action: 'buzz' }));
+
         // Add other event handlers here as we port games
     }
 }

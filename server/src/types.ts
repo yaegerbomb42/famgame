@@ -14,7 +14,8 @@ export type GameType =
     | 'SPEED_DRAW'
     | 'CHAIN_REACTION'
     | 'MIND_MELD'
-    | 'COMPETE';
+    | 'COMPETE'
+    | 'ROAST_MASTER';
 
 export interface Player {
     id: string;
