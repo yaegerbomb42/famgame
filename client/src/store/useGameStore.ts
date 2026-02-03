@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
+import type { GameType } from '../../../server/src/types';
 
 const SOCKET_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
 
@@ -27,7 +28,7 @@ interface GameState {
     roomCode: string;
     players: Record<string, Player>;
     status: 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS';
-    currentGame?: string;
+    currentGame?: GameType;
     gameData?: any;
     timer?: number;
     chat?: ChatMessage[];

@@ -19,8 +19,10 @@ import { useSound } from '../context/SoundContext';
 import confetti from 'canvas-confetti';
 import { usePersona } from '../context/PersonaContext';
 import { ChatPanel } from './ChatPanel';
+import type { GameType } from '../../../server/src/types';
+import { PERSONA_SCRIPTS } from '../data/personaScripts';
 
-const GAME_PERSONA_KEYS: Record<string, string> = {
+const GAME_PERSONA_KEYS: Record<GameType, keyof typeof PERSONA_SCRIPTS> = {
     TRIVIA: 'TRIVIA_SELECT',
     '2TRUTHS': 'TWO_TRUTHS_SELECT',
     HOT_TAKES: 'HOT_TAKES_SELECT',
@@ -35,7 +37,7 @@ const GAME_PERSONA_KEYS: Record<string, string> = {
     CHAIN_REACTION: 'CHAIN_REACTION_SELECT',
     MIND_MELD: 'MIND_MELD_SELECT',
     COMPETE: 'COMPETE_SELECT',
-};
+} as const;
 
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=000000&margin=10`;
@@ -71,7 +73,7 @@ const HostLogic = () => {
     const { playSuccess, setBGM } = useSound();
     const { speak } = usePersona();
     const lastStatus = useRef<string | null>(null);
-    const lastGame = useRef<string | null>(null);
+    const lastGame = useRef<GameType | null>(null);
     const lastPlayerCount = useRef(0);
 
     useEffect(() => {
@@ -106,7 +108,7 @@ const HostLogic = () => {
 
         if (gameState.currentGame && gameState.currentGame !== lastGame.current) {
             const key = GAME_PERSONA_KEYS[gameState.currentGame] ?? 'GAME_START';
-            speak(key as any);
+            speak(key);
             lastGame.current = gameState.currentGame;
         }
 
