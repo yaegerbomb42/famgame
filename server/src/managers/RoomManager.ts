@@ -51,20 +51,21 @@ export class RoomManager {
         this.broadcastState();
     }
 
-    public handleJoinRoom(socket: Socket, name: string, code: string, avatar: string) {
+    public handleJoinRoom(socket: Socket, name: string, code: string, avatar: string, color?: string) {
         if (code.toUpperCase() !== this.state.roomCode) {
             socket.emit('error', { message: 'Invalid room code' });
             return;
         }
-        this.addPlayer(socket, name, avatar || '🙂', false);
+        this.addPlayer(socket, name, avatar || '🙂', false, color);
         this.broadcastState();
     }
 
-    private addPlayer(socket: Socket, name: string, avatar: string, isHost: boolean) {
+    private addPlayer(socket: Socket, name: string, avatar: string, isHost: boolean, color?: string) {
         this.state.players[socket.id] = {
             id: socket.id,
             name: name || `Player ${Object.keys(this.state.players).length + 1}`,
             avatar,
+            color,
             score: 0,
             isHost,
         };

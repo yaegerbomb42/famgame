@@ -37,7 +37,7 @@ function Home() {
           animate={{ scale: 1, opacity: 1 }}
           className="text-[clamp(3rem,12vw,10rem)] font-black mb-8 tracking-tighter text-center leading-none"
         >
-          FAM<span className="text-transparent bg-clip-text bg-gradient-to-r from-game-primary to-game-secondary drop-shadow-[0_0_60px_rgba(255,0,255,0.3)]">GAME</span>
+          GAME<span className="text-transparent bg-clip-text bg-gradient-to-r from-game-primary to-game-secondary drop-shadow-[0_0_60px_rgba(255,0,255,0.3)]">NIGHT</span>
         </motion.h1>
 
         <p className="text-[clamp(1.2rem,3vw,1.8rem)] text-white/80 mb-16 text-center font-bold tracking-wide max-w-2xl leading-relaxed">

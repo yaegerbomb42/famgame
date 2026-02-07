@@ -63,7 +63,7 @@ const HostLogic = () => {
                 </div>
 
                 <h1 className="text-3xl font-black tracking-tighter">
-                    FAM<span className="text-transparent bg-clip-text bg-gradient-to-r from-game-primary to-game-secondary">GAME</span>
+                    GAME<span className="text-transparent bg-clip-text bg-gradient-to-r from-game-primary to-game-secondary">NIGHT</span>
                 </h1>
 
                 <button
@@ -108,7 +108,7 @@ const HostLogic = () => {
                                                 GAME
                                             </span>
                                             <span className="block text-white drop-shadow-[5px_5px_0_rgba(255,0,255,1)] ml-24">
-                                                SQUAD
+                                                NIGHT
                                             </span>
                                         </h1>
                                         <div className="flex items-center gap-6 mt-8 ml-4">
@@ -210,8 +210,8 @@ const HostLogic = () => {
                                             onClick={startGame}
                                             disabled={playerCount === 0}
                                             className={`w-full py-6 rounded-2xl text-2xl font-black uppercase tracking-widest transition-all relative overflow-hidden group ${playerCount === 0
-                                                    ? 'bg-white/5 text-white/20 cursor-not-allowed'
-                                                    : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white'
+                                                ? 'bg-white/5 text-white/20 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white'
                                                 }`}
                                         >
                                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 skew-x-12" />
@@ -226,49 +226,47 @@ const HostLogic = () => {
                     )}
 
                     {/* GAME SELECT / HUB */}
-                    {gameState.status === 'GAME_SELECT' && (
-                        <motion.div
-                            key="select"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 1.1 }}
-                            className="flex-1 flex flex-col items-center justify-center w-full max-w-7xl h-full"
-                        >
-                            <div className="relative mb-20 group">
-                                <div className="absolute inset-0 bg-blue-500/30 blur-[100px] animate-pulse rounded-full" />
-                                <motion.div
-                                    animate={{ scale: [1, 1.1, 1] }}
-                                    transition={{ duration: 4, repeat: Infinity }}
-                                    className="text-[15rem] relative z-10 drop-shadow-[0_0_60px_rgba(0,150,255,0.8)]"
-                                >
-                                    🎙️
-                                </motion.div>
-                                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/60 backdrop-blur-md px-8 py-3 rounded-full border border-white/20">
-                                    <p className="text-2xl font-bold uppercase tracking-widest text-green-400 flex items-center gap-3">
-                                        <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-                                        Voice Channels Open
-                                    </p>
+                    {gameState.status === 'GAME_SELECT' && <motion.div
+                        key="select"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.1 }}
+                        className="flex-1 flex flex-col w-full max-w-7xl h-full p-8"
+                    >
+                        <div className="text-center mb-12">
+                            <h1 className="text-6xl font-black uppercase tracking-tighter mb-4">
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-game-primary to-game-secondary">
+                                    Game Night
+                                </span>
+                            </h1>
+                            <p className="text-2xl text-white/50 font-bold uppercase tracking-widest">
+                                Select a Game to Begin
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-8 w-full">
+                            {/* Placeholder for Game Cards - Using "Coming Soon" for now as requested "Ready for me to add gameplay" */}
+                            {['TRIVIA', 'BUZZ', 'ROAST', 'POLL'].map((game, i) => (
+                                <div key={game} className="aspect-[4/5] bg-white/5 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center gap-6 group hover:bg-white/10 hover:border-game-primary/50 transition-all cursor-pointer opacity-50 hover:opacity-100">
+                                    <div className="text-6xl grayscale group-hover:grayscale-0 transition-all duration-300">
+                                        {['🧠', '🔔', '🔥', '📊'][i]}
+                                    </div>
+                                    <div className="text-center">
+                                        <h3 className="text-xl font-black uppercase tracking-widest mb-2">{['Trivia', 'Buzz In', 'Roast', 'Poll'][i]}</h3>
+                                        <span className="text-xs font-mono text-white/30 uppercase border border-white/10 px-2 py-1 rounded">Coming Soon</span>
+                                    </div>
                                 </div>
-                            </div>
+                            ))}
 
-                            <div className="text-center space-y-8 max-w-4xl">
-                                <h1 className="text-7xl font-black uppercase tracking-tighter">
-                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                                        The Living Room
-                                    </span>
-                                </h1>
-                                <p className="text-4xl text-white/60 font-medium leading-relaxed">
-                                    Enable your microphone to talk with the room.
-                                    <br />
-                                    <span className="text-white/30 text-2xl mt-4 block">Waiting for new games to be installed...</span>
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-4 gap-8 mt-24 w-full px-12 opacity-50 pointer-events-none grayscale">
-                                {/* Ghost placeholders to show "Empty/Waiting" state if desired, or just nothing. User said 'remove all games'. */}
-                            </div>
-                        </motion.div>
-                    )}
+                            {/* Add more slots */}
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div key={`empty-${i}`} className="aspect-[4/5] border-2 border-dashed border-white/5 rounded-3xl flex items-center justify-center opacity-20">
+                                    <span className="text-4xl">+</span>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                    }
 
                     {/* PLAYING - Disabled for Social Hub */}
                     {gameState.status === 'PLAYING' && (

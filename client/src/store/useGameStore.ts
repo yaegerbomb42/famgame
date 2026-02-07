@@ -7,6 +7,7 @@ interface Player {
     id: string;
     name: string;
     avatar?: string;
+    color?: string;
     score: number;
     isHost?: boolean;
     gameVote?: string;
@@ -34,7 +35,7 @@ export interface GameStore {
     initSocket: () => void;
     setRole: (role: 'NONE' | 'HOST' | 'PLAYER') => void;
     createRoom: (name: string) => void;
-    joinRoom: (name: string, code: string, avatar?: string) => void;
+    joinRoom: (name: string, code: string, avatar?: string, color?: string) => void;
     startGame: () => void;
     selectGame: (gameId: string) => void;
     voteGame: (gameId: string) => void;
@@ -86,8 +87,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         get().socket?.emit('createRoom', { name });
     },
 
-    joinRoom: (name: string, code: string, avatar?: string) => {
-        get().socket?.emit('joinRoom', { name, code, avatar });
+    joinRoom: (name: string, code: string, avatar?: string, color?: string) => {
+        get().socket?.emit('joinRoom', { name, code, avatar, color });
     },
 
     startGame: () => {

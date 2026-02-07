@@ -27,8 +27,8 @@ export class SocketManager {
             this.roomManager.handleCreateRoom(socket, name);
         });
 
-        socket.on('joinRoom', ({ name, code, avatar }: { name: string, code: string, avatar?: string }) => {
-            this.roomManager.handleJoinRoom(socket, name || 'Guest', code, avatar || '🙂');
+        socket.on('joinRoom', ({ name, code, avatar, color }: { name: string, code: string, avatar?: string, color?: string }) => {
+            this.roomManager.handleJoinRoom(socket, name || 'Guest', code, avatar || '🙂', color);
         });
 
         socket.on('leaveRoom', () => {
