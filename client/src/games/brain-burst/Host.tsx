@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface BrainBurstHostProps {
@@ -204,7 +204,7 @@ const useBrainBurstSounds = () => {
 
 // Confetti particle component
 const ConfettiExplosion = () => {
-    const particles = Array.from({ length: 60 }, (_, i) => ({
+    const particles = useMemo(() => Array.from({ length: 60 }, (_, i) => ({
         id: i,
         x: Math.random() * 100,
         delay: Math.random() * 0.5,
@@ -212,7 +212,9 @@ const ConfettiExplosion = () => {
         color: ['#f9ca24', '#00d4ff', '#ff00ff', '#00ff88', '#ff6b6b', '#fff'][Math.floor(Math.random() * 6)],
         rotation: Math.random() * 360,
         duration: Math.random() * 2 + 2,
-    }));
+        yOffset: -20 - Math.random() * 40,
+        xDrift: (Math.random() - 0.5) * 30,
+    })), []);
 
     return (
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 100, overflow: 'hidden' }}>
@@ -221,8 +223,8 @@ const ConfettiExplosion = () => {
                     key={p.id}
                     initial={{ y: '50vh', x: `${p.x}vw`, opacity: 1, scale: 1, rotate: 0 }}
                     animate={{
-                        y: [null, `${-20 - Math.random() * 40}vh`, `${110}vh`],
-                        x: [null, `${p.x + (Math.random() - 0.5) * 30}vw`],
+                        y: [null, `${p.yOffset}vh`, `${110}vh`],
+                        x: [null, `${p.x + p.xDrift}vw`],
                         opacity: [1, 1, 0],
                         rotate: p.rotation + 720,
                         scale: [1, 1.5, 0],
@@ -588,8 +590,8 @@ const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
                             style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '12px' }}
                         >
                             {Object.values(players)
-                                .filter(p => !('isHost' in p && (p as any).isHost))
-                                .sort((a, b) => b.score - a.score)
+                                .filter((p: any) => !p.isHost)
+                                .sort((a: any, b: any) => b.score - a.score)
                                 .map((player, i) => (
                                     <motion.div
                                         key={player.name}

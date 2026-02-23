@@ -50,6 +50,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setGameState(state);
         });
 
+        socket.on('timer', (time: number) => {
+            setGameState(prev => {
+                if (!prev || !prev.gameData) return prev;
+                return { ...prev, gameData: { ...prev.gameData, timer: time } };
+            });
+        });
+
         socket.on('disconnect', () => {
             setIsConnected(false);
         });
@@ -57,6 +64,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => {
             socket.off('connect');
             socket.off('gameState');
+            socket.off('timer');
             socket.off('disconnect');
             socket.close();
         };
