@@ -49,3 +49,4 @@
 [0] Client connected: mbvOUXa_cmH6v1YBAAAR
 [0] Client disconnected: mbvOUXa_cmH6v1YBAAAR
 [1] 7:00:31 PM [vite] (client) hmr update /src/games/brain-burst/Host.tsx
+[1] 7:06:39 PM [vite] (client) hmr update /src/components/HostLogic.tsx

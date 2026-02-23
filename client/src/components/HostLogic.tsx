@@ -218,18 +218,39 @@ const HostLogic = () => {
                             </div>
 
                             {/* Start Button - ALWAYS VISIBLE */}
-                            <div className="py-6 shrink-0 w-full flex justify-center mt-4">
+                            <div className="py-8 shrink-0 w-full flex justify-center mt-6 relative z-50">
                                 <motion.button
-                                    whileHover={{ scale: 1.05, y: -2 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    whileHover={playerCount > 0 ? { scale: 1.05, y: -5 } : {}}
+                                    whileTap={playerCount > 0 ? { scale: 0.95 } : {}}
+                                    animate={playerCount > 0 ? {
+                                        boxShadow: [
+                                            '0 0 40px rgba(249,202,36,0.5), inset 0 0 20px rgba(255,255,255,0.2)',
+                                            '0 0 120px rgba(249,202,36,1), inset 0 0 50px rgba(255,255,255,0.6)',
+                                            '0 0 40px rgba(249,202,36,0.5), inset 0 0 20px rgba(255,255,255,0.2)'
+                                        ]
+                                    } : {}}
+                                    transition={playerCount > 0 ? { repeat: Infinity, duration: 2 } : {}}
                                     onClick={startBrainBurst}
                                     disabled={playerCount === 0}
-                                    className={`text-white text-3xl md:text-5xl font-black px-12 md:px-20 py-6 md:py-8 rounded-[2.5rem] uppercase tracking-widest border-t-4 border-white/20 transition-all ${playerCount === 0
-                                        ? 'bg-white/10 opacity-30 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-[#f9ca24] to-[#f0932b] shadow-[0_0_60px_rgba(249,202,36,0.6)] hover:shadow-[0_0_100px_rgba(249,202,36,0.9)] animate-pulse-glow hover:scale-105'
+                                    className={`relative overflow-hidden text-white font-black rounded-[4rem] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-4 md:gap-8 ${playerCount === 0
+                                        ? 'bg-white/10 border-2 border-white/20 px-12 py-6 md:px-16 md:py-8 text-2xl md:text-3xl opacity-50 cursor-not-allowed text-white/50'
+                                        : 'bg-gradient-to-r from-[#f9ca24] via-[#f0932b] to-[#f9ca24] border-4 border-white px-12 py-6 md:px-24 md:py-10 text-5xl md:text-7xl'
                                         }`}
+                                    style={{
+                                        textShadow: playerCount > 0 ? '0 5px 15px rgba(0,0,0,0.5)' : 'none'
+                                    }}
                                 >
-                                    {playerCount === 0 ? 'Waiting...' : '🚀 Start Brain Burst'}
+                                    {playerCount === 0 ? 'WAITING FOR PLAYERS...' : (
+                                        <>
+                                            <motion.span
+                                                animate={{ rotate: [0, -20, 20, 0], scale: [1, 1.2, 1] }}
+                                                transition={{ repeat: Infinity, duration: 1.5 }}
+                                                className="text-6xl md:text-8xl drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]"
+                                                style={{ display: 'inline-block' }}
+                                            >🚀</motion.span>
+                                            <span className="drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">START GAME</span>
+                                        </>
+                                    )}
                                 </motion.button>
                             </div>
                         </motion.div>
