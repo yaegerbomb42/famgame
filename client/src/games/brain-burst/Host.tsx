@@ -332,7 +332,7 @@ const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
                             transition={{ delay: 0.6 }}
                             style={{ fontSize: 'clamp(1.2rem, 3vw, 2rem)', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.3em', textTransform: 'uppercase', fontWeight: 700 }}
                         >
-                            10 Questions • Who Takes the Million?
+                            35 Questions • Who Takes the Ten Billion?
                         </motion.p>
                         <motion.div
                             initial={{ opacity: 0 }}

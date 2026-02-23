@@ -50,17 +50,55 @@ const GAMES = [
     { id: 'GLOBAL_AVERAGES', name: 'Global Averages', icon: '🌍', color: '#00d4ff' },
 ];
 
-// Narrator — speaks text via Web Speech API
-const narrate = (text: string) => {
+// Narrator — speaks text via Web Speech API with emotional intensity
+type NarratorMood = 'calm' | 'dramatic' | 'excited' | 'epic' | 'tense';
+
+const narrate = (text: string, mood: NarratorMood = 'calm') => {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 0.95;
-    utter.pitch = 1.1;
-    // Pick a good voice
+
+    // Dynamic vocal styling based on mood
+    switch (mood) {
+        case 'epic':
+            utter.rate = 0.82;
+            utter.pitch = 0.85;
+            utter.volume = 1.0;
+            break;
+        case 'dramatic':
+            utter.rate = 0.88;
+            utter.pitch = 0.95;
+            utter.volume = 0.95;
+            break;
+        case 'excited':
+            utter.rate = 1.05;
+            utter.pitch = 1.15;
+            utter.volume = 1.0;
+            break;
+        case 'tense':
+            utter.rate = 0.9;
+            utter.pitch = 0.8;
+            utter.volume = 0.85;
+            break;
+        default: // calm
+            utter.rate = 0.92;
+            utter.pitch = 1.0;
+            utter.volume = 0.9;
+    }
+
+    // Pick the best available voice — prioritize premium, deeper, more expressive voices
     const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google UK English Male') || v.name.includes('Daniel'));
-    if (preferred) utter.voice = preferred;
+    const voicePreference = [
+        'Aaron', 'Daniel', 'Google UK English Male',
+        'Samantha', 'Karen', 'Moira', 'Google US English',
+        'Rishi', 'Tessa', 'Alex'
+    ];
+    let chosen = null;
+    for (const pref of voicePreference) {
+        chosen = voices.find(v => v.name.includes(pref));
+        if (chosen) break;
+    }
+    if (chosen) utter.voice = chosen;
     window.speechSynthesis.speak(utter);
 };
 
@@ -75,24 +113,48 @@ const HostLogic = () => {
         }
     }, [isConnected, socket]);
 
-    // Narrator — auto-narrate game events
+    // Narrator — auto-narrate game events with emotional flair
     useEffect(() => {
         if (!gameState?.gameData || gameState.currentGame !== 'BRAIN_BURST') return;
         const { phase, currentQuestion, tier, questionIndex } = gameState.gameData;
         let text = '';
+        let mood: NarratorMood = 'calm';
+        const qNum = (questionIndex || 0) + 1;
+
         if (phase === 'INTRO') {
-            text = 'Welcome to Brain Burst! Get ready for 15 questions worth up to one million dollars!';
+            text = 'Ladies and gentlemen... Welcome, to Brain Burst! 35 questions stand between you, and ten billion dollars. Let the game, begin!';
+            mood = 'epic';
         } else if (phase === 'QUESTION' && currentQuestion) {
-            text = `Question ${(questionIndex || 0) + 1}, for ${tier?.prize || 'points'}. ${currentQuestion.q}`;
+            if (qNum <= 5) {
+                text = `Question ${qNum}, for ${tier?.prize || 'points'}. ${currentQuestion.q}`;
+                mood = 'calm';
+            } else if (qNum <= 15) {
+                text = `Question ${qNum}. Playing for ${tier?.prize || 'points'}... ${currentQuestion.q}`;
+                mood = 'dramatic';
+            } else if (qNum <= 25) {
+                text = `Question ${qNum}! ${tier?.prize || 'big money'} is on the line! ... ${currentQuestion.q}`;
+                mood = 'tense';
+            } else {
+                text = `Question ${qNum}! We are deep into the billions! For ${tier?.prize || 'an incredible prize'}! ... ${currentQuestion.q}`;
+                mood = 'epic';
+            }
         } else if (phase === 'REVEAL' && currentQuestion) {
             const correctAnswer = currentQuestion.a[currentQuestion.correct];
-            text = `The answer is: ${correctAnswer}`;
+            const reveals = [
+                `The answer is... ${correctAnswer}!`,
+                `And the correct answer... ${correctAnswer}!`,
+                `It was... ${correctAnswer}!`,
+                `${correctAnswer}! That's the one!`,
+            ];
+            text = reveals[Math.floor(Math.random() * reveals.length)];
+            mood = 'excited';
         } else if (phase === 'GAME_OVER') {
-            text = 'Game over! Let\'s see the final scores!';
+            text = 'And that is the game! What a ride! Let us see who came out on top!';
+            mood = 'epic';
         }
         if (text && text !== lastNarratedRef.current) {
             lastNarratedRef.current = text;
-            narrate(text);
+            narrate(text, mood);
         }
     }, [gameState?.gameData?.phase, gameState?.gameData?.questionIndex]);
 
@@ -466,7 +528,6 @@ const HostLogic = () => {
                                     players={gameState.players}
                                     closestPid={gameState.gameData.closestPid}
                                     pointsAwarded={gameState.gameData.pointsAwarded}
-                                    socket={socket}
                                 />
                             )}
 

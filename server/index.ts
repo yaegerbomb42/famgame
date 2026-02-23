@@ -167,19 +167,19 @@ const WORD_RACE_CATEGORIES = [
 
 // Brain Burst — Millionaire-style trivia (50 fun questions, escalating tiers)
 const BRAIN_BURST_QUESTIONS = [
-    // Easy (Tier 1-3)
-    { q: "What color is a banana when it's ripe?", a: ["Blue", "Yellow", "Purple", "Green"], correct: 1 },
-    { q: "How many legs does a dog have?", a: ["2", "4", "6", "8"], correct: 1 },
-    { q: "What do bees make?", a: ["Butter", "Honey", "Cheese", "Jam"], correct: 1 },
-    { q: "Which animal says 'moo'?", a: ["Cat", "Dog", "Cow", "Duck"], correct: 2 },
-    { q: "What is the color of the sky on a clear day?", a: ["Green", "Red", "Blue", "Orange"], correct: 2 },
-    { q: "Which meal do you eat in the morning?", a: ["Dinner", "Lunch", "Supper", "Breakfast"], correct: 3 },
-    { q: "What shape is a stop sign?", a: ["Circle", "Triangle", "Octagon", "Square"], correct: 2 },
-    { q: "What do you use to write on a whiteboard?", a: ["Crayon", "Marker", "Pencil", "Paintbrush"], correct: 1 },
-    { q: "How many colors are in a rainbow?", a: ["5", "6", "7", "8"], correct: 2 },
-    { q: "Which one is NOT a fruit?", a: ["Apple", "Carrot", "Banana", "Grape"], correct: 1 },
-    { q: "What month comes after March?", a: ["February", "April", "May", "June"], correct: 1 },
-    { q: "What freezes to make ice?", a: ["Milk", "Juice", "Water", "Soda"], correct: 2 },
+    // Pop Culture & General Fun (Tier 1-5)
+    { q: "What is the highest grossing media franchise of all time?", a: ["Star Wars", "Marvel Cinematic Universe", "Pokemon", "Mickey Mouse"], correct: 2 },
+    { q: "Which of these animals is legally allowed to be mayor of a town in the US?", a: ["A Cat", "A Dog", "A Goat", "All of the Above"], correct: 3 },
+    { q: "What is the tiny piece of plastic at the end of a shoelace called?", a: ["Aglet", "Grommet", "Ferrule", "Flange"], correct: 0 },
+    { q: "Which of these is NOT a real flavor of Doritos ever released?", a: ["Mountain Dew", "Clam Chowder", "Late Night Cheeseburger", "Spicy Watermelon"], correct: 3 },
+    { q: "In the game Monopoly, what is the name of the mascot character?", a: ["Rich Uncle Pennybags", "Mr. Monopoly", "Milburn Pennybags", "Arthur Property"], correct: 2 },
+    { q: "What is the fear of being without your mobile phone called?", a: ["Telephobia", "Phonophobia", "Nomophobia", "Cellophobia"], correct: 2 },
+    { q: "Which US state's name ends in three consecutive vowels?", a: ["Hawaii", "Ohio", "Iowa", "None of them"], correct: 0 },
+    { q: "What was the original color of the Statue of Liberty?", a: ["Green", "Copper", "Gold", "White"], correct: 1 },
+    { q: "Which of these is a real animal?", a: ["Jackalope", "Drop Bear", "Binturong", "Snipe"], correct: 2 },
+    { q: "What is the main ingredient in the popular Middle Eastern dip, hummus?", a: ["Lentils", "Black Beans", "Chickpeas", "Edamame"], correct: 2 },
+    { q: "What is the only state in the US that does not participate in Daylight Saving Time across the whole state?", a: ["Arizona", "Hawaii", "Both Arizona and Hawaii", "None, they all do"], correct: 2 },
+    { q: "Which planet is known as the 'Morning Star' or 'Evening Star'?", a: ["Mars", "Venus", "Mercury", "Jupiter"], correct: 1 },
 
     // Medium-Easy (Tier 4-6)
     { q: "What is the largest planet in our solar system?", a: ["Mars", "Saturn", "Jupiter", "Neptune"], correct: 2 },
@@ -238,6 +238,66 @@ const BRAIN_BURST_QUESTIONS = [
     { q: "What geometric shape is generally used for stop signs?", a: ["Hexagon", "Octagon", "Decagon", "Pentagon"], correct: 1 },
     { q: "What is the only metal that is liquid at room temperature?", a: ["Lead", "Iron", "Zinc", "Mercury"], correct: 3 },
     { q: "What was the first feature-length animated movie ever released?", a: ["Fantasia", "Bambi", "Snow White", "Pinocchio"], correct: 2 },
+
+    // Extreme (Tier 16-18)
+    { q: "What is the capital city of Mongolia?", a: ["Ulaanbaatar", "Astana", "Tashkent", "Bishkek"], correct: 0 },
+    { q: "What is the rarest naturally occurring element on Earth?", a: ["Astatine", "Francium", "Promethium", "Technetium"], correct: 0 },
+    { q: "Who was the Byzantine Emperor during the Nika Riots?", a: ["Justinian I", "Constantine the Great", "Heraclius", "Basil II"], correct: 0 },
+    { q: "What is the heaviest naturally occurring element by atomic weight?", a: ["Uranium", "Plutonium", "Thorium", "Lead"], correct: 0 },
+    { q: "In Greek mythology, who was the muse of history?", a: ["Clio", "Calliope", "Thalia", "Melpomene"], correct: 0 },
+    { q: "Which composer wrote the 'Moonlight Sonata'?", a: ["Ludwig van Beethoven", "Wolfgang Amadeus Mozart", "Johann Sebastian Bach", "Frédéric Chopin"], correct: 0 },
+    { q: "What is the main language spoken in Andorra?", a: ["Catalan", "Spanish", "French", "Andorran"], correct: 0 },
+    { q: "Who discovered the neutron?", a: ["James Chadwick", "Niels Bohr", "Ernest Rutherford", "J.J. Thomson"], correct: 0 },
+    { q: "What is the longest bone in the human body?", a: ["Femur", "Tibia", "Fibula", "Humerus"], correct: 0 },
+    { q: "Which pharaoh's tomb was discovered by Howard Carter in 1922?", a: ["Tutankhamun", "Ramses II", "Khufu", "Akhenaten"], correct: 0 },
+
+    // Master (Tier 19-21)
+    { q: "What is the deepest known point in the Earth's oceans?", a: ["Mariana Trench", "Tonga Trench", "Philippine Trench", "Kermadec Trench"], correct: 0 },
+    { q: "What is the only even prime number?", a: ["2", "4", "6", "8"], correct: 0 },
+    { q: "Who authored the philosophical work 'Critique of Pure Reason'?", a: ["Immanuel Kant", "Friedrich Nietzsche", "Rene Descartes", "John Locke"], correct: 0 },
+    { q: "What is the chemical symbol for Tungsten?", a: ["W", "Tu", "Tn", "Tg"], correct: 0 },
+    { q: "What year did the Ottoman Empire officially end?", a: ["1922", "1918", "1920", "1925"], correct: 0 },
+    { q: "Who is the longest-reigning monarch in world history (verifiable)?", a: ["Louis XIV of France", "Queen Elizabeth II", "King Bhumibol Adulyadej", "Emperor Franz Joseph I"], correct: 0 },
+    { q: "Which planet in our solar system has the shortest day?", a: ["Jupiter", "Saturn", "Neptune", "Uranus"], correct: 0 },
+    { q: "What is the highest grossing movie of all time (as of 2024 unadjusted)?", a: ["Avatar", "Avengers: Endgame", "Titanic", "Star Wars: The Force Awakens"], correct: 0 },
+    { q: "Who was the first woman to win a Nobel Prize?", a: ["Marie Curie", "Rosalind Franklin", "Ada Lovelace", "Jane Goodall"], correct: 0 },
+    { q: "What is the smallest bone in the human body?", a: ["Stapes", "Incus", "Malleus", "Pisiform"], correct: 0 },
+
+    // Grandmaster (Tier 22-25)
+    { q: "What is the most abundant gas in the Earth's atmosphere?", a: ["Nitrogen", "Oxygen", "Argon", "Carbon Dioxide"], correct: 0 },
+    { q: "Who painted 'The Persistence of Memory'?", a: ["Salvador Dalí", "Pablo Picasso", "Vincent van Gogh", "Claude Monet"], correct: 0 },
+    { q: "What is the capital of Burkina Faso?", a: ["Ouagadougou", "Bamako", "Niamey", "Dakar"], correct: 0 },
+    { q: "Which element has the highest melting point?", a: ["Tungsten", "Carbon", "Rhenium", "Osmium"], correct: 0 },
+    { q: "Who was the first Roman Emperor?", a: ["Augustus", "Julius Caesar", "Nero", "Caligula"], correct: 0 },
+    { q: "What is the name of the largest moon of Saturn?", a: ["Titan", "Enceladus", "Europa", "Ganymede"], correct: 0 },
+    { q: "In what year was the Magna Carta signed?", a: ["1215", "1066", "1314", "1415"], correct: 0 },
+    { q: "What is the hardest natural substance known?", a: ["Lonsdaleite", "Diamond", "Wurtzite Boron Nitride", "Graphene"], correct: 1 },
+    { q: "Who wrote 'One Hundred Years of Solitude'?", a: ["Gabriel García Márquez", "Jorge Luis Borges", "Julio Cortázar", "Mario Vargas Llosa"], correct: 0 },
+    { q: "What is the speed of light in a vacuum (approx)?", a: ["299,792 km/s", "300,000 km/s", "290,000 km/s", "310,000 km/s"], correct: 0 },
+
+    // Demigod (Adding buffer for Random Shuffle length)
+    { q: "What is the name of the first artificial Earth satellite?", a: ["Sputnik 1", "Explorer 1", "Vanguard 1", "Luna 1"], correct: 0 },
+    { q: "Who discovered penicillin?", a: ["Alexander Fleming", "Louis Pasteur", "Joseph Lister", "Robert Koch"], correct: 0 },
+    { q: "What is the largest organ in the human body?", a: ["Skin", "Liver", "Brain", "Heart"], correct: 0 },
+    { q: "Which animal has the largest brain relative to its body size?", a: ["Sperm Whale", "Dolphin", "Human", "Elephant"], correct: 0 },
+    { q: "What is the boiling point of liquid nitrogen?", a: ["-196 °C", "-273 °C", "-100 °C", "-50 °C"], correct: 0 },
+    { q: "Who was the first human to journey into outer space?", a: ["Yuri Gagarin", "Neil Armstrong", "Buzz Aldrin", "Alan Shepard"], correct: 0 },
+    { q: "What is the most spoken language of the world?", a: ["Mandarin Chinese", "English", "Spanish", "Hindi"], correct: 1 },
+    { q: "Which country is the largest in the world by land area?", a: ["Russia", "Canada", "China", "USA"], correct: 0 },
+    { q: "What is the highest mountain in the world?", a: ["Mount Everest", "K2", "Kangchenjunga", "Lhotse"], correct: 0 },
+    { q: "Who is known as the 'Father of Computer Science'?", a: ["Alan Turing", "Charles Babbage", "John von Neumann", "Ada Lovelace"], correct: 0 },
+
+    // Mythological & Legendary (Buffer for 35)
+    { q: "What is the name of King Arthur's sword?", a: ["Excalibur", "Caliburn", "Durandal", "Joyeuse"], correct: 0 },
+    { q: "Who was the Greek god of the underworld?", a: ["Zeus", "Poseidon", "Ares", "Hades"], correct: 3 },
+    { q: "What creature has the head of an eagle and the body of a lion?", a: ["Griffin", "Chimera", "Manticore", "Sphinx"], correct: 0 },
+    { q: "Who was the Norse god of thunder?", a: ["Odin", "Loki", "Thor", "Tyr"], correct: 2 },
+    { q: "What is the Japanese equivalent of a dragon called?", a: ["Ryu", "Kappa", "Oni", "Kitsune"], correct: 0 },
+    { q: "What legendary city is said to be lost underwater?", a: ["El Dorado", "Atlantis", "Shangri-La", "Camelot"], correct: 1 },
+    { q: "Who was the Roman goddess of love and beauty?", a: ["Juno", "Minerva", "Venus", "Diana"], correct: 2 },
+    { q: "What mythical creature rises from its own ashes?", a: ["Dragon", "Phoenix", "Pegasus", "Unicorn"], correct: 1 },
+    { q: "Who was the hero of the epic poem 'The Odyssey'?", a: ["Achilles", "Hector", "Aeneas", "Odysseus"], correct: 3 },
+    { q: "What monster did Perseus defeat using a mirrored shield?", a: ["Chimera", "Minotaur", "Medusa", "Hydra"], correct: 2 },
 ];
 
 const BRAIN_BURST_TIERS = [
@@ -256,6 +316,26 @@ const BRAIN_BURST_TIERS = [
     { level: 13, prize: '$250,000', points: 250000 },
     { level: 14, prize: '$500,000', points: 500000 },
     { level: 15, prize: '$1,000,000', points: 1000000 },
+    { level: 16, prize: '$2,500,000', points: 2500000 },
+    { level: 17, prize: '$5,000,000', points: 5000000 },
+    { level: 18, prize: '$10,000,000', points: 10000000 },
+    { level: 19, prize: '$25,000,000', points: 25000000 },
+    { level: 20, prize: '$50,000,000', points: 50000000 },
+    { level: 21, prize: '$100,000,000', points: 100000000 },
+    { level: 22, prize: '$250,000,000', points: 250000000 },
+    { level: 23, prize: '$500,000,000', points: 500000000 },
+    { level: 24, prize: '$750,000,000', points: 750000000 },
+    { level: 25, prize: '$1,000,000,000', points: 1000000000 },
+    { level: 26, prize: '$1,250,000,000', points: 1250000000 },
+    { level: 27, prize: '$1,500,000,000', points: 1500000000 },
+    { level: 28, prize: '$2,000,000,000', points: 2000000000 },
+    { level: 29, prize: '$3,000,000,000', points: 3000000000 },
+    { level: 30, prize: '$4,000,000,000', points: 4000000000 },
+    { level: 31, prize: '$5,000,000,000', points: 5000000000 },
+    { level: 32, prize: '$6,000,000,000', points: 6000000000 },
+    { level: 33, prize: '$7,500,000,000', points: 7500000000 },
+    { level: 34, prize: '$8,500,000,000', points: 8500000000 },
+    { level: 35, prize: '$10,000,000,000', points: 10000000000 },
 ];
 
 const GLOBAL_AVERAGES_QUESTIONS = [
@@ -280,6 +360,84 @@ const GLOBAL_AVERAGES_QUESTIONS = [
     { q: "What percentage of millionaires are self-made?", correct: 80 },
     { q: "What percentage of people snooze their alarms at least once?", correct: 57 }
 ];
+
+const revealGlobalAveragesLogic = () => {
+    if (gameState.currentGame !== 'GLOBAL_AVERAGES' || gameState.gameData?.phase !== 'WAITING') return;
+
+    gameState.gameData.phase = 'REVEAL';
+
+    const correct = gameState.gameData.correct;
+    const differences = Object.entries(gameState.gameData.guesses).map(([pid, guess]: [string, any]) => ({
+        pid, diff: Math.abs(guess - correct)
+    }));
+
+    // Sort by closest to correct answer
+    differences.sort((a, b) => a.diff - b.diff);
+
+    const pointsDistribution = [200, 150, 100, 50]; // 1st, 2nd, 3rd, 4th place
+    differences.forEach((result, idx) => {
+        const pts = pointsDistribution[idx] || 10;
+        if (gameState.players[result.pid]) {
+            gameState.players[result.pid].score += pts;
+        }
+        if (idx === 0) {
+            gameState.gameData.closestPid = result.pid;
+            gameState.gameData.pointsAwarded = pts;
+        }
+    });
+
+    updateLeaderboard();
+    io.emit('gameState', gameState);
+
+    // Auto-Next Timer (10 Seconds total)
+    setTimeout(() => {
+        if (gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData?.phase === 'REVEAL') {
+            if (gameState.gameData.round < 5) {
+                // Next Round Routine
+                const question = GLOBAL_AVERAGES_QUESTIONS[Math.floor(Math.random() * GLOBAL_AVERAGES_QUESTIONS.length)];
+                gameState.gameData = {
+                    phase: 'WAITING',
+                    round: gameState.gameData.round + 1,
+                    question: question.q,
+                    correct: question.correct,
+                    guesses: {},
+                };
+                io.emit('gameState', gameState);
+
+                // Auto-Reveal Timer for the new round
+                const currentRound = gameState.gameData.round;
+                setTimeout(() => {
+                    if (gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData?.phase === 'WAITING' && gameState.gameData?.round === currentRound) {
+                        revealGlobalAveragesLogic();
+                    }
+                }, 20000);
+            } else {
+                // Game Over Routine
+                gameState.status = 'RESULTS';
+                io.emit('gameState', gameState);
+            }
+        }
+    }, 10000);
+};
+
+const startGlobalAveragesRound = (roundNum: number) => {
+    const question = GLOBAL_AVERAGES_QUESTIONS[Math.floor(Math.random() * GLOBAL_AVERAGES_QUESTIONS.length)];
+    gameState.gameData = {
+        phase: 'WAITING',
+        round: roundNum,
+        question: question.q,
+        correct: question.correct,
+        guesses: {},
+    };
+    io.emit('gameState', gameState);
+
+    // Auto-Reveal Timer (20 Seconds)
+    setTimeout(() => {
+        if (gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData?.phase === 'WAITING' && gameState.gameData?.round === roundNum) {
+            revealGlobalAveragesLogic();
+        }
+    }, 20000);
+};
 
 io.on('connection', (socket: any) => {
     console.log('Client connected:', socket.id);
@@ -547,8 +705,8 @@ io.on('connection', (socket: any) => {
                 }
             }, 3000);
         } else if (gameId === 'BRAIN_BURST') {
-            // Shuffle and pick 15 questions
-            const shuffled = [...BRAIN_BURST_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 15);
+            // Shuffle and pick 35 questions
+            const shuffled = [...BRAIN_BURST_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 35);
             gameState.gameData = {
                 phase: 'INTRO',
                 questionIndex: 0,
@@ -587,13 +745,8 @@ io.on('connection', (socket: any) => {
                 }
             }, 3500);
         } else if (gameId === 'GLOBAL_AVERAGES') {
-            const question = GLOBAL_AVERAGES_QUESTIONS[Math.floor(Math.random() * GLOBAL_AVERAGES_QUESTIONS.length)];
-            gameState.gameData = {
-                phase: 'WAITING',
-                question: question.q,
-                correct: question.correct,
-                guesses: {},
-            };
+            startGlobalAveragesRound(1);
+            return; // `startGlobalAveragesRound` emits its own initial state
         }
         io.emit('gameState', gameState);
     });
@@ -730,11 +883,23 @@ io.on('connection', (socket: any) => {
     const advanceBrainBurst = () => {
         if (gameState.currentGame !== 'BRAIN_BURST') return;
         const nextIdx = gameState.gameData.questionIndex + 1;
-        if (nextIdx >= 15) {
+        if (nextIdx >= 35) {
             // Game over!
             gameState.gameData.phase = 'GAME_OVER';
             updateLeaderboard();
             io.emit('gameState', gameState);
+
+            // Auto-chain into Global Averages after 10 seconds of scoreboard
+            setTimeout(() => {
+                gameState.currentGame = 'GLOBAL_AVERAGES';
+                startGlobalAveragesRound(1);
+
+                Object.keys(gameState.players).forEach(pid => {
+                    gameState.players[pid].bannedUntil = 0;
+                    gameState.players[pid].gameVote = undefined;
+                });
+                io.emit('gameState', gameState);
+            }, 10000);
         } else {
             gameState.gameData.questionIndex = nextIdx;
             gameState.gameData.currentQuestion = gameState.gameData.questions[nextIdx];
@@ -1025,38 +1190,25 @@ io.on('connection', (socket: any) => {
 
     // --- GLOBAL AVERAGES LOGIC ---
     socket.on('submitAverageGuess', (guess: number) => {
-        if (gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData.phase === 'WAITING') {
+        if (gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData?.phase === 'WAITING') {
             gameState.gameData.guesses[socket.id] = guess;
-            io.emit('gameState', gameState);
+
+            // Check if everyone has guessed, if so, trigger reveal early
+            const playerCount = Object.keys(gameState.players).filter((p: string) => !gameState.players[p].isHost).length;
+            const guessCount = Object.keys(gameState.gameData.guesses).length;
+
+            if (guessCount >= playerCount && playerCount > 0) {
+                revealGlobalAveragesLogic();
+            } else {
+                io.emit('gameState', gameState);
+            }
         }
     });
 
     socket.on('revealGlobalAverages', () => {
+        // Keep the handler in case a manual override is needed, but point it to the shared logic
         if (gameState.hostId === socket.id && gameState.currentGame === 'GLOBAL_AVERAGES') {
-            gameState.gameData.phase = 'REVEAL';
-
-            const correct = gameState.gameData.correct;
-            const differences = Object.entries(gameState.gameData.guesses).map(([pid, guess]: [string, any]) => ({
-                pid, diff: Math.abs(guess - correct)
-            }));
-
-            // Sort by closest to correct answer
-            differences.sort((a, b) => a.diff - b.diff);
-
-            const pointsDistribution = [200, 150, 100, 50]; // 1st, 2nd, 3rd, 4th place
-            differences.forEach((result, idx) => {
-                const pts = pointsDistribution[idx] || 10;
-                if (gameState.players[result.pid]) {
-                    gameState.players[result.pid].score += pts;
-                }
-                if (idx === 0) {
-                    gameState.gameData.closestPid = result.pid;
-                    gameState.gameData.pointsAwarded = pts;
-                }
-            });
-
-            updateLeaderboard();
-            io.emit('gameState', gameState);
+            revealGlobalAveragesLogic();
         }
     });
 

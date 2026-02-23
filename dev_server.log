@@ -320,3 +320,50 @@
 [0]   port: 3000
 [0] }
 [0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+[0] Server listening on internal port 3000
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+[0] Server listening on internal port 3000
+[1] 8:03:38 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[1] 8:03:39 PM [vite] (client) hmr update /src/games/brain-burst/Host.tsx
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+[0] Server listening on internal port 3000
+[0] Client connected: 1PaRLkyHzfFoSR_dAAAB
+[0] Client connected: OI2in5DLgGCPtHQwAAAD
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[0] Server listening on internal port 3000
+[0] Client connected: eUjMknJZ3T2SdHFUAAAB
+[0] Client connected: cEjlOsnEPufHrEmTAAAD
+[0] Client disconnected: cEjlOsnEPufHrEmTAAAD
+[0] Client disconnected: eUjMknJZ3T2SdHFUAAAB
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[0] Server listening on internal port 3000
+[1] 8:12:26 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[1] 8:12:26 PM [vite] (client) hmr update /src/games/brain-burst/Host.tsx
+[1] 8:12:39 PM [vite] (client) hmr update /src/games/global-averages/Host.tsx
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+[0] Server listening on internal port 3000
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+[0] Server listening on internal port 3000
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[0] Server listening on internal port 3000
+[1] 8:17:10 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[1] 8:17:29 PM [vite] (client) hmr update /src/games/global-averages/Host.tsx
+[1] 8:17:51 PM [vite] (client) hmr update /src/games/global-averages/Host.tsx
+[1] 8:18:13 PM [vite] (client) hmr update /src/components/HostLogic.tsx

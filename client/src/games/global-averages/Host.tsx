@@ -9,16 +9,14 @@ interface GlobalAveragesHostProps {
     players: Record<string, { name: string; avatar?: string; score: number; isHost?: boolean }>;
     closestPid?: string;
     pointsAwarded?: number;
-    socket: any;
 }
 
-export default function GlobalAveragesHost({ phase, question, correct, guesses, players, closestPid, pointsAwarded, socket }: GlobalAveragesHostProps) {
+export default function GlobalAveragesHost({ phase, question, correct, guesses, players, closestPid, pointsAwarded }: GlobalAveragesHostProps) {
     const [revealedPercent, setRevealedPercent] = useState(0);
     const [showGuesses, setShowGuesses] = useState(false);
 
     const playerCount = Object.keys(players).filter(p => !players[p].isHost).length;
     const guessCount = Object.keys(guesses).length;
-    const allGuessed = guessCount >= playerCount && playerCount > 0;
 
     // Trigger reveal flow
     useEffect(() => {
@@ -38,11 +36,6 @@ export default function GlobalAveragesHost({ phase, question, correct, guesses, 
         }
     }, [phase, correct]);
 
-    const revealAnswer = () => {
-        if (phase === 'WAITING' && allGuessed) {
-            socket.emit('revealGlobalAverages');
-        }
-    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '40px', alignItems: 'center', justifyContent: 'center' }}>
@@ -146,36 +139,11 @@ export default function GlobalAveragesHost({ phase, question, correct, guesses, 
 
             </div>
 
-            {/* Waiting/Reveal Actions */}
+            {/* Empty block to preserve space, manual buttons removed in favor of auto-timers */}
             <div style={{ marginTop: '60px' }}>
-                {phase === 'WAITING' ? (
-                    <motion.button
-                        onClick={revealAnswer}
-                        disabled={!allGuessed}
-                        style={{
-                            padding: '20px 40px', fontSize: '2rem', fontWeight: 900, borderRadius: '20px',
-                            background: allGuessed ? 'linear-gradient(135deg, #00d4ff, #00ff88)' : '#444',
-                            color: allGuessed ? '#000' : '#888',
-                            border: 'none', cursor: allGuessed ? 'pointer' : 'not-allowed',
-                            boxShadow: allGuessed ? '0 0 40px rgba(0, 212, 255, 0.4)' : 'none',
-                        }}
-                    >
-                        {allGuessed ? 'REVEAL ANSWER' : `WAITING FOR PLAYERS (${guessCount}/${playerCount})`}
-                    </motion.button>
-                ) : (
-                    <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 5 }}
-                        onClick={() => socket.emit('nextRound')}
-                        style={{
-                            padding: '20px 60px', fontSize: '1.8rem', fontWeight: 900, borderRadius: '20px',
-                            background: '#fff', color: '#000', border: 'none', cursor: 'pointer',
-                        }}
-                    >
-                        NEXT QUESTION
-                    </motion.button>
-                )}
+                <div style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>
+                    {phase === 'WAITING' ? 'WAITING FOR PLAYERS...' : 'LOADING NEXT QUESTION...'}
+                </div>
             </div>
 
         </div>
