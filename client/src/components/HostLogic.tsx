@@ -1,4 +1,5 @@
 import { useGame } from '../context/useGame';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TriviaHost from '../games/trivia/Host';
 import TwoTruthsHost from '../games/two-truths/Host';
@@ -48,9 +49,16 @@ const GAMES = [
 ];
 
 const HostLogic = () => {
-    const { gameState, startGame, socket } = useGame();
+    const { gameState, startGame, socket, isConnected } = useGame();
 
-    if (!gameState) return (
+    // Create room when host mounts and is connected
+    useEffect(() => {
+        if (isConnected && socket && (!gameState || !gameState.roomCode)) {
+            socket.emit('createRoom', { name: 'Host' });
+        }
+    }, [isConnected, socket]);
+
+    if (!gameState || !gameState.roomCode) return (
         <div className="flex h-screen items-center justify-center bg-[#0a0518]">
             <div className="w-20 h-20 border-4 border-game-primary border-t-transparent rounded-full animate-spin" />
         </div>
