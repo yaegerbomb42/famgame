@@ -16,6 +16,7 @@ import ChainReactionHost from '../games/chain-reaction/Host';
 import MindMeldHost from '../games/mind-meld/Host';
 import CompeteHost from '../games/compete/Host';
 import BrainBurstHost from '../games/brain-burst/Host';
+import GlobalAveragesHost from '../games/global-averages/Host';
 
 // QR Code component using Google Charts API
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
@@ -46,6 +47,7 @@ const GAMES = [
     { id: 'MIND_MELD', name: 'Mind Meld', icon: '🧠', color: '#70a1ff' },
     { id: 'COMPETE', name: 'Compete', icon: '⚔️', color: '#eccc68' },
     { id: 'BRAIN_BURST', name: 'Brain Burst', icon: '💰', color: '#f9ca24' },
+    { id: 'GLOBAL_AVERAGES', name: 'Global Averages', icon: '🌍', color: '#00d4ff' },
 ];
 
 // Narrator — speaks text via Web Speech API
@@ -79,7 +81,7 @@ const HostLogic = () => {
         const { phase, currentQuestion, tier, questionIndex } = gameState.gameData;
         let text = '';
         if (phase === 'INTRO') {
-            text = 'Welcome to Brain Burst! Get ready for 10 questions worth up to one million dollars!';
+            text = 'Welcome to Brain Burst! Get ready for 15 questions worth up to one million dollars!';
         } else if (phase === 'QUESTION' && currentQuestion) {
             text = `Question ${(questionIndex || 0) + 1}, for ${tier?.prize || 'points'}. ${currentQuestion.q}`;
         } else if (phase === 'REVEAL' && currentQuestion) {
@@ -142,7 +144,7 @@ const HostLogic = () => {
                 </button>
             </header>
 
-            <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+            <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 pb-40 md:pb-48 overflow-hidden">
                 <AnimatePresence mode='wait'>
                     {/* LOBBY STATE */}
                     {gameState.status === 'LOBBY' && (
@@ -218,7 +220,7 @@ const HostLogic = () => {
                             </div>
 
                             {/* Start Button - ALWAYS VISIBLE */}
-                            <div className="py-8 shrink-0 w-full flex justify-center mt-6 relative z-50">
+                            <div className="fixed bottom-8 left-0 right-0 w-full flex justify-center z-[100] pointer-events-none">
                                 <motion.button
                                     whileHover={playerCount > 0 ? { scale: 1.05, y: -5 } : {}}
                                     whileTap={playerCount > 0 ? { scale: 0.95 } : {}}
@@ -232,7 +234,7 @@ const HostLogic = () => {
                                     transition={playerCount > 0 ? { repeat: Infinity, duration: 2 } : {}}
                                     onClick={startBrainBurst}
                                     disabled={playerCount === 0}
-                                    className={`relative overflow-hidden text-white font-black rounded-[4rem] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-4 md:gap-8 ${playerCount === 0
+                                    className={`pointer-events-auto relative overflow-hidden text-white font-black rounded-[4rem] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-4 md:gap-8 ${playerCount === 0
                                         ? 'bg-white/10 border-2 border-white/20 px-12 py-6 md:px-16 md:py-8 text-2xl md:text-3xl opacity-50 cursor-not-allowed text-white/50'
                                         : 'bg-gradient-to-r from-[#f9ca24] via-[#f0932b] to-[#f9ca24] border-4 border-white px-12 py-6 md:px-24 md:py-10 text-5xl md:text-7xl'
                                         }`}
@@ -452,6 +454,19 @@ const HostLogic = () => {
                                     questionIndex={gameState.gameData.questionIndex}
                                     players={gameState.players}
                                     streaks={gameState.gameData.streaks}
+                                />
+                            )}
+
+                            {gameState.currentGame === 'GLOBAL_AVERAGES' && (
+                                <GlobalAveragesHost
+                                    phase={gameState.gameData.phase}
+                                    question={gameState.gameData.question}
+                                    correct={gameState.gameData.correct}
+                                    guesses={gameState.gameData.guesses}
+                                    players={gameState.players}
+                                    closestPid={gameState.gameData.closestPid}
+                                    pointsAwarded={gameState.gameData.pointsAwarded}
+                                    socket={socket}
                                 />
                             )}
 

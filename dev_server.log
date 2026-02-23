@@ -50,3 +50,273 @@
 [0] Client disconnected: mbvOUXa_cmH6v1YBAAAR
 [1] 7:00:31 PM [vite] (client) hmr update /src/games/brain-burst/Host.tsx
 [1] 7:06:39 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[1] 7:18:49 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[1] 7:19:56 PM [vite] (client) hmr update /src/games/brain-burst/Host.tsx
+[1] 7:20:11 PM [vite] (client) hmr update /src/games/brain-burst/Host.tsx
+[1] 7:20:40 PM [vite] (client) hmr update /src/games/brain-burst/Host.tsx
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [32m[nodemon] still waiting for 1 sub-process to finish...[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+[0] Server listening on internal port 3000
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[0] Server listening on internal port 3000
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] /Users/yaeger/famgame/node_modules/ts-node/src/index.ts:859
+[0]     return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+[0]            ^
+[0] TSError: ⨯ Unable to compile TypeScript:
+[0] index.ts(590,16): error TS2304: Cannot find name 'gameId'.
+[0] index.ts(766,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(870,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(878,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(881,36): error TS2304: Cannot find name 'socket'.
+[0] index.ts(899,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(901,31): error TS2304: Cannot find name 'socket'.
+[0] index.ts(917,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(919,30): error TS2304: Cannot find name 'socket'.
+[0] index.ts(939,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(942,31): error TS2304: Cannot find name 'socket'.
+[0] index.ts(954,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(957,30): error TS2304: Cannot find name 'socket'.
+[0] index.ts(970,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(973,30): error TS2304: Cannot find name 'socket'.
+[0] index.ts(983,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(987,27): error TS2304: Cannot find name 'socket'.
+[0] index.ts(987,72): error TS2304: Cannot find name 'socket'.
+[0] index.ts(993,27): error TS2304: Cannot find name 'socket'.
+[0] index.ts(994,9): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1000,39): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1001,31): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1001,61): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1007,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1012,113): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1015,36): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1015,74): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1017,31): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1018,27): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1018,57): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1021,19): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1028,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1029,9): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | undefined' and '"GLOBAL_AVERAGES"' have no overlap.
+[0] index.ts(1030,36): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1035,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1036,30): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1036,43): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | undefined' and '"GLOBAL_AVERAGES"' have no overlap.
+[0] index.ts(1069,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1074,31): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1074,61): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1078,74): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1080,36): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1083,35): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1083,65): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1085,35): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1085,65): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1092,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1095,31): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1104,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1107,32): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1117,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1126,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1128,30): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1148,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1151,30): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1161,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1163,33): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1172,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1174,30): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1187,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1189,9): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1191,53): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1192,27): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1192,57): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1205,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1207,32): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1218,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1220,33): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1225,39): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1226,31): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1226,61): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1232,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1234,36): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1235,32): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1257,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1259,42): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1260,38): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1271,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1272,41): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1273,27): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1274,34): error TS2304: Cannot find name 'socket'.
+[0] index.ts(590,7): error TS1005: ',' expected.
+[0] index.ts(590,12): error TS1135: Argument expression expected.
+[0] index.ts(1064,9): error TS1128: Declaration or statement expected.
+[0] index.ts(1064,10): error TS1128: Declaration or statement expected.
+[0] index.ts(1066,5): error TS1128: Declaration or statement expected.
+[0] index.ts(1066,6): error TS1128: Declaration or statement expected.
+[0] index.ts(1278,1): error TS1128: Declaration or statement expected.
+[0] index.ts(1278,2): error TS1128: Declaration or statement expected.
+[0] 
+[0]     at createTSError (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:859:12)
+[0]     at reportTSError (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:863:19)
+[0]     at getOutput (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1077:36)
+[0]     at Object.compile (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1433:41)
+[0]     at Module.m._compile (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1617:30)
+[0]     at Module._extensions..js (node:internal/modules/cjs/loader:1892:10)
+[0]     at Object.require.extensions.<computed> [as .ts] (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1621:12)
+[0]     at Module.load (node:internal/modules/cjs/loader:1480:32)
+[0]     at Module._load (node:internal/modules/cjs/loader:1299:12)
+[0]     at TracingChannel.traceSync (node:diagnostics_channel:328:14) {
+[0]   diagnosticCodes: [
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2367, 2304, 2304, 2304,
+[0]     2367, 2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     1005, 1135, 1128, 1128, 1128, 1128, 1128, 1128
+[0]   ]
+[0] }
+[0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] /Users/yaeger/famgame/node_modules/ts-node/src/index.ts:859
+[0]     return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+[0]            ^
+[0] TSError: ⨯ Unable to compile TypeScript:
+[0] index.ts(1028,13): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | undefined' and '"GLOBAL_AVERAGES"' have no overlap.
+[0] index.ts(1035,47): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | undefined' and '"GLOBAL_AVERAGES"' have no overlap.
+[0] index.ts(1068,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1073,31): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1073,61): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1077,74): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1079,36): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1082,35): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1082,65): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1084,35): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1084,65): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1091,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1094,31): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1103,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1106,32): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1116,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1125,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1127,30): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1147,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1150,30): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1160,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1162,33): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1171,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1173,30): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1186,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1188,9): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1190,53): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1191,27): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1191,57): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1199,5): error TS2304: Cannot find name 'startChainTimer'.
+[0] index.ts(1204,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1206,32): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1211,9): error TS2304: Cannot find name 'processMindMeldMatches'.
+[0] index.ts(1217,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1219,33): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1224,39): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1225,31): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1225,61): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1231,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1233,36): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1234,32): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1245,9): error TS2304: Cannot find name 'scoreBrainBurstRound'.
+[0] index.ts(1249,17): error TS2304: Cannot find name 'advanceBrainBurst'.
+[0] index.ts(1256,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1258,42): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1259,38): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1270,1): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1271,41): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1272,27): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1273,34): error TS2304: Cannot find name 'socket'.
+[0] index.ts(1065,5): error TS1128: Declaration or statement expected.
+[0] index.ts(1065,6): error TS1128: Declaration or statement expected.
+[0] index.ts(1277,1): error TS1128: Declaration or statement expected.
+[0] index.ts(1277,2): error TS1128: Declaration or statement expected.
+[0] 
+[0]     at createTSError (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:859:12)
+[0]     at reportTSError (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:863:19)
+[0]     at getOutput (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1077:36)
+[0]     at Object.compile (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1433:41)
+[0]     at Module.m._compile (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1617:30)
+[0]     at Module._extensions..js (node:internal/modules/cjs/loader:1892:10)
+[0]     at Object.require.extensions.<computed> [as .ts] (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1621:12)
+[0]     at Module.load (node:internal/modules/cjs/loader:1480:32)
+[0]     at Module._load (node:internal/modules/cjs/loader:1299:12)
+[0]     at TracingChannel.traceSync (node:diagnostics_channel:328:14) {
+[0]   diagnosticCodes: [
+[0]     2367, 2367, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 2304, 2304, 2304, 2304, 2304, 2304,
+[0]     2304, 1128, 1128, 1128, 1128
+[0]   ]
+[0] }
+[0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[1] 7:29:03 PM [vite] (client) hmr update /src/App.tsx
+[1] 7:29:28 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[1] 7:29:29 PM [vite] (client) hmr update /src/components/PlayerLogic.tsx
+[1] 7:29:40 PM [vite] (client) hmr update /src/components/PlayerLogic.tsx
+[1] 7:30:15 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[1] 7:30:47 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] /Users/yaeger/famgame/node_modules/ts-node/src/index.ts:859
+[0]     return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+[0]            ^
+[0] TSError: ⨯ Unable to compile TypeScript:
+[0] index.ts(1028,13): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | undefined' and '"GLOBAL_AVERAGES"' have no overlap.
+[0] index.ts(1035,47): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | undefined' and '"GLOBAL_AVERAGES"' have no overlap.
+[0] 
+[0]     at createTSError (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:859:12)
+[0]     at reportTSError (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:863:19)
+[0]     at getOutput (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1077:36)
+[0]     at Object.compile (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1433:41)
+[0]     at Module.m._compile (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1617:30)
+[0]     at Module._extensions..js (node:internal/modules/cjs/loader:1892:10)
+[0]     at Object.require.extensions.<computed> [as .ts] (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1621:12)
+[0]     at Module.load (node:internal/modules/cjs/loader:1480:32)
+[0]     at Module._load (node:internal/modules/cjs/loader:1299:12)
+[0]     at TracingChannel.traceSync (node:diagnostics_channel:328:14) {
+[0]   diagnosticCodes: [ 2367, 2367 ]
+[0] }
+[0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[0] Server listening on internal port 3000
+[0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[0] Error: listen EADDRINUSE: address already in use :::3000
+[0]     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+[0]     at listenInCluster (node:net:1997:12)
+[0]     at Server.listen (node:net:2102:7)
+[0]     at Object.<anonymous> (/Users/yaeger/famgame/server/index.ts:1276:12)
+[0]     at Module._compile (node:internal/modules/cjs/loader:1760:14)
+[0]     at Module.m._compile (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1618:23)
+[0]     at Module._extensions..js (node:internal/modules/cjs/loader:1892:10)
+[0]     at Object.require.extensions.<computed> [as .ts] (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1621:12)
+[0]     at Module.load (node:internal/modules/cjs/loader:1480:32)
+[0]     at Module._load (node:internal/modules/cjs/loader:1299:12) {
+[0]   code: 'EADDRINUSE',
+[0]   errno: -48,
+[0]   syscall: 'listen',
+[0]   address: '::',
+[0]   port: 3000
+[0] }
+[0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m

@@ -18,6 +18,7 @@ const GAME_MODES = [
   { name: 'Speed Draw', icon: '🎨', color: '#00d2d3' },
   { name: 'This or That', icon: '⚖️', color: '#ff9ff3' },
   { name: 'Brain Burst', icon: '💰', color: '#f9ca24' },
+  { name: 'Global Averages', icon: '🌍', color: '#00d4ff' },
 ];
 
 function GameContent() {

@@ -21,7 +21,7 @@ const useBrainBurstSounds = () => {
 
     const getCtx = useCallback(() => {
         if (!ctxRef.current) {
-            const AC = window.AudioContext || (window as any).webkitAudioContext;
+            const AC = window.AudioContext || (window as Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
             ctxRef.current = new AC();
         }
         if (ctxRef.current.state === 'suspended') ctxRef.current.resume();
@@ -204,7 +204,7 @@ const useBrainBurstSounds = () => {
 
 // Confetti particle component
 const ConfettiExplosion = () => {
-    const [particles] = useState<any[]>(() => Array.from({ length: 60 }, (_, i) => ({
+    const [particles] = useState<Array<{ id: number; x: number; delay: number; size: number; color: string; rotation: number; duration: number; yOffset: number; xDrift: number }>>(() => Array.from({ length: 60 }, (_, i) => ({
         id: i,
         x: Math.random() * 100,
         delay: Math.random() * 0.5,
@@ -218,7 +218,7 @@ const ConfettiExplosion = () => {
 
     return (
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 100, overflow: 'hidden' }}>
-            {particles.map((p: any) => (
+            {particles.map((p) => (
                 <motion.div
                     key={p.id}
                     initial={{ y: '50vh', x: `${p.x}vw`, opacity: 1, scale: 1, rotate: 0 }}
@@ -596,50 +596,58 @@ const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
                             initial={{ y: 40, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.8 }}
-                            style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '12px' }}
+                            style={{
+                                width: '100%', maxWidth: '1200px',
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                gap: '20px',
+                                padding: '20px'
+                            }}
                         >
                             {Object.values(players)
-                                .filter((p: any) => !p.isHost)
-                                .sort((a: any, b: any) => b.score - a.score)
+                                .filter((p: { isHost?: boolean; name: string; score: number; avatar?: string }) => !p.isHost)
+                                .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
                                 .map((player, i) => (
                                     <motion.div
                                         key={player.name}
-                                        initial={{ x: -40, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 1 + i * 0.2 }}
+                                        initial={{ x: -40, opacity: 0, scale: 0.9 }}
+                                        animate={{ x: 0, opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.8 + i * 0.1, type: "spring", stiffness: 200, damping: 15 }}
                                         style={{
                                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                            padding: '16px 24px', borderRadius: '16px',
+                                            padding: '20px 24px', borderRadius: '24px',
                                             background: i === 0
-                                                ? 'linear-gradient(135deg, rgba(249,202,36,0.2), rgba(240,147,43,0.1))'
-                                                : 'rgba(255,255,255,0.05)',
-                                            border: `2px solid ${i === 0 ? 'rgba(249,202,36,0.4)' : 'rgba(255,255,255,0.05)'}`,
+                                                ? 'linear-gradient(135deg, rgba(249,202,36,0.25), rgba(240,147,43,0.15))'
+                                                : 'rgba(255,255,255,0.08)',
+                                            border: `2px solid ${i === 0 ? 'rgba(249,202,36,0.6)' : 'rgba(255,255,255,0.1)'}`,
+                                            boxShadow: i === 0 ? '0 0 40px rgba(249,202,36,0.3)' : 'none',
+                                            backdropFilter: 'blur(10px)'
                                         }}
                                     >
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                             <span style={{
-                                                fontSize: '2rem', fontWeight: 900,
+                                                fontSize: '2.5rem', fontWeight: 900,
                                                 color: i === 0 ? '#f9ca24' : i === 1 ? '#c0c0c0' : i === 2 ? '#cd7f32' : 'rgba(255,255,255,0.3)',
                                             }}>
                                                 {i === 0 ? '👑' : `#${i + 1}`}
                                             </span>
-                                            <span style={{ fontSize: '1.5rem' }}>{player.avatar}</span>
-                                            <span style={{ fontSize: '1.4rem', fontWeight: 800 }}>{player.name}</span>
+                                            <span style={{ fontSize: '2rem' }}>{player.avatar}</span>
+                                            <span style={{ fontSize: '1.6rem', fontWeight: 800 }}>{player.name}</span>
                                         </div>
                                         <motion.span
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
-                                            transition={{ delay: 1.2 + i * 0.2, type: 'spring' }}
+                                            transition={{ delay: 1.2 + i * 0.1, type: 'spring' }}
                                             style={{
-                                                fontSize: '1.6rem', fontWeight: 900, fontFamily: 'monospace',
+                                                fontSize: '2rem', fontWeight: 900, fontFamily: 'monospace',
                                                 color: i === 0 ? '#f9ca24' : '#00d4ff',
+                                                textShadow: i === 0 ? '0 0 20px rgba(249,202,36,0.8)' : '0 0 10px rgba(0,212,255,0.5)'
                                             }}
                                         >
                                             {player.score}
                                         </motion.span>
                                     </motion.div>
-                                ))
-                            }
+                                ))}
                         </motion.div>
                     </motion.div>
                 )}

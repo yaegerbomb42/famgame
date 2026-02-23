@@ -16,6 +16,7 @@ import ChainReactionPlayer from '../games/chain-reaction/Player';
 import MindMeldPlayer from '../games/mind-meld/Player';
 import CompetePlayer from '../games/compete/Player';
 import BrainBurstPlayer from '../games/brain-burst/Player';
+import GlobalAveragesPlayer from '../games/global-averages/Player';
 
 const AVATARS = ['🙂', '😂', '😎', '🤔', '😍', '🤩', '🤯', '🥳', '👻', '👽', '🤖', '💩', '🐱', '🐶', '🦄', '🐲'];
 
@@ -353,6 +354,15 @@ const PlayerLogic = () => {
                                         showResult={gameState.gameData.showResult}
                                         onAnswer={handleBrainBurstAnswer}
                                         onUseLifeline={handleBrainBurstLifeline}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData && (
+                                    <GlobalAveragesPlayer
+                                        phase={gameState.gameData.phase}
+                                        question={gameState.gameData.question}
+                                        socket={socket}
+                                        hasGuessed={gameState.gameData.guesses?.[socket?.id || ''] !== undefined}
                                     />
                                 )}
                             </>
