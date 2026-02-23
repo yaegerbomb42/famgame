@@ -531,6 +531,12 @@ io.on('connection', (socket: any) => {
                             // Score correct answers
                             scoreBrainBurstRound();
                             io.emit('gameState', gameState);
+                            // Auto-advance to next question after 5s
+                            setTimeout(() => {
+                                if (gameState.currentGame === 'BRAIN_BURST' && gameState.gameData.phase === 'REVEAL') {
+                                    advanceBrainBurst();
+                                }
+                            }, 5000);
                         }
                     });
                     io.emit('gameState', gameState);
@@ -666,6 +672,41 @@ io.on('connection', (socket: any) => {
                 gameState.gameData.streaks[pid] = 0;
             }
         });
+    };
+
+    // Helper to auto-advance Brain Burst to next question
+    const advanceBrainBurst = () => {
+        if (gameState.currentGame !== 'BRAIN_BURST') return;
+        const nextIdx = gameState.gameData.questionIndex + 1;
+        if (nextIdx >= 10) {
+            // Game over!
+            gameState.gameData.phase = 'GAME_OVER';
+            updateLeaderboard();
+            io.emit('gameState', gameState);
+        } else {
+            gameState.gameData.questionIndex = nextIdx;
+            gameState.gameData.currentQuestion = gameState.gameData.questions[nextIdx];
+            gameState.gameData.tier = BRAIN_BURST_TIERS[nextIdx];
+            gameState.gameData.showResult = false;
+            gameState.gameData.answers = {};
+            gameState.gameData.fiftyFiftyDisabled = [];
+            gameState.gameData.phase = 'QUESTION';
+            startTimer(20, () => {
+                if (gameState.currentGame === 'BRAIN_BURST' && gameState.gameData.phase === 'QUESTION') {
+                    gameState.gameData.showResult = true;
+                    gameState.gameData.phase = 'REVEAL';
+                    scoreBrainBurstRound();
+                    io.emit('gameState', gameState);
+                    // Auto-advance after reveal
+                    setTimeout(() => {
+                        if (gameState.currentGame === 'BRAIN_BURST' && gameState.gameData.phase === 'REVEAL') {
+                            advanceBrainBurst();
+                        }
+                    }, 5000);
+                }
+            });
+            io.emit('gameState', gameState);
+        }
     };
 
     // GAME FLOW CONTROLS
@@ -1109,24 +1150,13 @@ io.on('connection', (socket: any) => {
             gameState.gameData.showResult = true;
             gameState.gameData.phase = 'REVEAL';
             // Score
-            const correctIdx = gameState.gameData.currentQuestion.correct;
-            const tierPoints = gameState.gameData.tier.points;
-            Object.entries(gameState.gameData.answers).forEach(([pid, ans]: [string, any]) => {
-                if (ans === correctIdx) {
-                    if (!gameState.gameData.streaks[pid]) gameState.gameData.streaks[pid] = 0;
-                    gameState.gameData.streaks[pid]++;
-                    const streakMultiplier = Math.min(gameState.gameData.streaks[pid], 3);
-                    const points = Math.round(tierPoints * (1 + (streakMultiplier - 1) * 0.25));
-                    if (gameState.players[pid]) gameState.players[pid].score += points;
-                } else {
-                    gameState.gameData.streaks[pid] = 0;
+            scoreBrainBurstRound();
+            // Auto-advance after 5s
+            setTimeout(() => {
+                if (gameState.currentGame === 'BRAIN_BURST' && gameState.gameData.phase === 'REVEAL') {
+                    advanceBrainBurst();
                 }
-            });
-            Object.keys(gameState.players).forEach(pid => {
-                if (pid !== gameState.hostId && !gameState.gameData.answers[pid]) {
-                    gameState.gameData.streaks[pid] = 0;
-                }
-            });
+            }, 5000);
         }
         io.emit('gameState', gameState);
     });

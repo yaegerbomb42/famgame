@@ -1,5 +1,5 @@
 import { useGame } from '../context/useGame';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TriviaHost from '../games/trivia/Host';
 import TwoTruthsHost from '../games/two-truths/Host';
@@ -48,8 +48,23 @@ const GAMES = [
     { id: 'BRAIN_BURST', name: 'Brain Burst', icon: '💰', color: '#f9ca24' },
 ];
 
+// Narrator — speaks text via Web Speech API
+const narrate = (text: string) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.95;
+    utter.pitch = 1.1;
+    // Pick a good voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google UK English Male') || v.name.includes('Daniel'));
+    if (preferred) utter.voice = preferred;
+    window.speechSynthesis.speak(utter);
+};
+
 const HostLogic = () => {
     const { gameState, startGame, socket, isConnected } = useGame();
+    const lastNarratedRef = useRef<string>('');
 
     // Create room when host mounts and is connected
     useEffect(() => {
@@ -57,6 +72,27 @@ const HostLogic = () => {
             socket.emit('createRoom', { name: 'Host' });
         }
     }, [isConnected, socket]);
+
+    // Narrator — auto-narrate game events
+    useEffect(() => {
+        if (!gameState?.gameData || gameState.currentGame !== 'BRAIN_BURST') return;
+        const { phase, currentQuestion, tier, questionIndex } = gameState.gameData;
+        let text = '';
+        if (phase === 'INTRO') {
+            text = 'Welcome to Brain Burst! Get ready for 10 questions worth up to one million dollars!';
+        } else if (phase === 'QUESTION' && currentQuestion) {
+            text = `Question ${(questionIndex || 0) + 1}, for ${tier?.prize || 'points'}. ${currentQuestion.q}`;
+        } else if (phase === 'REVEAL' && currentQuestion) {
+            const correctAnswer = currentQuestion.a[currentQuestion.correct];
+            text = `The answer is: ${correctAnswer}`;
+        } else if (phase === 'GAME_OVER') {
+            text = 'Game over! Let\'s see the final scores!';
+        }
+        if (text && text !== lastNarratedRef.current) {
+            lastNarratedRef.current = text;
+            narrate(text);
+        }
+    }, [gameState?.gameData?.phase, gameState?.gameData?.questionIndex]);
 
     if (!gameState || !gameState.roomCode) return (
         <div className="flex h-screen items-center justify-center bg-[#0a0518]">
@@ -76,9 +112,14 @@ const HostLogic = () => {
         socket?.emit('backToLobby');
     };
 
+    const startBrainBurst = () => {
+        socket?.emit('startGame');
+        // Immediately select Brain Burst
+        setTimeout(() => socket?.emit('selectGame', 'BRAIN_BURST'), 200);
+    };
 
     const joinUrl = `https://gamewithfam.vercel.app?code=${gameState.roomCode}`;
-    const playerCount = Object.keys(gameState.players).length;
+    const playerCount = Object.values(gameState.players).filter(p => !p.isHost).length;
 
     return (
         <div className="min-h-screen flex flex-col bg-[#0a0518] text-white overflow-auto">
@@ -177,14 +218,14 @@ const HostLogic = () => {
                                 <motion.button
                                     whileHover={{ scale: 1.1, y: -5 }}
                                     whileTap={{ scale: 0.9 }}
-                                    onClick={() => socket?.emit('startGame')}
+                                    onClick={startBrainBurst}
                                     disabled={playerCount === 0}
                                     className={`text-white text-4xl md:text-6xl font-black px-16 md:px-24 py-8 md:py-10 rounded-[3rem] uppercase tracking-widest border-t-8 border-white/20 transition-all ${playerCount === 0
                                         ? 'bg-white/10 opacity-30 cursor-not-allowed'
                                         : 'bg-game-primary shadow-[0_0_80px_rgba(255,0,255,0.5)] hover:shadow-[0_0_120px_rgba(255,0,255,0.8)] animate-pulse-glow'
                                         }`}
                                 >
-                                    {playerCount === 0 ? 'Waiting...' : 'Start Game'}
+                                    {playerCount === 0 ? 'Waiting...' : '🧠 Start Brain Burst'}
                                 </motion.button>
                             </div>
                         </motion.div>

@@ -21,7 +21,9 @@ const GAME_MODES = [
 ];
 
 function GameContent() {
-  const [role, setRole] = useState<'NONE' | 'HOST' | 'PLAYER'>('NONE');
+  // Auto-detect join code in URL — QR deep link
+  const hasJoinCode = new URLSearchParams(window.location.search).has('code');
+  const [role, setRole] = useState<'NONE' | 'HOST' | 'PLAYER'>(hasJoinCode ? 'PLAYER' : 'NONE');
 
   if (role === 'HOST') {
     return <HostLogic />;
