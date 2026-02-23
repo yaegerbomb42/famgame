@@ -1,0 +1,46 @@
+
+> famgame@1.0.0 dev
+> concurrently "npm run server" "npm run client"
+
+[1] 
+[1] > famgame@1.0.0 client
+[1] > cd client && npm run dev
+[1] 
+[0] 
+[0] > famgame@1.0.0 server
+[0] > cd server && npx nodemon --exec npx ts-node index.ts
+[0] 
+[1] 
+[1] > client@0.0.0 dev
+[1] > vite
+[1] 
+[1] 
+[1]   VITE v7.3.1  ready in 117 ms
+[1] 
+[1]   ➜  Local:   http://localhost:5173/
+[1]   ➜  Network: use --host to expose
+[0] [33m[nodemon] 3.1.11[39m
+[0] [33m[nodemon] to restart at any time, enter `rs`[39m
+[0] [33m[nodemon] watching path(s): *.*[39m
+[0] [33m[nodemon] watching extensions: ts,json[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[0] Server listening on internal port 3000
+[0] Client connected: GC5YmuTIqLqa9XOwAAAB
+[0] Client disconnected: GC5YmuTIqLqa9XOwAAAB
+[0] Client connected: tLsjGc87q7yV2sf1AAAD
+[0] Client connected: UMlAhSn2BtZmdq2GAAAF
+[0] Client disconnected: tLsjGc87q7yV2sf1AAAD
+[0] Client disconnected: UMlAhSn2BtZmdq2GAAAF
+[1] 6:52:09 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[1] 6:52:38 PM [vite] (client) hmr update /src/games/brain-burst/Host.tsx
+[1] 6:52:59 PM [vite] (client) hmr update /src/games/brain-burst/Host.tsx
+[1] 6:53:16 PM [vite] (client) hmr update /src/games/brain-burst/Host.tsx
+[0] Client connected: SP-0ZKZW5VaTHDTZAAAH
+[0] Client disconnected: SP-0ZKZW5VaTHDTZAAAH
+[0] Client connected: kt69FjZr199Wu79fAAAJ
+[0] Client disconnected: kt69FjZr199Wu79fAAAJ
+[0] Client connected: snviVP-eYkgSnkKZAAAL
+[0] Client connected: dRlu2VQ1JV4RWUeXAAAN
+[0] Client disconnected: dRlu2VQ1JV4RWUeXAAAN
+[0] Client disconnected: snviVP-eYkgSnkKZAAAL

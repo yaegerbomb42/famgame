@@ -153,29 +153,32 @@ const HostLogic = () => {
                             exit={{ opacity: 0, y: -20 }}
                             className="w-full max-w-6xl flex flex-col items-center"
                         >
-                            {/* Join Section - Massive for TV */}
-                            <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 mb-16 w-full">
-                                {/* QR Code */}
-                                <div className="flex flex-col items-center p-8 glass-card rounded-[3rem] border-4 border-white/5">
-                                    <QRCode url={joinUrl} size={250} />
-                                    <p className="mt-6 text-2xl font-black text-white/40 uppercase tracking-widest">Scan to join</p>
+                            <div className="flex flex-row items-center justify-between w-full mb-8">
+                                {/* Join Section Left */}
+                                <div className="flex flex-row items-center gap-8 glass-card p-6 rounded-[2rem] border-2 border-white/10 shadow-2xl">
+                                    <div className="bg-white p-2 rounded-2xl">
+                                        <QRCode url={joinUrl} size={150} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <p className="text-xl text-white/50 mb-1 uppercase tracking-widest font-black">Scan to Join</p>
+                                        <p className="text-sm text-game-secondary mb-2 uppercase tracking-widest">gamewithfam.vercel.app</p>
+                                    </div>
                                 </div>
 
-                                {/* Room Code - EXPLOSIVE SIZE */}
-                                <div className="text-center group flex flex-col items-center">
-                                    <p className="text-3xl md:text-4xl text-white/30 mb-4 uppercase tracking-[1em] font-black">Room Code</p>
-                                    <div className="text-[12rem] md:text-[16rem] leading-none font-black tracking-[0.1em] text-white drop-shadow-[0_0_50px_rgba(255,255,255,0.3)] animate-pulse-glow">
+                                {/* Room Code Center-Right */}
+                                <div className="text-center flex flex-col items-center">
+                                    <p className="text-2xl text-white/40 mb-2 uppercase tracking-[0.5em] font-black">Room Code</p>
+                                    <div className="text-8xl md:text-9xl leading-none font-black tracking-[0.1em] text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.4)] animate-pulse-glow">
                                         {gameState.roomCode}
                                     </div>
-                                    <p className="text-3xl md:text-4xl font-black text-game-secondary mt-4 uppercase tracking-widest">gamewithfam.vercel.app</p>
                                 </div>
                             </div>
 
                             {/* Players Section */}
-                            <div className="w-full flex-1 flex flex-col min-h-0">
-                                <h2 className="text-5xl md:text-7xl font-black text-center mb-12 uppercase tracking-[0.2em]">
-                                    <span className="text-white/20">Players </span>
-                                    <span className="text-game-primary">({playerCount})</span>
+                            <div className="w-full flex-1 flex flex-col min-h-0 bg-black/20 rounded-[3rem] p-8 border-2 border-white/5">
+                                <h2 className="text-4xl md:text-5xl font-black text-center mb-8 uppercase tracking-[0.2em]">
+                                    <span className="text-white/40">Players </span>
+                                    <span className="text-[#f9ca24]">({playerCount})</span>
                                 </h2>
 
                                 {playerCount === 0 ? (
@@ -184,27 +187,28 @@ const HostLogic = () => {
                                         <p className="text-4xl font-black uppercase tracking-widest">Waiting for players...</p>
                                     </div>
                                 ) : (
-                                    <div className="flex-1 overflow-y-auto px-4 pb-8 custom-scrollbar">
-                                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8">
+                                    <div className="flex-1 overflow-y-auto px-4 pb-4 custom-scrollbar">
+                                        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-6">
                                             {Object.values(gameState.players).filter(p => !p.isHost).map((player) => (
                                                 <motion.div
                                                     key={player.id}
                                                     layout
-                                                    initial={{ scale: 0, rotate: -10 }}
-                                                    animate={{ scale: 1, rotate: 0 }}
-                                                    className="glass-card p-6 md:p-8 rounded-[2rem] flex flex-col items-center justify-center relative group border-4 border-white/10 shadow-2xl"
+                                                    initial={{ scale: 0, y: 20 }}
+                                                    animate={{ scale: 1, y: 0 }}
+                                                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                                    className="glass-card p-4 md:p-6 rounded-[1.5rem] flex flex-col items-center justify-center relative group border-2 border-white/20 shadow-xl hover:border-[#00d4ff]/50 hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all bg-white/5"
                                                 >
-                                                    <div className="text-6xl md:text-7xl mb-4 transform group-hover:scale-110 transition-transform drop-shadow-2xl">
+                                                    <div className="text-5xl md:text-6xl mb-3 transform group-hover:scale-125 group-hover:-rotate-12 transition-transform drop-shadow-lg">
                                                         {player.avatar || '👾'}
                                                     </div>
-                                                    <div className="font-black text-xl md:text-2xl truncate w-full text-center uppercase tracking-tight text-white">
+                                                    <div className="font-black text-lg md:text-xl truncate w-full text-center uppercase tracking-tight text-white">
                                                         {player.name}
                                                     </div>
                                                     <button
                                                         onClick={() => socket?.emit('kickPlayer', player.id)}
-                                                        className="absolute -top-3 -right-3 w-10 h-10 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-xl hover:bg-red-600 hover:scale-110"
+                                                        className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-lg hover:bg-red-600 hover:scale-110"
                                                     >
-                                                        <span className="text-2xl font-black">✕</span>
+                                                        <span className="text-xl font-black">✕</span>
                                                     </button>
                                                 </motion.div>
                                             ))}
@@ -214,18 +218,18 @@ const HostLogic = () => {
                             </div>
 
                             {/* Start Button - ALWAYS VISIBLE */}
-                            <div className="py-8 shrink-0">
+                            <div className="py-6 shrink-0 w-full flex justify-center mt-4">
                                 <motion.button
-                                    whileHover={{ scale: 1.1, y: -5 }}
-                                    whileTap={{ scale: 0.9 }}
+                                    whileHover={{ scale: 1.05, y: -2 }}
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={startBrainBurst}
                                     disabled={playerCount === 0}
-                                    className={`text-white text-4xl md:text-6xl font-black px-16 md:px-24 py-8 md:py-10 rounded-[3rem] uppercase tracking-widest border-t-8 border-white/20 transition-all ${playerCount === 0
+                                    className={`text-white text-3xl md:text-5xl font-black px-12 md:px-20 py-6 md:py-8 rounded-[2.5rem] uppercase tracking-widest border-t-4 border-white/20 transition-all ${playerCount === 0
                                         ? 'bg-white/10 opacity-30 cursor-not-allowed'
-                                        : 'bg-game-primary shadow-[0_0_80px_rgba(255,0,255,0.5)] hover:shadow-[0_0_120px_rgba(255,0,255,0.8)] animate-pulse-glow'
+                                        : 'bg-gradient-to-r from-[#f9ca24] to-[#f0932b] shadow-[0_0_60px_rgba(249,202,36,0.6)] hover:shadow-[0_0_100px_rgba(249,202,36,0.9)] animate-pulse-glow hover:scale-105'
                                         }`}
                                 >
-                                    {playerCount === 0 ? 'Waiting...' : '🧠 Start Brain Burst'}
+                                    {playerCount === 0 ? 'Waiting...' : '🚀 Start Brain Burst'}
                                 </motion.button>
                             </div>
                         </motion.div>

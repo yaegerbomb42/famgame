@@ -204,7 +204,7 @@ const useBrainBurstSounds = () => {
 
 // Confetti particle component
 const ConfettiExplosion = () => {
-    const particles = useMemo(() => Array.from({ length: 60 }, (_, i) => ({
+    const [particles] = useState<any[]>(() => Array.from({ length: 60 }, (_, i) => ({
         id: i,
         x: Math.random() * 100,
         delay: Math.random() * 0.5,
@@ -214,7 +214,7 @@ const ConfettiExplosion = () => {
         duration: Math.random() * 2 + 2,
         yOffset: -20 - Math.random() * 40,
         xDrift: (Math.random() - 0.5) * 30,
-    })), []);
+    })));
 
     return (
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 100, overflow: 'hidden' }}>
@@ -406,9 +406,9 @@ const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
                             {/* Question */}
                             <motion.h2
                                 key={currentQuestion.q}
-                                initial={{ y: 30, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
+                                initial={{ scale: 0.8, y: 40, opacity: 0, filter: 'blur(10px)' }}
+                                animate={{ scale: 1, y: 0, opacity: 1, filter: 'blur(0px)' }}
+                                transition={{ type: 'spring', damping: 12, stiffness: 100, delay: 0.2 }}
                                 style={{
                                     fontSize: 'clamp(2rem, 4.5vw, 4.5rem)', fontWeight: 800, textAlign: 'center',
                                     maxWidth: '1100px', lineHeight: 1.2, letterSpacing: '-0.01em',
@@ -427,7 +427,7 @@ const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
                                     return (
                                         <motion.div
                                             key={i}
-                                            initial={{ x: i % 2 === 0 ? -30 : 30, opacity: 0 }}
+                                            initial={{ x: i % 2 === 0 ? -40 : 40, opacity: 0, scale: 0.9 }}
                                             animate={{
                                                 x: 0, opacity: isDisabled ? 0.15 : 1,
                                                 backgroundColor: isRevealing
@@ -436,18 +436,23 @@ const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
                                                 borderColor: isRevealing
                                                     ? isCorrect ? '#2ecc71' : 'rgba(231,76,60,0.3)'
                                                     : ANSWER_COLORS[i] + '60',
-                                                scale: isRevealing && isCorrect ? 1.03 : 1,
+                                                scale: isRevealing && isCorrect ? [1, 1.08, 1.05] : 1,
                                                 boxShadow: isRevealing && isCorrect
-                                                    ? '0 0 40px rgba(46,204,113,0.4), 0 0 80px rgba(46,204,113,0.2)'
+                                                    ? ['0 0 0px rgba(46,204,113,0)', '0 0 80px rgba(46,204,113,0.8)', '0 0 40px rgba(46,204,113,0.4), 0 0 80px rgba(46,204,113,0.2)']
                                                     : 'none',
                                             }}
-                                            transition={{ delay: i * 0.1 + (isRevealing ? 0.3 : 0), duration: 0.4 }}
+                                            transition={{
+                                                delay: i * 0.1 + (isRevealing && isCorrect ? 0.3 : 0),
+                                                duration: isRevealing && isCorrect ? 0.8 : 0.4,
+                                                times: isRevealing && isCorrect ? [0, 0.2, 1] : undefined
+                                            }}
                                             style={{
                                                 padding: 'clamp(16px, 3vh, 32px) 24px',
                                                 borderRadius: '20px',
-                                                border: '2px solid',
+                                                border: '3px solid',
                                                 display: 'flex', alignItems: 'center', gap: '16px',
                                                 position: 'relative', overflow: 'hidden',
+                                                zIndex: isRevealing && isCorrect ? 10 : 1,
                                             }}
                                         >
                                             {/* Letter Badge */}
@@ -476,8 +481,9 @@ const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
                             {phase === 'QUESTION' && (
                                 <div style={{ width: '100%', maxWidth: '800px' }}>
                                     <div style={{
-                                        height: '8px', borderRadius: '4px',
+                                        height: '12px', borderRadius: '6px',
                                         background: 'rgba(255,255,255,0.08)', overflow: 'hidden',
+                                        boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)',
                                     }}>
                                         <motion.div
                                             animate={{ width: `${(timer / 20) * 100}%` }}
@@ -495,9 +501,12 @@ const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
                                         fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', fontWeight: 600,
                                     }}>
                                         <span>{answerCount}/{playerCount} answered</span>
-                                        <span style={{ color: timer <= 5 ? '#e74c3c' : 'rgba(255,255,255,0.5)', fontFamily: 'monospace', fontWeight: 900, fontSize: '1.2rem' }}>
+                                        <motion.span
+                                            animate={timer <= 5 ? { scale: [1, 1.2, 1], color: ['#e74c3c', '#ff6b6b', '#e74c3c'] } : {}}
+                                            transition={timer <= 5 ? { repeat: Infinity, duration: 1 } : {}}
+                                            style={{ color: timer <= 5 ? '#e74c3c' : 'rgba(255,255,255,0.8)', fontFamily: 'monospace', fontWeight: 900, fontSize: '1.4rem' }}>
                                             {timer}s
-                                        </span>
+                                        </motion.span>
                                     </div>
                                 </div>
                             )}
