@@ -15,6 +15,7 @@ import SpeedDrawPlayer from '../games/speed-draw/Player';
 import ChainReactionPlayer from '../games/chain-reaction/Player';
 import MindMeldPlayer from '../games/mind-meld/Player';
 import CompetePlayer from '../games/compete/Player';
+import BrainBurstPlayer from '../games/brain-burst/Player';
 
 const AVATARS = ['🙂', '😂', '😎', '🤔', '😍', '🤩', '🤯', '🥳', '👻', '👽', '🤖', '💩', '🐱', '🐶', '🦄', '🐲'];
 
@@ -136,6 +137,10 @@ const PlayerLogic = () => {
 
     // Compete
     const handleCompeteProgress = (progress: number) => socket?.emit('competeProgress', progress);
+
+    // Brain Burst
+    const handleBrainBurstAnswer = (index: number) => socket?.emit('submitBrainBurstAnswer', index);
+    const handleBrainBurstLifeline = () => socket?.emit('useBrainBurstLifeline');
 
     if (!isConnected) {
         return (
@@ -334,6 +339,20 @@ const PlayerLogic = () => {
                                         timer={gameState.gameData.timer}
                                         onProgress={handleCompeteProgress}
                                         amWinner={socket?.id === gameState.gameData.winnerId}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'BRAIN_BURST' && gameState.gameData && (
+                                    <BrainBurstPlayer
+                                        phase={gameState.gameData.phase}
+                                        currentQuestion={gameState.gameData.currentQuestion}
+                                        tier={gameState.gameData.tier}
+                                        questionIndex={gameState.gameData.questionIndex}
+                                        fiftyFiftyDisabled={gameState.gameData.fiftyFiftyDisabled || []}
+                                        lifelineUsed={!!gameState.gameData.lifelinesUsed?.[socket?.id || '']}
+                                        showResult={gameState.gameData.showResult}
+                                        onAnswer={handleBrainBurstAnswer}
+                                        onUseLifeline={handleBrainBurstLifeline}
                                     />
                                 )}
                             </>

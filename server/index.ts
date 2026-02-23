@@ -76,7 +76,7 @@ interface GameState {
     hostId: string | null;
     players: Record<string, Player>;
     status: 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS';
-    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION' | 'EMOJI_STORY' | 'BLUFF' | 'THIS_OR_THAT' | 'SPEED_DRAW' | 'CHAIN_REACTION' | 'MIND_MELD' | 'COMPETE';
+    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION' | 'EMOJI_STORY' | 'BLUFF' | 'THIS_OR_THAT' | 'SPEED_DRAW' | 'CHAIN_REACTION' | 'MIND_MELD' | 'COMPETE' | 'BRAIN_BURST';
     gameData?: any;
     gameVotes: Record<string, number>;
     timer?: number;
@@ -163,6 +163,78 @@ const WORD_RACE_CATEGORIES = [
     "Animals", "Fruits", "Countries", "Brands", "Movies", "Colors", "Sports",
     "Vegetables", "Cities", "Cars", "Body Parts", "Jobs", "Clothes",
     "Furniture", "Tools", "Instruments", "Toys", "Drinks", "Flowers"
+];
+
+// Brain Burst — Millionaire-style trivia (50 fun questions, escalating tiers)
+const BRAIN_BURST_QUESTIONS = [
+    // Tier 1-2: Super Easy
+    { q: "What color is a banana when it's ripe?", a: ["Blue", "Yellow", "Purple", "Green"], correct: 1 },
+    { q: "How many legs does a dog have?", a: ["2", "4", "6", "8"], correct: 1 },
+    { q: "What do bees make?", a: ["Butter", "Honey", "Cheese", "Jam"], correct: 1 },
+    { q: "Which animal says 'moo'?", a: ["Cat", "Dog", "Cow", "Duck"], correct: 2 },
+    { q: "What is the color of the sky on a clear day?", a: ["Green", "Red", "Blue", "Orange"], correct: 2 },
+    { q: "Which meal do you eat in the morning?", a: ["Dinner", "Lunch", "Supper", "Breakfast"], correct: 3 },
+    { q: "What shape is a stop sign?", a: ["Circle", "Triangle", "Octagon", "Square"], correct: 2 },
+    { q: "What do you use to write on a whiteboard?", a: ["Crayon", "Marker", "Pencil", "Paintbrush"], correct: 1 },
+    { q: "How many colors are in a rainbow?", a: ["5", "6", "7", "8"], correct: 2 },
+    { q: "Which one is NOT a fruit?", a: ["Apple", "Carrot", "Banana", "Grape"], correct: 1 },
+    // Tier 3-4: Easy-Medium
+    { q: "What is the largest planet in our solar system?", a: ["Mars", "Saturn", "Jupiter", "Neptune"], correct: 2 },
+    { q: "Which country is shaped like a boot?", a: ["France", "Spain", "Italy", "Greece"], correct: 2 },
+    { q: "What is baby kangaroo called?", a: ["Cub", "Joey", "Kit", "Pup"], correct: 1 },
+    { q: "How many bones does an adult human have?", a: ["106", "156", "206", "306"], correct: 2 },
+    { q: "What is the hardest rock?", a: ["Granite", "Diamond", "Marble", "Quartz"], correct: 1 },
+    { q: "Which ocean is the biggest?", a: ["Atlantic", "Indian", "Pacific", "Arctic"], correct: 2 },
+    { q: "What animal is Winnie the Pooh?", a: ["Rabbit", "Bear", "Pig", "Donkey"], correct: 1 },
+    { q: "What gas do we breathe in?", a: ["Carbon Dioxide", "Nitrogen", "Oxygen", "Helium"], correct: 2 },
+    { q: "How many continents are there?", a: ["5", "6", "7", "8"], correct: 2 },
+    { q: "What is the tallest animal?", a: ["Elephant", "Giraffe", "Horse", "Camel"], correct: 1 },
+    // Tier 5-6: Medium
+    { q: "Which planet is closest to the Sun?", a: ["Venus", "Earth", "Mercury", "Mars"], correct: 2 },
+    { q: "What is the fastest bird?", a: ["Eagle", "Peregrine Falcon", "Hawk", "Ostrich"], correct: 1 },
+    { q: "In which city is the Eiffel Tower?", a: ["London", "Rome", "Berlin", "Paris"], correct: 3 },
+    { q: "What is a group of lions called?", a: ["Pack", "Herd", "Pride", "Flock"], correct: 2 },
+    { q: "How many Harry Potter books are there?", a: ["5", "6", "7", "8"], correct: 2 },
+    { q: "What is sushi traditionally wrapped in?", a: ["Lettuce", "Seaweed", "Rice Paper", "Tortilla"], correct: 1 },
+    { q: "Which superhero is from Wakanda?", a: ["Iron Man", "Black Panther", "Spider-Man", "Thor"], correct: 1 },
+    { q: "What is the currency of Japan?", a: ["Won", "Yuan", "Yen", "Dollar"], correct: 2 },
+    { q: "How many teeth does an adult human normally have?", a: ["28", "30", "32", "36"], correct: 2 },
+    { q: "What is the world's largest desert?", a: ["Sahara", "Gobi", "Antarctic", "Arabian"], correct: 2 },
+    // Tier 7-8: Medium-Hard
+    { q: "What year did the first iPhone come out?", a: ["2005", "2006", "2007", "2008"], correct: 2 },
+    { q: "Which country has the most people?", a: ["USA", "India", "China", "Indonesia"], correct: 1 },
+    { q: "What is the smallest country in the world?", a: ["Monaco", "Vatican City", "Nauru", "Malta"], correct: 1 },
+    { q: "How many rings are on the Olympic flag?", a: ["3", "4", "5", "6"], correct: 2 },
+    { q: "What element does 'Au' represent?", a: ["Silver", "Aluminum", "Gold", "Argon"], correct: 2 },
+    { q: "Which animal can sleep for 3 years?", a: ["Sloth", "Snail", "Bear", "Koala"], correct: 1 },
+    { q: "What is the longest river in the world?", a: ["Amazon", "Nile", "Mississippi", "Yangtze"], correct: 1 },
+    { q: "What does DNA stand for?", a: ["Deoxyribonucleic Acid", "Dioxin Natural Acid", "Dynamic Neural Acid", "Digital Network Array"], correct: 0 },
+    { q: "Which planet has the most moons?", a: ["Jupiter", "Saturn", "Uranus", "Neptune"], correct: 1 },
+    { q: "What is the national animal of Scotland?", a: ["Dragon", "Lion", "Unicorn", "Griffin"], correct: 2 },
+    // Tier 9-10: Tricky Fun
+    { q: "What is a group of flamingos called?", a: ["Flock", "Flamboyance", "Colony", "Brigade"], correct: 1 },
+    { q: "Which fruit has the most seeds?", a: ["Watermelon", "Pomegranate", "Strawberry", "Kiwi"], correct: 2 },
+    { q: "What color are aircraft black boxes?", a: ["Black", "Orange", "Yellow", "Red"], correct: 1 },
+    { q: "How long is a goldfish's memory?", a: ["3 seconds", "Months", "1 minute", "1 hour"], correct: 1 },
+    { q: "Which country invented ice cream?", a: ["Italy", "France", "China", "USA"], correct: 2 },
+    { q: "What is the fear of long words called?", a: ["Logophobia", "Hippopotomonstrosesquipedaliophobia", "Sesquiphobia", "Verbophobia"], correct: 1 },
+    { q: "How many hearts does an octopus have?", a: ["1", "2", "3", "4"], correct: 2 },
+    { q: "What was the first toy advertised on TV?", a: ["Barbie", "Mr. Potato Head", "Slinky", "LEGO"], correct: 1 },
+    { q: "Which Disney princess has a raccoon friend?", a: ["Rapunzel", "Pocahontas", "Moana", "Mulan"], correct: 1 },
+    { q: "What is the most stolen food in the world?", a: ["Candy", "Bread", "Cheese", "Meat"], correct: 2 },
+];
+
+const BRAIN_BURST_TIERS = [
+    { level: 1, prize: '$100', points: 100 },
+    { level: 2, prize: '$200', points: 200 },
+    { level: 3, prize: '$500', points: 300 },
+    { level: 4, prize: '$1,000', points: 400 },
+    { level: 5, prize: '$2,000', points: 500 },
+    { level: 6, prize: '$5,000', points: 600 },
+    { level: 7, prize: '$10,000', points: 700 },
+    { level: 8, prize: '$50,000', points: 800 },
+    { level: 9, prize: '$100,000', points: 900 },
+    { level: 10, prize: '$1,000,000', points: 1000 },
 ];
 
 io.on('connection', (socket: any) => {
@@ -430,6 +502,40 @@ io.on('connection', (socket: any) => {
                     io.emit('gameState', gameState);
                 }
             }, 3000);
+        } else if (gameId === 'BRAIN_BURST') {
+            // Shuffle and pick 10 questions
+            const shuffled = [...BRAIN_BURST_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
+            gameState.gameData = {
+                phase: 'INTRO',
+                questionIndex: 0,
+                questions: shuffled,
+                currentQuestion: shuffled[0],
+                tier: BRAIN_BURST_TIERS[0],
+                tiers: BRAIN_BURST_TIERS,
+                timer: 20,
+                answers: {},
+                showResult: false,
+                fiftyFiftyDisabled: [],
+                lifelinesUsed: {},
+                streaks: {},
+            };
+            // Auto-transition from INTRO to QUESTION after 3s
+            setTimeout(() => {
+                if (gameState.currentGame === 'BRAIN_BURST' && gameState.gameData.phase === 'INTRO') {
+                    gameState.gameData.phase = 'QUESTION';
+                    startTimer(20, () => {
+                        if (gameState.currentGame === 'BRAIN_BURST' && gameState.gameData.phase === 'QUESTION') {
+                            // Time's up — reveal answers
+                            gameState.gameData.showResult = true;
+                            gameState.gameData.phase = 'REVEAL';
+                            // Score correct answers
+                            scoreBrainBurstRound();
+                            io.emit('gameState', gameState);
+                        }
+                    });
+                    io.emit('gameState', gameState);
+                }
+            }, 3500);
         }
         io.emit('gameState', gameState);
     });
@@ -537,6 +643,31 @@ io.on('connection', (socket: any) => {
         }, 3000);
     };
 
+    // Helper for scoring Brain Burst round
+    const scoreBrainBurstRound = () => {
+        const correctIdx = gameState.gameData.currentQuestion.correct;
+        const tierPoints = gameState.gameData.tier.points;
+        Object.entries(gameState.gameData.answers).forEach(([pid, ans]: [string, any]) => {
+            if (ans === correctIdx) {
+                // Streak bonus
+                if (!gameState.gameData.streaks[pid]) gameState.gameData.streaks[pid] = 0;
+                gameState.gameData.streaks[pid]++;
+                const streakMultiplier = Math.min(gameState.gameData.streaks[pid], 3); // Max 3x
+                const points = Math.round(tierPoints * (1 + (streakMultiplier - 1) * 0.25));
+                if (gameState.players[pid]) gameState.players[pid].score += points;
+            } else {
+                // Reset streak
+                gameState.gameData.streaks[pid] = 0;
+            }
+        });
+        // Players who didn't answer also reset streak
+        Object.keys(gameState.players).forEach(pid => {
+            if (!gameState.gameData.answers[pid]) {
+                gameState.gameData.streaks[pid] = 0;
+            }
+        });
+    };
+
     // GAME FLOW CONTROLS
     socket.on('nextRound', () => {
         if (gameState.currentGame === 'TRIVIA') {
@@ -607,6 +738,35 @@ io.on('connection', (socket: any) => {
             gameState.gameData.scores = {};
             gameState.gameData.endTime = Date.now() + 45000;
             io.emit('gameState', gameState);
+        } else if (gameState.currentGame === 'BRAIN_BURST') {
+            if (gameState.gameData.phase === 'REVEAL' || gameState.gameData.phase === 'CELEBRATION') {
+                const nextIdx = gameState.gameData.questionIndex + 1;
+                if (nextIdx >= 10) {
+                    // Game over!
+                    gameState.gameData.phase = 'GAME_OVER';
+                    io.emit('gameState', gameState);
+                } else {
+                    gameState.gameData.questionIndex = nextIdx;
+                    gameState.gameData.currentQuestion = gameState.gameData.questions[nextIdx];
+                    gameState.gameData.tier = BRAIN_BURST_TIERS[nextIdx];
+                    gameState.gameData.showResult = false;
+                    gameState.gameData.answers = {};
+                    gameState.gameData.fiftyFiftyDisabled = [];
+                    gameState.gameData.phase = 'QUESTION';
+                    startTimer(20, () => {
+                        if (gameState.currentGame === 'BRAIN_BURST' && gameState.gameData.phase === 'QUESTION') {
+                            gameState.gameData.showResult = true;
+                            gameState.gameData.phase = 'REVEAL';
+                            scoreBrainBurstRound();
+                            io.emit('gameState', gameState);
+                        }
+                    });
+                    io.emit('gameState', gameState);
+                }
+            } else {
+                gameState.status = 'RESULTS';
+                io.emit('gameState', gameState);
+            }
         } else {
             gameState.status = 'RESULTS';
             io.emit('gameState', gameState);
@@ -931,6 +1091,57 @@ io.on('connection', (socket: any) => {
             gameState.gameData.winnerId = socket.id;
             if (gameState.players[socket.id]) gameState.players[socket.id].score += 100;
         }
+        io.emit('gameState', gameState);
+    });
+
+    // --- BRAIN BURST LOGIC ---
+    socket.on('submitBrainBurstAnswer', (answerIndex: number) => {
+        if (gameState.currentGame !== 'BRAIN_BURST' || gameState.gameData.phase !== 'QUESTION') return;
+        if (gameState.gameData.answers[socket.id] !== undefined) return; // Already answered
+        gameState.gameData.answers[socket.id] = answerIndex;
+
+        const playerCount = Object.keys(gameState.players).filter(id => id !== gameState.hostId).length;
+        const answerCount = Object.keys(gameState.gameData.answers).length;
+
+        if (answerCount >= playerCount) {
+            // All answered — reveal
+            if (currentTimer) clearTimeout(currentTimer);
+            gameState.gameData.showResult = true;
+            gameState.gameData.phase = 'REVEAL';
+            // Score
+            const correctIdx = gameState.gameData.currentQuestion.correct;
+            const tierPoints = gameState.gameData.tier.points;
+            Object.entries(gameState.gameData.answers).forEach(([pid, ans]: [string, any]) => {
+                if (ans === correctIdx) {
+                    if (!gameState.gameData.streaks[pid]) gameState.gameData.streaks[pid] = 0;
+                    gameState.gameData.streaks[pid]++;
+                    const streakMultiplier = Math.min(gameState.gameData.streaks[pid], 3);
+                    const points = Math.round(tierPoints * (1 + (streakMultiplier - 1) * 0.25));
+                    if (gameState.players[pid]) gameState.players[pid].score += points;
+                } else {
+                    gameState.gameData.streaks[pid] = 0;
+                }
+            });
+            Object.keys(gameState.players).forEach(pid => {
+                if (pid !== gameState.hostId && !gameState.gameData.answers[pid]) {
+                    gameState.gameData.streaks[pid] = 0;
+                }
+            });
+        }
+        io.emit('gameState', gameState);
+    });
+
+    socket.on('useBrainBurstLifeline', () => {
+        if (gameState.currentGame !== 'BRAIN_BURST' || gameState.gameData.phase !== 'QUESTION') return;
+        if (gameState.gameData.lifelinesUsed[socket.id]) return; // Already used
+        gameState.gameData.lifelinesUsed[socket.id] = true;
+
+        // Remove 2 wrong answers
+        const correctIdx = gameState.gameData.currentQuestion.correct;
+        const wrongIndices = [0, 1, 2, 3].filter(i => i !== correctIdx);
+        // Shuffle wrong and pick 2 to disable
+        const shuffledWrong = wrongIndices.sort(() => Math.random() - 0.5);
+        gameState.gameData.fiftyFiftyDisabled = shuffledWrong.slice(0, 2);
         io.emit('gameState', gameState);
     });
 

@@ -14,6 +14,7 @@ import SpeedDrawHost from '../games/speed-draw/Host';
 import ChainReactionHost from '../games/chain-reaction/Host';
 import MindMeldHost from '../games/mind-meld/Host';
 import CompeteHost from '../games/compete/Host';
+import BrainBurstHost from '../games/brain-burst/Host';
 
 // QR Code component using Google Charts API
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
@@ -43,6 +44,7 @@ const GAMES = [
     { id: 'CHAIN_REACTION', name: 'Chain Reaction', icon: '⛓️', color: '#ff4757' },
     { id: 'MIND_MELD', name: 'Mind Meld', icon: '🧠', color: '#70a1ff' },
     { id: 'COMPETE', name: 'Compete', icon: '⚔️', color: '#eccc68' },
+    { id: 'BRAIN_BURST', name: 'Brain Burst', icon: '💰', color: '#f9ca24' },
 ];
 
 const HostLogic = () => {
@@ -170,8 +172,8 @@ const HostLogic = () => {
                                     onClick={() => socket?.emit('startGame')}
                                     disabled={playerCount === 0}
                                     className={`text-white text-4xl md:text-6xl font-black px-16 md:px-24 py-8 md:py-10 rounded-[3rem] uppercase tracking-widest border-t-8 border-white/20 transition-all ${playerCount === 0
-                                            ? 'bg-white/10 opacity-30 cursor-not-allowed'
-                                            : 'bg-game-primary shadow-[0_0_80px_rgba(255,0,255,0.5)] hover:shadow-[0_0_120px_rgba(255,0,255,0.8)] animate-pulse-glow'
+                                        ? 'bg-white/10 opacity-30 cursor-not-allowed'
+                                        : 'bg-game-primary shadow-[0_0_80px_rgba(255,0,255,0.5)] hover:shadow-[0_0_120px_rgba(255,0,255,0.8)] animate-pulse-glow'
                                         }`}
                                 >
                                     {playerCount === 0 ? 'Waiting...' : 'Start Game'}
@@ -360,6 +362,22 @@ const HostLogic = () => {
                                     players={gameState.players}
                                     winnerId={gameState.gameData.winnerId}
                                     timer={gameState.gameData.timer}
+                                />
+                            )}
+
+                            {gameState.currentGame === 'BRAIN_BURST' && (
+                                <BrainBurstHost
+                                    phase={gameState.gameData.phase}
+                                    currentQuestion={gameState.gameData.currentQuestion}
+                                    tier={gameState.gameData.tier}
+                                    tiers={gameState.gameData.tiers}
+                                    timer={gameState.gameData.timer}
+                                    showResult={gameState.gameData.showResult}
+                                    answers={gameState.gameData.answers}
+                                    fiftyFiftyDisabled={gameState.gameData.fiftyFiftyDisabled}
+                                    questionIndex={gameState.gameData.questionIndex}
+                                    players={gameState.players}
+                                    streaks={gameState.gameData.streaks}
                                 />
                             )}
 
