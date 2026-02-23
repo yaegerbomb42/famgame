@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface BrainBurstHostProps {
@@ -218,7 +218,7 @@ const ConfettiExplosion = () => {
 
     return (
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 100, overflow: 'hidden' }}>
-            {particles.map((p) => (
+            {particles.map((p: any) => (
                 <motion.div
                     key={p.id}
                     initial={{ y: '50vh', x: `${p.x}vw`, opacity: 1, scale: 1, rotate: 0 }}
