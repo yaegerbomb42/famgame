@@ -15,9 +15,6 @@ export default function GlobalAveragesHost({ phase, question, correct, guesses, 
     const [revealedPercent, setRevealedPercent] = useState(0);
     const [showGuesses, setShowGuesses] = useState(false);
 
-    const playerCount = Object.keys(players).filter(p => !players[p].isHost).length;
-    const guessCount = Object.keys(guesses).length;
-
     // Trigger reveal flow
     useEffect(() => {
         if (phase === 'REVEAL') {

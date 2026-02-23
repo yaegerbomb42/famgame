@@ -76,7 +76,7 @@ interface GameState {
     hostId: string | null;
     players: Record<string, Player>;
     status: 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS';
-    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION' | 'EMOJI_STORY' | 'BLUFF' | 'THIS_OR_THAT' | 'SPEED_DRAW' | 'CHAIN_REACTION' | 'MIND_MELD' | 'COMPETE' | 'BRAIN_BURST' | 'GLOBAL_AVERAGES';
+    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION' | 'EMOJI_STORY' | 'BLUFF' | 'THIS_OR_THAT' | 'SPEED_DRAW' | 'CHAIN_REACTION' | 'MIND_MELD' | 'COMPETE' | 'BRAIN_BURST' | 'GLOBAL_AVERAGES' | 'SKILL_SHOWDOWN';
     gameData?: any;
     gameVotes: Record<string, number>;
     timer?: number;
@@ -412,12 +412,205 @@ const revealGlobalAveragesLogic = () => {
                     }
                 }, 20000);
             } else {
-                // Game Over Routine
-                gameState.status = 'RESULTS';
-                io.emit('gameState', gameState);
+                // Chain into Skill Showdown instead of RESULTS
+                gameState.currentGame = 'SKILL_SHOWDOWN';
+                startSkillShowdown();
             }
         }
     }, 10000);
+};
+
+// --- SKILL SHOWDOWN CHALLENGE DEFINITIONS ---
+const SKILL_SHOWDOWN_CHALLENGES = [
+    { type: 'CIRCLE_DRAW', title: '🎯 Perfect Circle', instruction: 'Draw the most perfect circle you can!', timeLimit: 10 },
+    { type: 'MEMORY_GRID', title: '🧠 Memory Grid', instruction: 'Memorize the pattern, then recreate it!', timeLimit: 12, gridSize: 4, litCount: 6 },
+    { type: 'TEMPO_TAP', title: '⏱️ Tempo Tap', instruction: 'Tap to the beat! Keep a steady rhythm.', timeLimit: 10, targetBPM: 120 },
+    { type: 'COLOR_MATCH', title: '🎨 Color Match', instruction: 'Match the target color as closely as possible!', timeLimit: 10 },
+    { type: 'ANGLE_GUESS', title: '📐 Angle Guess', instruction: 'Estimate the angle shown on screen!', timeLimit: 8 },
+];
+
+const startSkillShowdown = () => {
+    const challenge = SKILL_SHOWDOWN_CHALLENGES[0];
+    let challengeData: any = { ...challenge };
+
+    // Generate challenge-specific data
+    if (challenge.type === 'MEMORY_GRID') {
+        const grid = Array(16).fill(false);
+        const indices: number[] = [];
+        while (indices.length < (challenge.litCount || 6)) {
+            const idx = Math.floor(Math.random() * 16);
+            if (!indices.includes(idx)) { indices.push(idx); grid[idx] = true; }
+        }
+        challengeData.grid = grid;
+    } else if (challenge.type === 'COLOR_MATCH') {
+        challengeData.targetColor = {
+            r: Math.floor(Math.random() * 200) + 30,
+            g: Math.floor(Math.random() * 200) + 30,
+            b: Math.floor(Math.random() * 200) + 30,
+        };
+    } else if (challenge.type === 'ANGLE_GUESS') {
+        challengeData.targetAngle = Math.floor(Math.random() * 340) + 10; // 10-350 degrees
+    }
+
+    gameState.gameData = {
+        phase: 'PREVIEW',
+        challengeIndex: 0,
+        challenge: challengeData,
+        submissions: {},
+        scores: {},
+    };
+    io.emit('gameState', gameState);
+
+    // After 3s preview, switch to PLAYING
+    setTimeout(() => {
+        if (gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData?.phase === 'PREVIEW' && gameState.gameData?.challengeIndex === 0) {
+            gameState.gameData.phase = 'PLAYING';
+            io.emit('gameState', gameState);
+
+            // Auto-close after timeLimit
+            setTimeout(() => {
+                if (gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData?.phase === 'PLAYING' && gameState.gameData?.challengeIndex === 0) {
+                    scoreAndRevealSkillShowdown();
+                }
+            }, (challengeData.timeLimit || 10) * 1000);
+        }
+    }, 3000);
+};
+
+const scoreAndRevealSkillShowdown = () => {
+    if (gameState.currentGame !== 'SKILL_SHOWDOWN' || gameState.gameData?.phase !== 'PLAYING') return;
+
+    gameState.gameData.phase = 'REVEAL';
+    const challenge = gameState.gameData.challenge;
+    const submissions = gameState.gameData.submissions;
+
+    // Score each player based on challenge type
+    const playerScores: Record<string, number> = {};
+
+    Object.entries(submissions).forEach(([pid, data]: [string, any]) => {
+        let score = 0;
+        switch (challenge.type) {
+            case 'CIRCLE_DRAW': {
+                // Score is the circularity value (0-100) sent by the client
+                score = Math.round(Math.max(0, Math.min(100, data.circularity || 0)));
+                break;
+            }
+            case 'MEMORY_GRID': {
+                // Score = number of correct tiles out of gridSize^2
+                const correct = challenge.grid;
+                const player = data.grid || [];
+                let matches = 0;
+                for (let i = 0; i < 16; i++) {
+                    if (correct[i] === (player[i] || false)) matches++;
+                }
+                score = Math.round((matches / 16) * 100);
+                break;
+            }
+            case 'TEMPO_TAP': {
+                // Score = consistency (0-100) from client
+                score = Math.round(Math.max(0, Math.min(100, data.consistency || 0)));
+                break;
+            }
+            case 'COLOR_MATCH': {
+                // Score = inverse color distance
+                const target = challenge.targetColor;
+                const submitted = data.color || { r: 0, g: 0, b: 0 };
+                const dist = Math.sqrt(
+                    Math.pow(target.r - submitted.r, 2) +
+                    Math.pow(target.g - submitted.g, 2) +
+                    Math.pow(target.b - submitted.b, 2)
+                );
+                const maxDist = Math.sqrt(255 * 255 * 3); // ~441
+                score = Math.round(Math.max(0, (1 - dist / maxDist) * 100));
+                break;
+            }
+            case 'ANGLE_GUESS': {
+                // Score = inverse of angle difference
+                const diff = Math.abs(data.angle - challenge.targetAngle);
+                score = Math.round(Math.max(0, 100 - diff));
+                break;
+            }
+        }
+        playerScores[pid] = score;
+    });
+
+    // Sort and award points (top gets 300, 2nd 200, 3rd 100, rest 50)
+    const sorted = Object.entries(playerScores).sort((a, b) => b[1] - a[1]);
+    const pointTiers = [300, 200, 100, 50];
+    sorted.forEach(([pid, rawScore], idx) => {
+        const pts = pointTiers[idx] || 25;
+        if (gameState.players[pid]) {
+            gameState.players[pid].score += pts;
+        }
+    });
+    gameState.gameData.scores = playerScores;
+
+    updateLeaderboard();
+    io.emit('gameState', gameState);
+
+    // After 6s reveal, advance to next challenge or end
+    setTimeout(() => {
+        if (gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData?.phase === 'REVEAL') {
+            advanceSkillShowdown();
+        }
+    }, 6000);
+};
+
+const advanceSkillShowdown = () => {
+    const nextIdx = gameState.gameData.challengeIndex + 1;
+    if (nextIdx >= SKILL_SHOWDOWN_CHALLENGES.length) {
+        // All challenges done → RESULTS
+        gameState.status = 'RESULTS';
+        updateLeaderboard();
+        io.emit('gameState', gameState);
+        return;
+    }
+
+    const challenge = SKILL_SHOWDOWN_CHALLENGES[nextIdx];
+    let challengeData: any = { ...challenge };
+
+    // Generate challenge-specific data
+    if (challenge.type === 'MEMORY_GRID') {
+        const grid = Array(16).fill(false);
+        const indices: number[] = [];
+        while (indices.length < (challenge.litCount || 6)) {
+            const idx = Math.floor(Math.random() * 16);
+            if (!indices.includes(idx)) { indices.push(idx); grid[idx] = true; }
+        }
+        challengeData.grid = grid;
+    } else if (challenge.type === 'COLOR_MATCH') {
+        challengeData.targetColor = {
+            r: Math.floor(Math.random() * 200) + 30,
+            g: Math.floor(Math.random() * 200) + 30,
+            b: Math.floor(Math.random() * 200) + 30,
+        };
+    } else if (challenge.type === 'ANGLE_GUESS') {
+        challengeData.targetAngle = Math.floor(Math.random() * 340) + 10;
+    }
+
+    gameState.gameData = {
+        phase: 'PREVIEW',
+        challengeIndex: nextIdx,
+        challenge: challengeData,
+        submissions: {},
+        scores: {},
+    };
+    io.emit('gameState', gameState);
+
+    // After 3s preview, switch to PLAYING
+    setTimeout(() => {
+        if (gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData?.phase === 'PREVIEW' && gameState.gameData?.challengeIndex === nextIdx) {
+            gameState.gameData.phase = 'PLAYING';
+            io.emit('gameState', gameState);
+
+            // Auto-close after timeLimit
+            setTimeout(() => {
+                if (gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData?.phase === 'PLAYING' && gameState.gameData?.challengeIndex === nextIdx) {
+                    scoreAndRevealSkillShowdown();
+                }
+            }, (challengeData.timeLimit || 10) * 1000);
+        }
+    }, 3000);
 };
 
 const startGlobalAveragesRound = (roundNum: number) => {
@@ -1212,6 +1405,22 @@ io.on('connection', (socket: any) => {
         }
     });
 
+    // --- SKILL SHOWDOWN LOGIC ---
+    socket.on('submitSkillResult', (data: any) => {
+        if (gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData?.phase === 'PLAYING') {
+            gameState.gameData.submissions[socket.id] = data;
+
+            // Check if all non-host players have submitted
+            const playerCount = Object.keys(gameState.players).filter((p: string) => !gameState.players[p].isHost).length;
+            const submitCount = Object.keys(gameState.gameData.submissions).length;
+
+            if (submitCount >= playerCount && playerCount > 0) {
+                scoreAndRevealSkillShowdown();
+            } else {
+                io.emit('gameState', gameState);
+            }
+        }
+    });
 
     // --- REACTION LOGIC (WITH FAKEOUT) ---
     socket.on('reactionClick', () => {

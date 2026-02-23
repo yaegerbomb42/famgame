@@ -17,6 +17,7 @@ import MindMeldHost from '../games/mind-meld/Host';
 import CompeteHost from '../games/compete/Host';
 import BrainBurstHost from '../games/brain-burst/Host';
 import GlobalAveragesHost from '../games/global-averages/Host';
+import SkillShowdownHost from '../games/skill-showdown/Host';
 
 // QR Code component using Google Charts API
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
@@ -206,7 +207,7 @@ const HostLogic = () => {
                 </button>
             </header>
 
-            <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 pb-40 md:pb-48 overflow-hidden">
+            <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 pb-8 overflow-hidden">
                 <AnimatePresence mode='wait'>
                     {/* LOBBY STATE */}
                     {gameState.status === 'LOBBY' && (
@@ -281,8 +282,8 @@ const HostLogic = () => {
                                 )}
                             </div>
 
-                            {/* Start Button - ALWAYS VISIBLE */}
-                            <div className="fixed bottom-8 left-0 right-0 w-full flex justify-center z-[100] pointer-events-none">
+                            {/* Start Button */}
+                            <div className="w-full flex justify-center mt-6">
                                 <motion.button
                                     whileHover={playerCount > 0 ? { scale: 1.05, y: -5 } : {}}
                                     whileTap={playerCount > 0 ? { scale: 0.95 } : {}}
@@ -296,9 +297,9 @@ const HostLogic = () => {
                                     transition={playerCount > 0 ? { repeat: Infinity, duration: 2 } : {}}
                                     onClick={startBrainBurst}
                                     disabled={playerCount === 0}
-                                    className={`pointer-events-auto relative overflow-hidden text-white font-black rounded-[4rem] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-4 md:gap-8 ${playerCount === 0
-                                        ? 'bg-white/10 border-2 border-white/20 px-12 py-6 md:px-16 md:py-8 text-2xl md:text-3xl opacity-50 cursor-not-allowed text-white/50'
-                                        : 'bg-gradient-to-r from-[#f9ca24] via-[#f0932b] to-[#f9ca24] border-4 border-white px-12 py-6 md:px-24 md:py-10 text-5xl md:text-7xl'
+                                    className={`relative overflow-hidden text-white font-black rounded-[4rem] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-4 md:gap-8 ${playerCount === 0
+                                        ? 'bg-white/10 border-2 border-white/20 px-12 py-5 md:px-16 md:py-6 text-2xl md:text-3xl opacity-50 cursor-not-allowed text-white/50'
+                                        : 'bg-gradient-to-r from-[#f9ca24] via-[#f0932b] to-[#f9ca24] border-4 border-white px-12 py-5 md:px-20 md:py-8 text-4xl md:text-6xl'
                                         }`}
                                     style={{
                                         textShadow: playerCount > 0 ? '0 5px 15px rgba(0,0,0,0.5)' : 'none'
@@ -528,6 +529,17 @@ const HostLogic = () => {
                                     players={gameState.players}
                                     closestPid={gameState.gameData.closestPid}
                                     pointsAwarded={gameState.gameData.pointsAwarded}
+                                />
+                            )}
+
+                            {gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData && (
+                                <SkillShowdownHost
+                                    phase={gameState.gameData.phase}
+                                    challengeIndex={gameState.gameData.challengeIndex}
+                                    challenge={gameState.gameData.challenge}
+                                    submissions={gameState.gameData.submissions}
+                                    scores={gameState.gameData.scores}
+                                    players={gameState.players}
                                 />
                             )}
 

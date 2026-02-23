@@ -367,3 +367,65 @@
 [1] 8:17:29 PM [vite] (client) hmr update /src/games/global-averages/Host.tsx
 [1] 8:17:51 PM [vite] (client) hmr update /src/games/global-averages/Host.tsx
 [1] 8:18:13 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[1] 8:26:12 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] /Users/yaeger/famgame/node_modules/ts-node/src/index.ts:859
+[0]     return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+[0]            ^
+[0] TSError: ⨯ Unable to compile TypeScript:
+[0] index.ts(416,17): error TS2322: Type '"SKILL_SHOWDOWN"' is not assignable to type '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | "GLOBAL_AVERAGES" | undefined'.
+[0] index.ts(439,15): error TS7034: Variable 'indices' implicitly has type 'any[]' in some locations where its type cannot be determined.
+[0] index.ts(442,18): error TS7005: Variable 'indices' implicitly has an 'any[]' type.
+[0] index.ts(466,13): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | "GLOBAL_AVERAGES" | undefined' and '"SKILL_SHOWDOWN"' have no overlap.
+[0] index.ts(472,21): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | "GLOBAL_AVERAGES" | undefined' and '"SKILL_SHOWDOWN"' have no overlap.
+[0] index.ts(481,9): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | "GLOBAL_AVERAGES" | undefined' and '"SKILL_SHOWDOWN"' have no overlap.
+[0] index.ts(553,13): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | "GLOBAL_AVERAGES" | undefined' and '"SKILL_SHOWDOWN"' have no overlap.
+[0] index.ts(602,13): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | "GLOBAL_AVERAGES" | undefined' and '"SKILL_SHOWDOWN"' have no overlap.
+[0] index.ts(608,21): error TS2367: This comparison appears to be unintentional because the types '"TRIVIA" | "2TRUTHS" | "HOT_TAKES" | "POLL" | "BUZZ_IN" | "WORD_RACE" | "REACTION" | "EMOJI_STORY" | "BLUFF" | "THIS_OR_THAT" | "SPEED_DRAW" | "CHAIN_REACTION" | "MIND_MELD" | "COMPETE" | "BRAIN_BURST" | "GLOBAL_AVERAGES" | undefined' and '"SKILL_SHOWDOWN"' have no overlap.
+[0] 
+[0]     at createTSError (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:859:12)
+[0]     at reportTSError (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:863:19)
+[0]     at getOutput (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1077:36)
+[0]     at Object.compile (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1433:41)
+[0]     at Module.m._compile (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1617:30)
+[0]     at Module._extensions..js (node:internal/modules/cjs/loader:1892:10)
+[0]     at Object.require.extensions.<computed> [as .ts] (/Users/yaeger/famgame/node_modules/ts-node/src/index.ts:1621:12)
+[0]     at Module.load (node:internal/modules/cjs/loader:1480:32)
+[0]     at Module._load (node:internal/modules/cjs/loader:1299:12)
+[0]     at TracingChannel.traceSync (node:diagnostics_channel:328:14) {
+[0]   diagnosticCodes: [
+[0]     2322, 7034, 7005,
+[0]     2367, 2367, 2367,
+[0]     2367, 2367, 2367
+[0]   ]
+[0] }
+[0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[0] Server listening on internal port 3000
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+[0] Server listening on internal port 3000
+[1] 8:32:23 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[1] 8:32:56 PM [vite] (client) hmr update /src/components/PlayerLogic.tsx
+[1] 8:34:10 PM [vite] (client) hmr update /src/games/global-averages/Host.tsx
+[1] 8:34:12 PM [vite] (client) hmr update /src/components/PlayerLogic.tsx
+[1] 8:34:13 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[0] Server listening on internal port 3000
+[1] 8:36:07 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[0] Client connected: XQBNaiKSlyG1JNsGAAAB
+[0] Client connected: UlzorcumfOzRuztkAAAD
+[1] 8:41:48 PM [vite] (client) hmr update /src/components/HostLogic.tsx
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `npx ts-node index.ts`[39m
+[0] [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[0] Server listening on internal port 3000
+[0] Client connected: MLTxcdN8JWQ3lvXYAAAB
+[0] Client connected: 9im5bkpQrcoUQ0QSAAAD

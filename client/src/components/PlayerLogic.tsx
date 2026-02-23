@@ -17,6 +17,7 @@ import MindMeldPlayer from '../games/mind-meld/Player';
 import CompetePlayer from '../games/compete/Player';
 import BrainBurstPlayer from '../games/brain-burst/Player';
 import GlobalAveragesPlayer from '../games/global-averages/Player';
+import SkillShowdownPlayer from '../games/skill-showdown/Player';
 
 const AVATARS = ['🙂', '😂', '😎', '🤔', '😍', '🤩', '🤯', '🥳', '👻', '👽', '🤖', '💩', '🐱', '🐶', '🦄', '🐲'];
 
@@ -363,6 +364,18 @@ const PlayerLogic = () => {
                                         question={gameState.gameData.question}
                                         socket={socket}
                                         hasGuessed={gameState.gameData.guesses?.[socket?.id || ''] !== undefined}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData && (
+                                    <SkillShowdownPlayer
+                                        phase={gameState.gameData.phase}
+                                        challengeIndex={gameState.gameData.challengeIndex}
+                                        challenge={gameState.gameData.challenge}
+                                        submitted={!!gameState.gameData.submissions?.[socket?.id || '']}
+                                        socket={socket}
+                                        scores={gameState.gameData.scores || {}}
+                                        myId={socket?.id || ''}
                                     />
                                 )}
                             </>
