@@ -19,6 +19,10 @@ const GAME_MODES = [
   { name: 'This or That', icon: '⚖️', color: '#ff9ff3' },
   { name: 'Brain Burst', icon: '💰', color: '#f9ca24' },
   { name: 'Global Averages', icon: '🌍', color: '#00d4ff' },
+  { name: 'Chain Reaction', icon: '⛓️', color: '#ff4757' },
+  { name: 'Mind Meld', icon: '🧠', color: '#70a1ff' },
+  { name: 'Compete', icon: '⚔️', color: '#eccc68' },
+  { name: 'Skill Showdown', icon: '🏆', color: '#ff6348' },
 ];
 
 function GameContent() {

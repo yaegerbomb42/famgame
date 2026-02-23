@@ -18,19 +18,23 @@
 ## Known Issues
 
 - IDE shows "Cannot find module" for react/framer-motion/etc — pre-existing; node_modules not resolved in TS server but Vite builds fine
-- No AGENT_HANDOFF.md exists yet
 - `gameData` is typed as `any` — works but not type-safe
+- Single `gameState` object — only one room at a time
 
-## Games Implemented
+## Games Implemented (17 total)
 
-TRIVIA, 2TRUTHS, HOT_TAKES, POLL, BUZZ_IN, WORD_RACE, REACTION, EMOJI_STORY, BLUFF, THIS_OR_THAT, SPEED_DRAW, CHAIN_REACTION, MIND_MELD, COMPETE, **BRAIN_BURST**
+TRIVIA, 2TRUTHS, HOT_TAKES, POLL, BUZZ_IN, WORD_RACE, REACTION, EMOJI_STORY, BLUFF, THIS_OR_THAT, SPEED_DRAW, CHAIN_REACTION, MIND_MELD, COMPETE, BRAIN_BURST, GLOBAL_AVERAGES, SKILL_SHOWDOWN
 
 ## Brain Burst Details
 
-- 50 questions shuffled, 10 per game
+- 35 questions shuffled per game
 - 10 prize tiers ($100 → $1M)
 - Phases: INTRO → QUESTION → REVEAL → GAME_OVER
 - 20s timer per question
 - 50:50 lifeline (one per player per game)
 - Streak bonuses up to 3x
-- Synthesized sounds: intro stinger, question appear, correct/wrong, tier up, final fanfare, urgent tick
+- Auto-chains: Brain Burst → Global Averages → Skill Showdown
+
+## Deployment
+
+See `AGENT_HANDOFF.md` for full deployment instructions.
