@@ -1,7 +1,8 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
+const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const SOCKET_URL = isLocalDev ? 'http://localhost:3000' : (import.meta.env.VITE_SERVER_URL || 'https://famgame.onrender.com');
 
 export interface Player {
     id: string;

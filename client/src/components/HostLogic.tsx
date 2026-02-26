@@ -8,6 +8,9 @@ import { useNarratorStore } from '../store/useNarratorStore';
 import { Narrator } from './Narrator';
 import TriviaHost from '../games/trivia/Host';
 import ReactionHost from '../games/reaction/Host';
+import BrainBurstHost from '../games/brain-burst/Host';
+import GlobalAveragesHost from '../games/global-averages/Host';
+import SkillShowdownHost from '../games/skill-showdown/Host';
 
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=000000&margin=10`;
@@ -273,15 +276,23 @@ const HostLogic = () => {
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-4 gap-8 w-full">
-                            {['TRIVIA', 'REACTION', 'ROAST_MASTER', 'POLL'].map((gameId, i) => (
-                                <div key={gameId} onClick={() => selectGame(gameId as any)} className="aspect-[4/5] bg-white/5 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center gap-6 group hover:bg-white/10 hover:border-game-primary/50 transition-all cursor-pointer opacity-100 hover:scale-[1.02]">
+                        <div className="grid grid-cols-4 gap-8 w-full overflow-y-auto">
+                            {[
+                                { id: 'TRIVIA', name: 'Trivia', icon: '🧠', ready: true },
+                                { id: 'REACTION', name: 'Reaction', icon: '⚡️', ready: true },
+                                { id: 'BRAIN_BURST', name: 'Brain Burst', icon: '💰', ready: true },
+                                { id: 'GLOBAL_AVERAGES', name: 'Global Avg', icon: '🌍', ready: true },
+                                { id: 'SKILL_SHOWDOWN', name: 'Showdown', icon: '🏆', ready: true },
+                                { id: 'ROAST_MASTER', name: 'Roast', icon: '🔥', ready: false },
+                                { id: 'POLL', name: 'Poll', icon: '📊', ready: false },
+                            ].map((game) => (
+                                <div key={game.id} onClick={() => selectGame(game.id as any)} className="aspect-[4/5] bg-white/5 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center gap-6 group hover:bg-white/10 hover:border-game-primary/50 transition-all cursor-pointer opacity-100 hover:scale-[1.02]">
                                     <div className="text-6xl group-hover:scale-110 transition-all duration-300">
-                                        {['🧠', '⚡️', '🔥', '📊'][i]}
+                                        {game.icon}
                                     </div>
                                     <div className="text-center">
-                                        <h3 className="text-xl font-black uppercase tracking-widest mb-2">{['Trivia', 'Reaction', 'Roast', 'Poll'][i]}</h3>
-                                        {gameId !== 'TRIVIA' && gameId !== 'REACTION' && <span className="text-xs font-mono text-white/30 uppercase border border-white/10 px-2 py-1 rounded">Coming Soon</span>}
+                                        <h3 className="text-xl font-black uppercase tracking-widest mb-2">{game.name}</h3>
+                                        {!game.ready && <span className="text-xs font-mono text-white/30 uppercase border border-white/10 px-2 py-1 rounded">Coming Soon</span>}
                                     </div>
                                 </div>
                             ))}
@@ -314,7 +325,43 @@ const HostLogic = () => {
                             {gameState.currentGame === 'REACTION' && (
                                 <ReactionHost />
                             )}
-                            {gameState.currentGame !== 'TRIVIA' && gameState.currentGame !== 'REACTION' && (
+                            {gameState.currentGame === 'BRAIN_BURST' && (
+                                <BrainBurstHost
+                                    phase={gameState.gameData.phase}
+                                    currentQuestion={gameState.gameData.currentQuestion}
+                                    tier={gameState.gameData.tier}
+                                    tiers={gameState.gameData.tiers}
+                                    timer={gameState.gameData.timer}
+                                    showResult={gameState.gameData.showResult}
+                                    answers={gameState.gameData.answers}
+                                    fiftyFiftyDisabled={gameState.gameData.fiftyFiftyDisabled}
+                                    questionIndex={gameState.gameData.questionIndex}
+                                    players={gameState.players}
+                                    streaks={gameState.gameData.streaks}
+                                />
+                            )}
+                            {gameState.currentGame === 'GLOBAL_AVERAGES' && (
+                                <GlobalAveragesHost
+                                    phase={gameState.gameData.phase}
+                                    question={gameState.gameData.question}
+                                    correct={gameState.gameData.correct}
+                                    guesses={gameState.gameData.guesses}
+                                    players={gameState.players}
+                                    closestPid={gameState.gameData.closestPid}
+                                    pointsAwarded={gameState.gameData.pointsAwarded}
+                                />
+                            )}
+                            {gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData && (
+                                <SkillShowdownHost
+                                    phase={gameState.gameData.phase}
+                                    challengeIndex={gameState.gameData.challengeIndex}
+                                    challenge={gameState.gameData.challenge}
+                                    submissions={gameState.gameData.submissions}
+                                    scores={gameState.gameData.scores}
+                                    players={gameState.players}
+                                />
+                            )}
+                            {gameState.currentGame !== 'TRIVIA' && gameState.currentGame !== 'REACTION' && gameState.currentGame !== 'BRAIN_BURST' && gameState.currentGame !== 'GLOBAL_AVERAGES' && gameState.currentGame !== 'SKILL_SHOWDOWN' && (
                                 <div className="flex flex-col items-center justify-center text-center">
                                     <h2 className="text-4xl font-black text-white mb-4 uppercase">
                                         Loading {gameState.currentGame}...

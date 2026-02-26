@@ -7,7 +7,6 @@ import { SoundProvider } from './context/SoundContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 
-
 function Home() {
   const setRole = useGameStore((state: GameStore) => state.setRole);
   const initSocket = useGameStore((state: GameStore) => state.initSocket);

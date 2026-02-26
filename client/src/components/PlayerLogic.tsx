@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSound } from '../context/SoundContext';
 import TriviaPlayer from '../games/trivia/Player';
 import ReactionPlayer from '../games/reaction/Player';
+import BrainBurstPlayer from '../games/brain-burst/Player';
+import GlobalAveragesPlayer from '../games/global-averages/Player';
+import SkillShowdownPlayer from '../games/skill-showdown/Player';
 
 // Extended Avatar List
 const AVATARS = [
@@ -75,6 +78,10 @@ const PlayerLogic = () => {
         setHasJoined(true);
         playSuccess();
     };
+
+    // Brain Burst
+    const handleBrainBurstAnswer = (index: number) => socket?.emit('submitBrainBurstAnswer', index);
+    const handleBrainBurstLifeline = () => socket?.emit('useBrainBurstLifeline');
 
     if (!isConnected) {
         return (
@@ -163,7 +170,43 @@ const PlayerLogic = () => {
                                 {gameState.currentGame === 'REACTION' && (
                                     <ReactionPlayer />
                                 )}
-                                {gameState.currentGame !== 'TRIVIA' && gameState.currentGame !== 'REACTION' && (
+
+                                {gameState.currentGame === 'BRAIN_BURST' && gameState.gameData && (
+                                    <BrainBurstPlayer
+                                        phase={gameState.gameData.phase}
+                                        currentQuestion={gameState.gameData.currentQuestion}
+                                        tier={gameState.gameData.tier}
+                                        questionIndex={gameState.gameData.questionIndex}
+                                        fiftyFiftyDisabled={gameState.gameData.fiftyFiftyDisabled || []}
+                                        lifelineUsed={!!gameState.gameData.lifelinesUsed?.[socket?.id || '']}
+                                        showResult={gameState.gameData.showResult}
+                                        onAnswer={handleBrainBurstAnswer}
+                                        onUseLifeline={handleBrainBurstLifeline}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData && (
+                                    <GlobalAveragesPlayer
+                                        phase={gameState.gameData.phase}
+                                        question={gameState.gameData.question}
+                                        socket={socket}
+                                        hasGuessed={gameState.gameData.guesses?.[socket?.id || ''] !== undefined}
+                                    />
+                                )}
+
+                                {gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData && (
+                                    <SkillShowdownPlayer
+                                        phase={gameState.gameData.phase}
+                                        challengeIndex={gameState.gameData.challengeIndex}
+                                        challenge={gameState.gameData.challenge}
+                                        submitted={!!gameState.gameData.submissions?.[socket?.id || '']}
+                                        socket={socket}
+                                        scores={gameState.gameData.scores || {}}
+                                        myId={socket?.id || ''}
+                                    />
+                                )}
+
+                                {gameState.currentGame !== 'TRIVIA' && gameState.currentGame !== 'REACTION' && gameState.currentGame !== 'BRAIN_BURST' && gameState.currentGame !== 'GLOBAL_AVERAGES' && gameState.currentGame !== 'SKILL_SHOWDOWN' && (
                                     <div className="flex flex-col items-center justify-center h-full text-center">
                                         <h1 className="text-2xl font-bold animate-pulse uppercase tracking-widest text-cyan-400">Loading {gameState.currentGame}...</h1>
                                         <p className="text-white/50 mt-4">Look at the Big Screen!</p>
