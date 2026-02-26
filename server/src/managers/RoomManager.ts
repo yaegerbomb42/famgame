@@ -20,6 +20,7 @@ export class RoomManager {
     public state: GameState;
     private io: Server;
     private activeGame: IGameLogic | null = null;
+    private updateInterval: any = null;
 
     constructor(io: Server) {
         this.io = io;
@@ -72,12 +73,17 @@ export class RoomManager {
     }
 
     public handleDisconnect(socketId: string) {
+        if (this.activeGame && this.activeGame.onPlayerLeave) {
+            this.activeGame.onPlayerLeave(this.state, socketId, () => this.broadcastState());
+        }
+
         delete this.state.players[socketId];
         if (socketId === this.state.hostId) {
             // Hard reset if host leaves
             this.state.hostId = null;
             this.state.roomCode = this.generateRoomCode();
             this.state.players = {};
+            if (this.updateInterval) clearInterval(this.updateInterval);
             this.state.status = 'LOBBY';
             // Ideally we'd migrate host, but for now reset is safe
         }
@@ -131,6 +137,8 @@ export class RoomManager {
 
         if (this.activeGame) {
             this.activeGame.onStart(this.state, () => this.broadcastState());
+            if (this.updateInterval) clearInterval(this.updateInterval);
+            this.updateInterval = setInterval(() => this.tick(), 100);
         }
 
         this.broadcastState();
@@ -139,8 +147,44 @@ export class RoomManager {
     public handleInput(socketId: string, data: any) {
         if (this.state.status === 'PLAYING' && this.activeGame) {
             this.activeGame.onInput(this.state, socketId, data);
-            this.broadcastState();
+
+            if (this.state.gameData?.phase === 'GAME_OVER') {
+                this.endCurrentGame();
+            } else {
+                this.broadcastState();
+            }
         }
+    }
+
+    private tick() {
+        if (this.state.status !== 'PLAYING' || !this.activeGame) {
+            if (this.updateInterval) {
+                clearInterval(this.updateInterval);
+                this.updateInterval = null;
+            }
+            return;
+        }
+
+        if (this.activeGame.update) {
+            this.activeGame.update(0.1, this.state, () => this.broadcastState());
+        }
+
+        if (this.state.gameData?.phase === 'GAME_OVER') {
+            this.endCurrentGame();
+        }
+    }
+
+    private endCurrentGame() {
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+        }
+        if (this.activeGame) {
+            this.activeGame.onEnd(this.state);
+        }
+        this.activeGame = null;
+        this.state.status = 'RESULTS';
+        this.broadcastState();
     }
 
     public broadcastState() {

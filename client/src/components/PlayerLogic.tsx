@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSound } from '../context/SoundContext';
+import TriviaPlayer from '../games/trivia/Player';
+import ReactionPlayer from '../games/reaction/Player';
 
 // Extended Avatar List
 const AVATARS = [
@@ -152,11 +154,21 @@ const PlayerLogic = () => {
                             </motion.div>
                         )}
 
-                        {/* Placeholder for other states if needed */}
+                        {/* PLAYING STATE */}
                         {gameState.status === 'PLAYING' && (
-                            <div className="flex flex-col items-center justify-center h-full text-center">
-                                <h1 className="text-2xl font-bold animate-pulse">Game in Progress...</h1>
-                                <p className="text-white/50">Look at the TV!</p>
+                            <div className="flex-1 flex flex-col w-full h-full rounded-2xl overflow-hidden relative">
+                                {gameState.currentGame === 'TRIVIA' && (
+                                    <TriviaPlayer />
+                                )}
+                                {gameState.currentGame === 'REACTION' && (
+                                    <ReactionPlayer />
+                                )}
+                                {gameState.currentGame !== 'TRIVIA' && gameState.currentGame !== 'REACTION' && (
+                                    <div className="flex flex-col items-center justify-center h-full text-center">
+                                        <h1 className="text-2xl font-bold animate-pulse uppercase tracking-widest text-cyan-400">Loading {gameState.currentGame}...</h1>
+                                        <p className="text-white/50 mt-4">Look at the Big Screen!</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </AnimatePresence>

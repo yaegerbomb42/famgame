@@ -1,6 +1,8 @@
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Timer } from '../../components/Shared/Timer';
 import { useGameStore } from '../../store/useGameStore';
+import { useNarratorStore } from '../../store/useNarratorStore';
 
 interface TriviaQuestion {
     q: string;
@@ -16,18 +18,111 @@ interface TriviaHostProps {
 }
 
 const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) => {
+    const { gameState, gameInput } = useGameStore();
+    const gameData = gameState?.gameData;
+    const phase = gameData?.phase;
+
+    const [selectedCategory, setSelectedCategory] = useState('Any');
+    const [selectedDifficulty, setSelectedDifficulty] = useState('Any');
+
     // Safely access data
     const safeQ = question as TriviaQuestion;
     const qText = safeQ?.q || "Loading...";
-    const answers = safeQ?.a || [];
+    const answers = useMemo(() => safeQ?.a || [], [safeQ?.a]);
     const correctIndex = safeQ?.correct;
     const category = safeQ?.category || "General Knowledge";
 
+    const { speak } = useNarratorStore();
+
+    // Trigger narrator when a new question appears
+    const prevQRef = useRef('');
+    useEffect(() => {
+        if (qText && qText !== prevQRef.current && phase === 'ROUND') {
+            const intros = [
+                `Question incoming. Try not to embarrass yourselves.`,
+                `Next question. Let's see who's been paying attention to life.`,
+                `Here we go. A topic I know everything about, and you know nothing about.`,
+                `Let's test your pathetic human brains.`,
+                `I hope you studied... nah, who am I kidding.`
+            ];
+            speak(intros[Math.floor(Math.random() * intros.length)]);
+            prevQRef.current = qText;
+        }
+    }, [qText, phase, speak]);
+
+    // Trigger narrator when answer is revealed
+    const prevShowResultRef = useRef(false);
+    useEffect(() => {
+        if (showResult && !prevShowResultRef.current && answers[correctIndex]) {
+            const reveals = [
+                `The answer is ${answers[correctIndex]}. Obviously.`,
+                `If you didn't guess ${answers[correctIndex]}, I weep for the future.`,
+                `It's ${answers[correctIndex]}. Some of you got that right. Some of you.`,
+                `The correct human string is ${answers[correctIndex]}.`,
+                `${answers[correctIndex]}. My databanks confirm.`
+            ];
+            speak(reveals[Math.floor(Math.random() * reveals.length)]);
+        }
+        prevShowResultRef.current = showResult;
+    }, [showResult, answers, correctIndex, speak]);
+
     // Get scores for podium
-    const { gameState } = useGameStore();
     const players = Object.values(gameState?.players || {})
         .filter((p: any) => !p.isHost)
         .sort((a: any, b: any) => b.score - a.score);
+
+    if (phase === 'SETTINGS') {
+        return (
+            <div className="flex flex-col h-full w-full justify-center items-center px-8 relative font-display z-10">
+                <h2 className="text-6xl font-black text-white mb-12 uppercase tracking-widest drop-shadow-lg text-center">
+                    Trivia Settings
+                </h2>
+
+                <div className="flex gap-12 bg-white/5 p-12 rounded-[2.5rem] border border-white/10 backdrop-blur-xl shadow-2xl">
+                    <div className="flex flex-col gap-4">
+                        <label className="text-cyan-400 font-bold uppercase tracking-widest text-lg ml-2">Category</label>
+                        <select
+                            value={selectedCategory}
+                            onChange={e => setSelectedCategory(e.target.value)}
+                            className="bg-black/60 border-2 border-white/20 rounded-2xl p-4 text-white text-2xl font-bold uppercase appearance-none outline-none focus:border-cyan-500 min-w-[300px]"
+                        >
+                            {gameData?.availableCategories?.map((c: string) => (
+                                <option key={c} value={c} className="bg-slate-900">{c}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        <label className="text-fuchsia-400 font-bold uppercase tracking-widest text-lg ml-2">Difficulty</label>
+                        <select
+                            value={selectedDifficulty}
+                            onChange={e => setSelectedDifficulty(e.target.value)}
+                            className="bg-black/60 border-2 border-white/20 rounded-2xl p-4 text-white text-2xl font-bold uppercase appearance-none outline-none focus:border-fuchsia-500 min-w-[300px]"
+                        >
+                            {gameData?.availableDifficulties?.map((d: string) => (
+                                <option key={d} value={d} className="bg-slate-900">{d}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <motion.button
+                    whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(0, 255, 255, 0.6)" }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                        gameInput({
+                            action: 'START_TRIVIA',
+                            category: selectedCategory,
+                            difficulty: selectedDifficulty
+                        });
+                    }}
+                    className="mt-16 px-16 py-6 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-full font-black text-3xl uppercase tracking-widest shadow-[0_0_30px_rgba(6,182,212,0.5)] border border-cyan-400/50"
+                >
+                    Start Game
+                </motion.button>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-full w-full max-w-[90rem] justify-center items-center px-8 relative font-display">

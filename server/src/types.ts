@@ -46,6 +46,8 @@ export interface IGameLogic {
     description: string;
     onStart(gameState: GameState, broadcast: () => void): void;
     onInput(gameState: GameState, playerId: string, data: any): void;
-    onTick?(gameState: GameState): void; // Called every second if needed
+    onTick?(gameState: GameState): void; // Legacy, optional
+    update?(dt: number, gameState: GameState, broadcast: () => void): void;
+    onPlayerLeave?(gameState: GameState, playerId: string, broadcast: () => void): void;
     onEnd(gameState: GameState): void;
 }

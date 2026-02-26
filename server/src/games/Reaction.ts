@@ -2,76 +2,129 @@ import { GameState, IGameLogic } from '../types';
 
 export class ReactionGame implements IGameLogic {
     id = 'REACTION' as const;
-    name = 'Reaction';
-    description = 'Wait for Green!';
+    name = 'Lightning React';
+    description = 'Tap when the screen turns GREEN!';
 
     onStart(gameState: GameState, broadcast: () => void) {
+        // Initial state
         gameState.gameData = {
-            phase: 'WAITING',
-            goTime: 0,
-            results: {},
-            fakeOut: false
+            phase: 'INSTRUCT',
+            timer: 5, // 5 seconds of instruction
+            round: 0,
+            scores: {},
         };
-
-        this.startSequence(gameState, broadcast);
-    }
-
-    startSequence(gameState: GameState, broadcast: () => void) {
-        const isFakeOut = Math.random() < 0.3;
-
-        if (isFakeOut) {
-            setTimeout(() => {
-                if (gameState.currentGame !== 'REACTION') return;
-
-                gameState.gameData.fakeOut = true;
-                broadcast();
-
-                setTimeout(() => {
-                    gameState.gameData.fakeOut = false;
-                    broadcast();
-
-                    setTimeout(() => {
-                        if (gameState.currentGame === 'REACTION') {
-                            this.triggerGo(gameState, broadcast);
-                        }
-                    }, Math.random() * 1000 + 500);
-
-                }, 800);
-            }, Math.random() * 2000 + 1000);
-        } else {
-            setTimeout(() => {
-                if (gameState.currentGame === 'REACTION') {
-                    this.triggerGo(gameState, broadcast);
-                }
-            }, Math.random() * 3000 + 2000);
-        }
-    }
-
-    triggerGo(gameState: GameState, broadcast: () => void) {
-        gameState.gameData.phase = 'GO';
-        gameState.gameData.goTime = Date.now();
         broadcast();
     }
 
-    onInput(gameState: GameState, playerId: string, data: any) {
-        // Data: { action: 'click' }
-        if (gameState.gameData.phase === 'WAITING') {
-            // False Start
-            if (gameState.players[playerId]) gameState.players[playerId].score -= 10;
-        } else if (gameState.gameData.phase === 'GO') {
-            if (!gameState.gameData.results[playerId]) {
-                const diff = Date.now() - gameState.gameData.goTime;
-                gameState.gameData.results[playerId] = diff;
+    update(dt: number, gameState: GameState, broadcast: () => void) {
+        if (gameState.gameData.phase === 'GAME_OVER') return;
 
-                // Scoring
-                if (diff < 300) {
-                    if (gameState.players[playerId]) gameState.players[playerId].score += 100;
-                } else if (diff < 500) {
-                    if (gameState.players[playerId]) gameState.players[playerId].score += 50;
+        let stateChanged = false;
+
+        if (gameState.gameData.phase === 'INSTRUCT' || gameState.gameData.phase === 'RESULT') {
+            gameState.gameData.timer -= dt;
+            if (gameState.gameData.timer <= 0) {
+                if (gameState.gameData.round >= 5) {
+                    gameState.gameData.phase = 'GAME_OVER';
                 } else {
-                    if (gameState.players[playerId]) gameState.players[playerId].score += 10;
+                    // Start next round
+                    gameState.gameData.phase = 'WAITING';
+                    gameState.gameData.round++;
+                    gameState.gameData.delay = Math.random() * 3 + 2; // 2-5 seconds random delay
+                    gameState.gameData.startTime = 0;
+                    gameState.gameData.answers = {};
                 }
+                stateChanged = true;
             }
+        } else if (gameState.gameData.phase === 'WAITING') {
+            gameState.gameData.delay -= dt;
+            if (gameState.gameData.delay <= 0) {
+                gameState.gameData.phase = 'GO';
+                gameState.gameData.startTime = Date.now();
+                gameState.gameData.timer = 5; // 5 seconds max to react
+                stateChanged = true;
+            }
+        } else if (gameState.gameData.phase === 'GO') {
+            gameState.gameData.timer -= dt;
+            if (gameState.gameData.timer <= 0) {
+                this.resolveRound(gameState);
+                stateChanged = true;
+            }
+        }
+
+        if (stateChanged) broadcast();
+    }
+
+    onInput(gameState: GameState, playerId: string, data: any) {
+        if (gameState.gameData.phase === 'WAITING') {
+            // Early click! Penalize them
+            if (!gameState.gameData.answers) gameState.gameData.answers = {};
+            if (gameState.gameData.answers[playerId]) return;
+
+            gameState.gameData.answers[playerId] = {
+                time: -1000 // Flag for early click
+            };
+
+        } else if (gameState.gameData.phase === 'GO') {
+            if (!gameState.gameData.answers) gameState.gameData.answers = {};
+            if (gameState.gameData.answers[playerId]) return;
+
+            const reactTime = Date.now() - gameState.gameData.startTime;
+            gameState.gameData.answers[playerId] = {
+                time: reactTime
+            };
+
+            const playerCount = Object.values(gameState.players).filter(p => !p.isHost).length;
+            if (Object.keys(gameState.gameData.answers).length >= playerCount) {
+                this.resolveRound(gameState);
+            }
+        }
+    }
+
+    private resolveRound(gameState: GameState) {
+        if (gameState.gameData.phase === 'RESULT') return;
+
+        gameState.gameData.phase = 'RESULT';
+        gameState.gameData.timer = 4; // Show results for 4 seconds
+
+        const answers = gameState.gameData.answers || {};
+        const roundScores: Record<string, any> = {};
+
+        Object.keys(gameState.players).forEach(pid => {
+            const p = gameState.players[pid];
+            if (p.isHost) return;
+
+            const ans = answers[pid];
+            if (!ans) {
+                // Didn't click
+                roundScores[pid] = { points: 0, time: null, early: false };
+            } else if (ans.time < 0) {
+                // Early click
+                roundScores[pid] = { points: -50, time: null, early: true };
+                p.score -= 50; // Minor penalty
+            } else {
+                // Proper click
+                const points = Math.max(0, Math.floor(1000 - ans.time));
+                roundScores[pid] = { points, time: ans.time, early: false };
+                p.score += points;
+            }
+        });
+
+        gameState.gameData.roundScores = roundScores;
+    }
+
+    onPlayerLeave(gameState: GameState, playerId: string, broadcast: () => void) {
+        if (gameState.gameData.phase !== 'GO') return;
+
+        const playerCount = Object.keys(gameState.players).filter(id => id !== playerId && !gameState.players[id].isHost).length;
+        const activeAnswers = Object.keys(gameState.gameData.answers || {}).filter(id => id !== playerId).length;
+
+        if (playerCount > 0 && activeAnswers >= playerCount) {
+            this.resolveRound(gameState);
+            broadcast();
+        } else if (playerCount === 0) {
+            gameState.gameData.phase = 'GAME_OVER';
+            broadcast();
         }
     }
 

@@ -45,6 +45,18 @@ const TriviaPlayer = () => {
         if (navigator.vibrate) navigator.vibrate(50);
     }
 
+    if (gameData?.phase === 'SETTINGS') {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center bg-zinc-950 p-6 space-y-8 text-center">
+                <div className="text-6xl animate-pulse">⚙️</div>
+                <div>
+                    <h2 className="text-2xl font-black text-white uppercase tracking-widest mb-2">Host Settings</h2>
+                    <p className="text-zinc-500 font-bold uppercase text-sm">Waiting for the host to choose category and difficulty...</p>
+                </div>
+            </div>
+        );
+    }
+
     if (selectedIdx !== null && !gameData?.showResult) {
         return (
             <motion.div

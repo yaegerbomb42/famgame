@@ -1,21 +1,25 @@
 import { GameState, IGameLogic } from '../types';
 
 export const TRIVIA_QUESTIONS = [
-    { q: "Who is most likely to trip over nothing?", a: ["Dad", "Mom", "The Dog", "Grandma"], correct: 0, category: "Family Roast" }, // Keep for legacy testing
-    { q: "Which tech billionaire challenged a rival to a cage match?", a: ["Jeff Bezos", "Elon Musk", "Mark Zuckerberg", "Bill Gates"], correct: 1, category: "Tech Drama" },
-    { q: "What implies that you are 'drowning' in Gen Z slang?", a: ["Simp", "Drip", "Cheugy", "Rizz"], correct: 3, category: "Gen Z" },
-    { q: "Which movie features a DeLorean time machine?", a: ["Star Wars", "Back to the Future", "Blade Runner", "E.T."], correct: 1, category: "Pop Culture" },
-    { q: "What is the powerhouse of the cell?", a: ["Nucleus", "Mitochondria", "Ribosome", "Membrane"], correct: 1, category: "Science 101" },
-    { q: "Who released the hit song 'Espresso' in 2024?", a: ["Taylor Swift", "Sabrina Carpenter", "Olivia Rodrigo", "Dua Lipa"], correct: 1, category: "Music" },
-    { q: "Which fast food chain has the slogan 'I'm Lovin' It'?", a: ["KFC", "Burger King", "McDonald's", "Wendy's"], correct: 2, category: "Brands" },
-    { q: "In gaming, what does 'FPS' stand for?", a: ["Frames Per Second", "First Person Shooter", "Both A & B", "Fast Player Speed"], correct: 2, category: "Gaming" },
-    { q: "What is the only fruit that has seeds on the outside?", a: ["Strawberry", "Raspberry", "Blueberry", "Fig"], correct: 0, category: "Food Facts" },
-    { q: "Which planet is known as the Red Planet?", a: ["Venus", "Jupiter", "Mars", "Saturn"], correct: 2, category: "Space" },
-    { q: "Who painted the Mona Lisa?", a: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2, category: "Art" },
-    { q: "What does the 'www' stand for in a website browser?", a: ["World Wide Web", "World Web Wide", "Web World Wide", "Wild Wild West"], correct: 0, category: "Tech" },
-    { q: "Which animal is known to have the longest memory?", a: ["Elephant", "Dolphin", "Crow", "Dog"], correct: 0, category: "Nature" },
-    { q: "What is the most visited country in the world?", a: ["USA", "China", "Spain", "France"], correct: 3, category: "Travel" },
-    { q: "Who is the 'King of Pop'?", a: ["Elvis", "Prince", "Michael Jackson", "Bruno Mars"], correct: 2, category: "Music" }
+    { q: "Who is most likely to trip over nothing?", a: ["Dad", "Mom", "The Dog", "Grandma"], correct: 0, category: "Family Roast", difficulty: "Easy" },
+    { q: "Which tech billionaire challenged a rival to a cage match?", a: ["Jeff Bezos", "Elon Musk", "Mark Zuckerberg", "Bill Gates"], correct: 1, category: "Tech Drama", difficulty: "Medium" },
+    { q: "What implies that you are 'drowning' in Gen Z slang?", a: ["Simp", "Drip", "Cheugy", "Rizz"], correct: 3, category: "Gen Z", difficulty: "Easy" },
+    { q: "Which movie features a DeLorean time machine?", a: ["Star Wars", "Back to the Future", "Blade Runner", "E.T."], correct: 1, category: "Pop Culture", difficulty: "Medium" },
+    { q: "What is the powerhouse of the cell?", a: ["Nucleus", "Mitochondria", "Ribosome", "Membrane"], correct: 1, category: "Science", difficulty: "Easy" },
+    { q: "Who released the hit song 'Espresso' in 2024?", a: ["Taylor Swift", "Sabrina Carpenter", "Olivia Rodrigo", "Dua Lipa"], correct: 1, category: "Music", difficulty: "Easy" },
+    { q: "Which fast food chain has the slogan 'I'm Lovin' It'?", a: ["KFC", "Burger King", "McDonald's", "Wendy's"], correct: 2, category: "Brands", difficulty: "Easy" },
+    { q: "In gaming, what does 'FPS' stand for?", a: ["Frames Per Second", "First Person Shooter", "Both A & B", "Fast Player Speed"], correct: 2, category: "Gaming", difficulty: "Medium" },
+    { q: "What is the only fruit that has seeds on the outside?", a: ["Strawberry", "Raspberry", "Blueberry", "Fig"], correct: 0, category: "Food Facts", difficulty: "Hard" },
+    { q: "Which planet is known as the Red Planet?", a: ["Venus", "Jupiter", "Mars", "Saturn"], correct: 2, category: "Space", difficulty: "Easy" },
+    { q: "Who painted the Mona Lisa?", a: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2, category: "Art", difficulty: "Medium" },
+    { q: "What does the 'www' stand for in a website browser?", a: ["World Wide Web", "World Web Wide", "Web World Wide", "Wild Wild West"], correct: 0, category: "Tech", difficulty: "Easy" },
+    { q: "Which animal is known to have the longest memory?", a: ["Elephant", "Dolphin", "Crow", "Dog"], correct: 1, category: "Nature", difficulty: "Hard" },
+    { q: "What is the most visited country in the world?", a: ["USA", "China", "Spain", "France"], correct: 3, category: "Travel", difficulty: "Hard" },
+    { q: "Who is the 'King of Pop'?", a: ["Elvis", "Prince", "Michael Jackson", "Bruno Mars"], correct: 2, category: "Music", difficulty: "Easy" },
+    // A few extra Hard questions
+    { q: "What is the capital of Iceland?", a: ["Reykjavik", "Oslo", "Helsinki", "Copenhagen"], correct: 0, category: "Travel", difficulty: "Hard" },
+    { q: "What is the rarest blood type?", a: ["O-Negative", "B-Negative", "AB-Negative", "A-Negative"], correct: 2, category: "Science", difficulty: "Hard" },
+    { q: "How many bones are in the adult human body?", a: ["206", "208", "210", "212"], correct: 0, category: "Science", difficulty: "Medium" }
 ];
 
 interface PlayerStats {
@@ -32,11 +36,9 @@ export class TriviaGame implements IGameLogic {
     private playerStats: Record<string, PlayerStats> = {};
 
     onStart(gameState: GameState, broadcast: () => void) {
-        // Shuffle questions
-        const shuffled = [...TRIVIA_QUESTIONS].sort(() => Math.random() - 0.5);
-
-        // LIMIT to 10 rounds max
-        const questions = shuffled.slice(0, 10);
+        // Collect available categories and difficulties
+        const categories = Array.from(new Set(TRIVIA_QUESTIONS.map(q => q.category)));
+        const difficulties = ['Any', 'Easy', 'Medium', 'Hard'];
 
         // Initialize Stats
         Object.keys(gameState.players).forEach(pid => {
@@ -44,16 +46,45 @@ export class TriviaGame implements IGameLogic {
         });
 
         gameState.gameData = {
+            phase: 'SETTINGS', // Start in settings phase
+            availableCategories: ['Any', ...categories],
+            availableDifficulties: difficulties,
+            timer: 0,
+        };
+
+        broadcast();
+    }
+
+    private startGame(gameState: GameState, category: string, difficulty: string, broadcast: () => void) {
+        let pool = [...TRIVIA_QUESTIONS];
+
+        if (category && category !== 'Any') {
+            pool = pool.filter(q => q.category === category);
+        }
+        if (difficulty && difficulty !== 'Any') {
+            pool = pool.filter(q => q.difficulty === difficulty);
+        }
+
+        // Fallback if combination has no questions
+        if (pool.length === 0) {
+            pool = [...TRIVIA_QUESTIONS];
+        }
+
+        const shuffled = pool.sort(() => Math.random() - 0.5);
+        const questions = shuffled.slice(0, 10);
+
+        gameState.gameData = {
+            phase: 'ROUND',
             round: 0,
-            questions, // Store the full list
+            questions,
             question: questions[0],
             timer: 20,
             showResult: false,
             answers: {},
-            scores: {} // Round specific scores
+            scores: {}
         };
 
-        this.startTimer(gameState, broadcast);
+        broadcast();
     }
 
     private startTimer(gameState: GameState, broadcast: () => void) {
@@ -65,6 +96,8 @@ export class TriviaGame implements IGameLogic {
 
     // Standard Update Loop
     update(dt: number, gameState: GameState, broadcast: () => void) {
+        if (gameState.gameData.phase === 'SETTINGS' || gameState.gameData.phase === 'GAME_OVER') return;
+
         if (gameState.gameData.showResult) {
             // In result phase, wait then next round
             gameState.gameData.timer -= dt;
@@ -85,6 +118,16 @@ export class TriviaGame implements IGameLogic {
     }
 
     onInput(gameState: GameState, playerId: string, data: any) {
+        const player = gameState.players[playerId];
+
+        if (gameState.gameData.phase === 'SETTINGS') {
+            if (player?.isHost && data.action === 'START_TRIVIA') {
+                this.startGame(gameState, data.category, data.difficulty, () => { });
+                // Room update loop handles broadcast or host does
+            }
+            return;
+        }
+
         if (gameState.gameData.showResult) return;
 
         // data expected to be { answerIndex: number }
@@ -186,6 +229,26 @@ export class TriviaGame implements IGameLogic {
         gameState.gameData.showResult = false;
         gameState.gameData.answers = {};
         gameState.gameData.roundScores = {};
+    }
+
+    onPlayerLeave(gameState: GameState, playerId: string, broadcast: () => void) {
+        if (gameState.gameData.showResult) return;
+
+        // The player is about to be deleted from gameState.players by RoomManager.
+        // We simulate the effect to check if we should resolve.
+        const playerCount = Object.keys(gameState.players).filter(id => id !== playerId && !gameState.players[id].isHost).length;
+
+        // Only count answers from players who are NOT the one leaving
+        const activeAnswers = Object.keys(gameState.gameData.answers || {}).filter(id => id !== playerId).length;
+
+        if (playerCount > 0 && activeAnswers >= playerCount) {
+            this.resolveRound(gameState);
+            broadcast();
+        } else if (playerCount === 0) {
+            // No players left
+            gameState.gameData.phase = 'GAME_OVER';
+            broadcast();
+        }
     }
 
     onEnd(gameState: GameState) {

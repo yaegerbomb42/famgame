@@ -1,9 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSound } from '../context/SoundContext';
 import { Persona } from './Persona';
 import { useVoiceStore } from '../store/useVoiceStore';
+import { useNarratorStore } from '../store/useNarratorStore';
+import { Narrator } from './Narrator';
+import TriviaHost from '../games/trivia/Host';
+import ReactionHost from '../games/reaction/Host';
 
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=000000&margin=10`;
@@ -18,9 +22,14 @@ const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
 };
 
 const HostLogic = () => {
-    const { gameState, createRoom, backToLobby, startGame } = useGameStore();
+    const { gameState, createRoom, backToLobby, startGame, selectGame } = useGameStore();
     const { setBGM } = useSound();
     const { activeSpeakers } = useVoiceStore();
+    const { speak } = useNarratorStore();
+
+    // Narrator: Lobby Join Remarks
+    const players = Object.values(gameState?.players || {}).filter((p: any) => !p.isHost);
+    const playerCount = players.length;
 
     useEffect(() => {
         if (gameState?.status === 'LOBBY' || gameState?.status === 'GAME_SELECT') {
@@ -32,11 +41,32 @@ const HostLogic = () => {
         }
     }, [gameState?.status, setBGM]);
 
+    const prevPlayerCountRef = useRef(0);
+
+    // Track Player Joins for Narrator
     useEffect(() => {
         if (!gameState) {
             createRoom('Host');
         }
     }, [gameState, createRoom]);
+
+    useEffect(() => {
+        if (gameState?.status === 'LOBBY' && playerCount > prevPlayerCountRef.current) {
+            const newPlayer: any = players[playerCount - 1];
+            if (newPlayer) {
+                const remarks = [
+                    `Oh look, it's ${newPlayer.name}. Lower your expectations, everyone.`,
+                    `A round of polite applause for ${newPlayer.name}. Welcome to the meat grinder.`,
+                    `${newPlayer.name} has arrived. Did you bring snacks? Because you're about to get cooked.`,
+                    `Ah, ${newPlayer.name}. I was hoping for someone smarter, but you'll do.`,
+                    `Please remain calm, ${newPlayer.name} has breached containment and entered the lobby.`,
+                    `Who let ${newPlayer.name} in? Security is a joke around here.`
+                ];
+                speak(remarks[Math.floor(Math.random() * remarks.length)]);
+            }
+        }
+        prevPlayerCountRef.current = playerCount;
+    }, [gameState?.status, playerCount, players, speak]);
 
     if (!gameState) return (
         <div className="flex h-screen items-center justify-center bg-game-bg">
@@ -49,11 +79,10 @@ const HostLogic = () => {
     );
 
     const joinUrl = `${window.location.origin}?code=${gameState.roomCode}`;
-    const players = Object.values(gameState.players).filter((p: any) => !p.isHost);
-    const playerCount = players.length;
 
     return (
         <div className="min-h-screen flex flex-col bg-game-bg text-white overflow-hidden">
+            <Narrator />
             <Persona />
             {/* Header */}
             <header className="flex justify-between items-center p-6 z-20">
@@ -245,15 +274,14 @@ const HostLogic = () => {
                         </div>
 
                         <div className="grid grid-cols-4 gap-8 w-full">
-                            {/* Placeholder for Game Cards - Using "Coming Soon" for now as requested "Ready for me to add gameplay" */}
-                            {['TRIVIA', 'BUZZ', 'ROAST', 'POLL'].map((game, i) => (
-                                <div key={game} className="aspect-[4/5] bg-white/5 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center gap-6 group hover:bg-white/10 hover:border-game-primary/50 transition-all cursor-pointer opacity-50 hover:opacity-100">
-                                    <div className="text-6xl grayscale group-hover:grayscale-0 transition-all duration-300">
-                                        {['🧠', '🔔', '🔥', '📊'][i]}
+                            {['TRIVIA', 'REACTION', 'ROAST_MASTER', 'POLL'].map((gameId, i) => (
+                                <div key={gameId} onClick={() => selectGame(gameId as any)} className="aspect-[4/5] bg-white/5 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center gap-6 group hover:bg-white/10 hover:border-game-primary/50 transition-all cursor-pointer opacity-100 hover:scale-[1.02]">
+                                    <div className="text-6xl group-hover:scale-110 transition-all duration-300">
+                                        {['🧠', '⚡️', '🔥', '📊'][i]}
                                     </div>
                                     <div className="text-center">
-                                        <h3 className="text-xl font-black uppercase tracking-widest mb-2">{['Trivia', 'Buzz In', 'Roast', 'Poll'][i]}</h3>
-                                        <span className="text-xs font-mono text-white/30 uppercase border border-white/10 px-2 py-1 rounded">Coming Soon</span>
+                                        <h3 className="text-xl font-black uppercase tracking-widest mb-2">{['Trivia', 'Reaction', 'Roast', 'Poll'][i]}</h3>
+                                        {gameId !== 'TRIVIA' && gameId !== 'REACTION' && <span className="text-xs font-mono text-white/30 uppercase border border-white/10 px-2 py-1 rounded">Coming Soon</span>}
                                     </div>
                                 </div>
                             ))}
@@ -268,27 +296,40 @@ const HostLogic = () => {
                     </motion.div>
                     }
 
-                    {/* PLAYING - Disabled for Social Hub */}
+                    {/* PLAYING - Active Game Area */}
                     {gameState.status === 'PLAYING' && (
-                        <div className="flex flex-col items-center justify-center h-full max-w-2xl text-center px-4">
-                            <div className="text-6xl mb-6">🛠️</div>
-                            <h2 className="text-4xl font-black text-white mb-4 uppercase tracking-wide">
-                                Under Construction
-                            </h2>
-                            <p className="text-xl text-white/60 mb-8 leading-relaxed">
-                                We are renovating the game library to bring you a better experience.
-                                <br />
-                                Please enjoy the Social Hub!
-                            </p>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={backToLobby}
-                                className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold border border-white/10 backdrop-blur-sm transition-all"
-                            >
-                                Return to Lounge
-                            </motion.button>
-                        </div>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="w-full h-full flex items-center justify-center relative z-20"
+                        >
+                            {gameState.currentGame === 'TRIVIA' && (
+                                <TriviaHost
+                                    question={gameState.gameData?.question}
+                                    timer={gameState.gameData?.timer}
+                                    showResult={gameState.gameData?.showResult}
+                                />
+                            )}
+                            {gameState.currentGame === 'REACTION' && (
+                                <ReactionHost />
+                            )}
+                            {gameState.currentGame !== 'TRIVIA' && gameState.currentGame !== 'REACTION' && (
+                                <div className="flex flex-col items-center justify-center text-center">
+                                    <h2 className="text-4xl font-black text-white mb-4 uppercase">
+                                        Loading {gameState.currentGame}...
+                                    </h2>
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={backToLobby}
+                                        className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold mt-8 border border-white/10 backdrop-blur-sm"
+                                    >
+                                        Back to Lounge
+                                    </motion.button>
+                                </div>
+                            )}
+                        </motion.div>
                     )}
 
                     {/* RESULTS - Disabled for Social Hub */}
