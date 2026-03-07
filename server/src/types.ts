@@ -15,7 +15,10 @@ export type GameType =
     | 'CHAIN_REACTION'
     | 'MIND_MELD'
     | 'COMPETE'
-    | 'ROAST_MASTER';
+    | 'ROAST_MASTER'
+    | 'AI_MASHUP'
+    | 'GLOBAL_AVERAGES'
+    | 'BRAIN_BURST';
 
 export interface Player {
     id: string;

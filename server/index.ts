@@ -5,6 +5,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import { generateMashupGame } from './src/utils/ai.js';
 
 const app = express();
 app.use(cors());
@@ -71,12 +72,15 @@ interface Player {
     gameVote?: string;
 }
 
+export const GAME_SEQUENCE: string[] = ['TRIVIA', 'BRAIN_BURST', 'GLOBAL_AVERAGES', 'SKILL_SHOWDOWN', 'AI_MASHUP'];
+
 interface GameState {
     roomCode: string;
     hostId: string | null;
     players: Record<string, Player>;
     status: 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS';
-    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION' | 'EMOJI_STORY' | 'BLUFF' | 'THIS_OR_THAT' | 'SPEED_DRAW' | 'CHAIN_REACTION' | 'MIND_MELD' | 'COMPETE' | 'BRAIN_BURST' | 'GLOBAL_AVERAGES' | 'SKILL_SHOWDOWN';
+    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION' | 'EMOJI_STORY' | 'BLUFF' | 'THIS_OR_THAT' | 'SPEED_DRAW' | 'CHAIN_REACTION' | 'MIND_MELD' | 'COMPETE' | 'BRAIN_BURST' | 'GLOBAL_AVERAGES' | 'SKILL_SHOWDOWN' | 'AI_MASHUP';
+    currentSequenceIndex?: number;
     gameData?: any;
     gameVotes: Record<string, number>;
     timer?: number;
@@ -337,41 +341,41 @@ const BRAIN_BURST_QUESTIONS = [
 ];
 
 const BRAIN_BURST_TIERS = [
-    { level: 1, prize: '$100', points: 100 },
-    { level: 2, prize: '$200', points: 200 },
-    { level: 3, prize: '$300', points: 300 },
-    { level: 4, prize: '$500', points: 500 },
-    { level: 5, prize: '$1,000', points: 1000 },
-    { level: 6, prize: '$2,000', points: 2000 },
-    { level: 7, prize: '$4,000', points: 4000 },
-    { level: 8, prize: '$8,000', points: 8000 },
-    { level: 9, prize: '$16,000', points: 16000 },
-    { level: 10, prize: '$32,000', points: 32000 },
-    { level: 11, prize: '$64,000', points: 64000 },
-    { level: 12, prize: '$125,000', points: 125000 },
-    { level: 13, prize: '$250,000', points: 250000 },
-    { level: 14, prize: '$500,000', points: 500000 },
-    { level: 15, prize: '$1,000,000', points: 1000000 },
-    { level: 16, prize: '$2,500,000', points: 2500000 },
-    { level: 17, prize: '$5,000,000', points: 5000000 },
-    { level: 18, prize: '$10,000,000', points: 10000000 },
-    { level: 19, prize: '$25,000,000', points: 25000000 },
-    { level: 20, prize: '$50,000,000', points: 50000000 },
-    { level: 21, prize: '$100,000,000', points: 100000000 },
-    { level: 22, prize: '$250,000,000', points: 250000000 },
-    { level: 23, prize: '$500,000,000', points: 500000000 },
-    { level: 24, prize: '$750,000,000', points: 750000000 },
-    { level: 25, prize: '$1,000,000,000', points: 1000000000 },
-    { level: 26, prize: '$1,250,000,000', points: 1250000000 },
-    { level: 27, prize: '$1,500,000,000', points: 1500000000 },
-    { level: 28, prize: '$2,000,000,000', points: 2000000000 },
-    { level: 29, prize: '$3,000,000,000', points: 3000000000 },
-    { level: 30, prize: '$4,000,000,000', points: 4000000000 },
-    { level: 31, prize: '$5,000,000,000', points: 5000000000 },
-    { level: 32, prize: '$6,000,000,000', points: 6000000000 },
-    { level: 33, prize: '$7,500,000,000', points: 7500000000 },
-    { level: 34, prize: '$8,500,000,000', points: 8500000000 },
-    { level: 35, prize: '$10,000,000,000', points: 10000000000 },
+    { level: 1, prize: '50 PTS', points: 50 },
+    { level: 2, prize: '100 PTS', points: 100 },
+    { level: 3, prize: '150 PTS', points: 150 },
+    { level: 4, prize: '200 PTS', points: 200 },
+    { level: 5, prize: '250 PTS', points: 250 },
+    { level: 6, prize: '300 PTS', points: 300 },
+    { level: 7, prize: '350 PTS', points: 350 },
+    { level: 8, prize: '400 PTS', points: 400 },
+    { level: 9, prize: '450 PTS', points: 450 },
+    { level: 10, prize: '500 PTS', points: 500 },
+    { level: 11, prize: '550 PTS', points: 550 },
+    { level: 12, prize: '600 PTS', points: 600 },
+    { level: 13, prize: '650 PTS', points: 650 },
+    { level: 14, prize: '700 PTS', points: 700 },
+    { level: 15, prize: '750 PTS', points: 750 },
+    { level: 16, prize: '800 PTS', points: 800 },
+    { level: 17, prize: '850 PTS', points: 850 },
+    { level: 18, prize: '900 PTS', points: 900 },
+    { level: 19, prize: '950 PTS', points: 950 },
+    { level: 20, prize: '1000 PTS', points: 1000 },
+    { level: 21, prize: '1050 PTS', points: 1050 },
+    { level: 22, prize: '1100 PTS', points: 1100 },
+    { level: 23, prize: '1150 PTS', points: 1150 },
+    { level: 24, prize: '1200 PTS', points: 1200 },
+    { level: 25, prize: '1250 PTS', points: 1250 },
+    { level: 26, prize: '1300 PTS', points: 1300 },
+    { level: 27, prize: '1350 PTS', points: 1350 },
+    { level: 28, prize: '1400 PTS', points: 1400 },
+    { level: 29, prize: '1450 PTS', points: 1450 },
+    { level: 30, prize: '1500 PTS', points: 1500 },
+    { level: 31, prize: '1550 PTS', points: 1550 },
+    { level: 32, prize: '1600 PTS', points: 1600 },
+    { level: 33, prize: '1650 PTS', points: 1650 },
+    { level: 34, prize: '1700 PTS', points: 1700 },
+    { level: 35, prize: '1750 PTS', points: 1750 },
 ];
 
 const GLOBAL_AVERAGES_QUESTIONS = [
@@ -762,10 +766,40 @@ io.on('connection', (socket: any) => {
         io.emit('gameState', gameState);
     });
 
-    // GAME SELECT
+    // START LINEAR SEQUENCE
+    socket.on('startGameSequence', () => {
+        gameState.currentSequenceIndex = -1; // -1 because nextGameInSequence increments it to 0
+        nextGameInSequence();
+    });
+
+    // FALLBACK / MANUAL GAME SELECT (If needed)
     socket.on('selectGame', (gameId: any) => {
+        initGame(typeof gameId === 'object' ? gameId.type : gameId);
+    });
+
+    const nextGameInSequence = () => {
+        if (gameState.currentSequenceIndex === undefined) {
+            gameState.currentSequenceIndex = 0;
+        } else {
+            gameState.currentSequenceIndex++;
+        }
+
+        if (gameState.currentSequenceIndex >= GAME_SEQUENCE.length) {
+            // End of sequence, go to RESULTS
+            gameState.status = 'RESULTS';
+            gameState.currentGame = undefined;
+            gameState.gameData = undefined;
+            io.emit('gameState', gameState);
+            return;
+        }
+
+        const nextGameId = GAME_SEQUENCE[gameState.currentSequenceIndex];
+        initGame(nextGameId);
+    };
+
+    const initGame = (gameId: any) => {
         gameState.status = 'PLAYING';
-        gameState.currentGame = gameId;
+        gameState.currentGame = gameId as any;
 
         // Reset logic
         Object.keys(gameState.players).forEach(pid => {
@@ -774,19 +808,20 @@ io.on('connection', (socket: any) => {
 
         if (gameId === 'TRIVIA' || (gameId && typeof gameId === 'object' && gameId.type === 'TRIVIA')) {
             const category = (typeof gameId === 'object') ? gameId.category : 'General';
-            const questions = TRIVIA_CATEGORIES[category] || TRIVIA_CATEGORIES["General"];
 
             gameState.currentGame = 'TRIVIA';
             gameState.gameData = {
-                phase: 'WAITING',
+                phase: 'SETTINGS', // Start in settings so host can choose
+                availableCategories: Object.keys(TRIVIA_CATEGORIES),
+                availableDifficulties: ['Easy', 'Medium', 'Hard', 'Insane'],
                 questionIndex: 0,
-                question: questions[0],
+                question: null,
                 timer: 30,
                 answers: {},
                 showResult: false,
-                currentQuestions: questions // Store the chosen set for advanceTriviaRound
+                currentQuestions: []
             };
-            startTriviaRound();
+            io.emit('gameState', gameState);
             return;
         } else if (gameId === '2TRUTHS') {
             gameState.gameData = {
@@ -994,9 +1029,45 @@ io.on('connection', (socket: any) => {
         } else if (gameId === 'SKILL_SHOWDOWN') {
             startSkillShowdown();
             return; // `startSkillShowdown` emits its own initial state
+        } else if (gameId === 'AI_MASHUP') {
+            gameState.gameData = {
+                phase: 'GATHER',
+                inputs: {},
+                timer: 30
+            };
+
+            // Start gather timer
+            startTimer(30, async () => {
+                if (gameState.currentGame === 'AI_MASHUP' && gameState.gameData.phase === 'GATHER') {
+                    gameState.gameData.phase = 'GENERATE';
+                    io.emit('gameState', gameState);
+
+                    const ideas = Object.values(gameState.gameData.inputs) as string[];
+                    const generatedGame = await generateMashupGame(ideas.length > 0 ? ideas : ["Anything funny"]);
+
+                    if (generatedGame && generatedGame.rounds.length > 0) {
+                        gameState.gameData = {
+                            phase: 'PLAYING',
+                            roundIndex: 0,
+                            game: generatedGame,
+                            currentRound: generatedGame.rounds[0],
+                            answers: {},
+                            timer: 30, // Default round timer
+                            showResult: false
+                        };
+                        io.emit('gameState', gameState);
+
+                        startTimer(30, () => finishMashupRound());
+                    } else {
+                        // Fallback if AI fails
+                        gameState.status = 'GAME_SELECT';
+                        io.emit('gameState', gameState);
+                    }
+                }
+            });
         }
         io.emit('gameState', gameState);
-    });
+    };
 
     // Helper for Buzz In Round Start
     const startBuzzRound = () => {
@@ -1007,6 +1078,35 @@ io.on('connection', (socket: any) => {
             }
         }, Math.random() * 2000 + 2000); // Random 2-4s delay
     }
+
+    // Helper for AI Mashup
+    const finishMashupRound = () => {
+        if (gameState.currentGame === 'AI_MASHUP' && gameState.gameData.phase === 'PLAYING') {
+            gameState.gameData.showResult = true;
+            io.emit('gameState', gameState);
+
+            // Advance to next round after 5 seconds
+            setTimeout(() => {
+                if (gameState.currentGame === 'AI_MASHUP' && gameState.gameData.phase === 'PLAYING') {
+                    const nextIdx = gameState.gameData.roundIndex + 1;
+                    if (nextIdx < gameState.gameData.game.rounds.length) {
+                        gameState.gameData.roundIndex = nextIdx;
+                        gameState.gameData.currentRound = gameState.gameData.game.rounds[nextIdx];
+                        gameState.gameData.answers = {};
+                        gameState.gameData.showResult = false;
+                        io.emit('gameState', gameState);
+
+                        startTimer(30, () => finishMashupRound());
+                    } else {
+                        // Game Over!
+                        gameState.status = 'RESULTS';
+                        io.emit('gameState', gameState);
+                    }
+                }
+            }, 5000);
+        }
+    };
+
 
     // Helper for Reaction Round Start
     const startReactionRound = () => {
@@ -1184,11 +1284,19 @@ io.on('connection', (socket: any) => {
                 gameState.gameData.question = questions[nextIdx];
                 gameState.gameData.showResult = false;
                 gameState.gameData.answers = {};
+                io.emit('gameState', gameState);
+
+                // Start timer for the new round
+                startTimer(45, () => {
+                    if (gameState.currentGame === 'TRIVIA' && gameState.gameData.phase === 'ROUND') {
+                        gameState.gameData.showResult = true;
+                        io.emit('gameState', gameState);
+                    }
+                });
             } else {
                 gameState.status = 'RESULTS';
+                io.emit('gameState', gameState);
             }
-            io.emit('gameState', gameState);
-
         } else if (gameState.currentGame === 'BUZZ_IN') {
             gameState.gameData = {
                 phase: 'WAITING',
@@ -1280,11 +1388,49 @@ io.on('connection', (socket: any) => {
         }
     });
 
+    // GLOBAL GAME INPUT (Generic actions)
+    socket.on('gameInput', (data: any) => {
+        const { action, ...payload } = data;
+
+        if (action === 'START_TRIVIA') {
+            const category = payload.category || 'General';
+            const questions = TRIVIA_CATEGORIES[category] || TRIVIA_CATEGORIES["General"];
+
+            gameState.gameData = {
+                ...gameState.gameData,
+                phase: 'ROUND',
+                questionIndex: 0,
+                question: questions[0],
+                timer: 45,
+                answers: {},
+                showResult: false,
+                currentQuestions: questions
+            };
+            io.emit('gameState', gameState);
+
+            // Start the 45s timer for the first round
+            startTimer(45, () => {
+                if (gameState.currentGame === 'TRIVIA' && gameState.gameData.phase === 'ROUND') {
+                    gameState.gameData.showResult = true;
+                    io.emit('gameState', gameState);
+                }
+            });
+        }
+    });
+
     socket.on('backToLobby', () => {
-        gameState.status = 'GAME_SELECT';
-        gameState.currentGame = undefined;
-        gameState.gameData = undefined;
-        io.emit('gameState', gameState);
+        if (gameState.status === 'RESULTS' && gameState.currentSequenceIndex !== undefined && gameState.currentSequenceIndex >= GAME_SEQUENCE.length - 1) {
+            // Sequence complete, reset to lobby
+            gameState.status = 'LOBBY';
+            gameState.currentGame = undefined;
+            gameState.gameData = undefined;
+            gameState.currentSequenceIndex = undefined;
+            Object.values(gameState.players).forEach(p => { p.score = 0; p.bannedUntil = 0; p.gameVote = undefined; });
+            io.emit('gameState', gameState);
+        } else {
+            // Next game in the sequence
+            nextGameInSequence();
+        }
     });
 
     // --- TRIVIA LOGIC ---

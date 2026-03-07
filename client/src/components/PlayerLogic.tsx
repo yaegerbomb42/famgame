@@ -7,6 +7,7 @@ import ReactionPlayer from '../games/reaction/Player';
 import BrainBurstPlayer from '../games/brain-burst/Player';
 import GlobalAveragesPlayer from '../games/global-averages/Player';
 import SkillShowdownPlayer from '../games/skill-showdown/Player';
+import AIMashupPlayer from '../games/ai-mashup/Player';
 import type {
     BrainBurstGameData,
     GlobalAveragesGameData,
@@ -149,22 +150,7 @@ const PlayerLogic = () => {
                             </motion.div>
                         )}
 
-                        {gameState.status === 'GAME_SELECT' && (
-                            <motion.div
-                                key="select"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="flex-1 flex flex-col items-center justify-center p-4 text-center space-y-8"
-                            >
-                                <div className="text-8xl animate-pulse grayscale opacity-50">🕹️</div>
-                                <div>
-                                    <h2 className="text-3xl font-black uppercase tracking-tighter mb-2" style={{ color: me.color }}>Game Night</h2>
-                                    <p className="text-white/40 text-lg font-medium">
-                                        Waiting for Host to start a game...
-                                    </p>
-                                </div>
-                            </motion.div>
-                        )}
+
 
                         {/* PLAYING STATE */}
                         {gameState.status === 'PLAYING' && (
@@ -201,8 +187,12 @@ const PlayerLogic = () => {
                                         myId={socket?.id || ''}
                                     />
                                 )}
+                                {gameState.currentGame === 'AI_MASHUP' && gameState.gameData && (
+                                    <AIMashupPlayer />
+                                )}
 
-                                {gameState.currentGame !== 'TRIVIA' && gameState.currentGame !== 'REACTION' && gameState.currentGame !== 'BRAIN_BURST' && gameState.currentGame !== 'GLOBAL_AVERAGES' && gameState.currentGame !== 'SKILL_SHOWDOWN' && (
+                                {/* Fallback for unimplemented games */}
+                                {gameState.currentGame !== 'TRIVIA' && gameState.currentGame !== 'REACTION' && gameState.currentGame !== 'BRAIN_BURST' && gameState.currentGame !== 'GLOBAL_AVERAGES' && gameState.currentGame !== 'SKILL_SHOWDOWN' && gameState.currentGame !== 'AI_MASHUP' && (
                                     <div className="flex flex-col items-center justify-center h-full text-center">
                                         <h1 className="text-2xl font-bold animate-pulse uppercase tracking-widest text-cyan-400">Loading {gameState.currentGame}...</h1>
                                         <p className="text-white/50 mt-4">Look at the Big Screen!</p>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSound } from '../context/SoundContext';
@@ -12,6 +12,7 @@ import ReactionHost from '../games/reaction/Host';
 import BrainBurstHost from '../games/brain-burst/Host';
 import GlobalAveragesHost from '../games/global-averages/Host';
 import SkillShowdownHost from '../games/skill-showdown/Host';
+import AIMashupHost from '../games/ai-mashup/Host';
 import type {
     BrainBurstGameData,
     GlobalAveragesGameData,
@@ -84,13 +85,12 @@ const PersistentLeaderboard = ({ gameState, players }: { gameState: GameState, p
 };
 
 const HostLogic = () => {
-    const { gameState, createRoom, backToLobby, startGame, selectGame } = useGameStore();
+    const { gameState, createRoom, backToLobby, startGame } = useGameStore();
     const { setBGM } = useSound();
     const { activeSpeakers } = useVoiceStore();
     const { speak } = useNarratorStore();
 
     // --- HOST STATE ---
-    const [showCategorySelect, setShowCategorySelect] = useState(false);
 
     // Narrator: Lobby Join Remarks
     const players = Object.values(gameState?.players || {}).filter(p => !p.isHost);
@@ -268,13 +268,13 @@ const HostLogic = () => {
                                                                 boxShadow: isSpeaking ? '0 0 20px rgba(0, 255, 255, 0.5)' : 'none'
                                                             }}
                                                             exit={{ scale: 0 }}
-                                                            className={`bg-black/40 backdrop-blur-md border border-white/10 p-3 rounded-xl flex items-center gap-3 overflow-hidden group shadow-lg ${isSpeaking ? 'bg-cyan-900/40' : ''}`}
+                                                            className={`h-24 bg-black/40 backdrop-blur-md border border-white/10 p-4 rounded-xl flex items-center gap-4 overflow-hidden group shadow-lg ${isSpeaking ? 'bg-cyan-900/40' : ''}`}
                                                         >
-                                                            <div className={`text-3xl bg-white/5 p-2 rounded-lg transition-colors ${isSpeaking ? 'animate-pulse' : 'group-hover:bg-white/10'}`}>
+                                                            <div className={`text-4xl bg-white/5 p-2 rounded-lg transition-colors shrink-0 ${isSpeaking ? 'animate-pulse' : 'group-hover:bg-white/10'}`}>
                                                                 {player.avatar}
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <div className={`font-bold text-white text-sm truncate uppercase tracking-wide transition-colors ${isSpeaking ? 'text-cyan-300' : 'group-hover:text-cyan-400'}`}>
+                                                                <div className={`font-bold text-white text-base truncate uppercase tracking-widest transition-colors ${isSpeaking ? 'text-cyan-300' : 'group-hover:text-cyan-400'}`}>
                                                                     {player.name}
                                                                 </div>
                                                                 <div className="text-[10px] text-white/30 font-mono flex items-center gap-2">
@@ -290,9 +290,9 @@ const HostLogic = () => {
                                                 })}
                                             </AnimatePresence>
 
-                                            {/* Empty Slots visuals if needed, or just leave blank space */}
+                                            {/* Empty Slots visuals */}
                                             {Array.from({ length: Math.max(0, 8 - playerCount) }).map((_, i) => (
-                                                <div key={`empty-${i}`} className="border-2 border-dashed border-white/5 rounded-xl h-20 opacity-30" />
+                                                <div key={`empty-${i}`} className="border-2 border-dashed border-white/5 rounded-xl h-24 opacity-30" />
                                             ))}
                                         </div>
                                     </div>
@@ -329,99 +329,7 @@ const HostLogic = () => {
                         </motion.div>
                     )}
 
-                    {/* GAME SELECT / HUB */}
-                    {gameState.status === 'GAME_SELECT' && <motion.div
-                        key="select"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.1 }}
-                        className="flex-1 flex flex-col w-full max-w-7xl h-full p-8"
-                    >
-                        <div className="text-center mb-12">
-                            <h1 className="text-6xl font-black uppercase tracking-tighter mb-4">
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-game-primary to-game-secondary">
-                                    {showCategorySelect ? 'Choose Category' : 'Game Night'}
-                                </span>
-                            </h1>
-                            <p className="text-2xl text-white/50 font-bold uppercase tracking-widest">
-                                {showCategorySelect ? 'Pick the perfect set of questions' : 'Select a Game to Begin'}
-                            </p>
-                        </div>
 
-                        {showCategorySelect ? (
-                            <div className="flex-1 flex flex-col items-center">
-                                <div className="grid grid-cols-4 gap-8 w-full overflow-y-auto max-h-[60vh] p-4 custom-scrollbar">
-                                    {[
-                                        "General", "Pop Culture", "Science & Tech", "History & Geo",
-                                        "Food & Drink", "Sports", "Movies & TV"
-                                    ].map((cat) => (
-                                        <motion.div
-                                            key={cat}
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() => {
-                                                setShowCategorySelect(false);
-                                                selectGame({ type: 'TRIVIA', category: cat });
-                                            }}
-                                            className="aspect-square bg-white/5 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center p-6 cursor-pointer hover:border-game-primary transition-all group"
-                                        >
-                                            <div className="text-4xl mb-4 group-hover:animate-bounce">
-                                                {cat === 'General' ? '🧠' : cat === 'Pop Culture' ? '🎸' : cat === 'Science & Tech' ? '🧪' : cat === 'History & Geo' ? '🏛️' : cat === 'Food & Drink' ? '🍕' : cat === 'Sports' ? '⚽' : '🎬'}
-                                            </div>
-                                            <div className="text-center font-black uppercase text-xl leading-tight">{cat}</div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                                <button
-                                    onClick={() => setShowCategorySelect(false)}
-                                    className="mt-8 px-12 py-4 rounded-full bg-white/10 hover:bg-white/20 font-bold uppercase tracking-widest transition-colors border border-white/10"
-                                >
-                                    BACK TO GAMES
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-4 gap-8 w-full overflow-y-auto custom-scrollbar">
-                                {[
-                                    { id: 'TRIVIA', name: 'Trivia', icon: '🧠', ready: true },
-                                    { id: 'REACTION', name: 'Reaction', icon: '⚡️', ready: true },
-                                    { id: 'BRAIN_BURST', name: 'Brain Burst', icon: '💰', ready: true },
-                                    { id: 'GLOBAL_AVERAGES', name: 'Global Avg', icon: '🌍', ready: true },
-                                    { id: 'SKILL_SHOWDOWN', name: 'Showdown', icon: '🏆', ready: true },
-                                    { id: 'ROAST_MASTER', name: 'Roast', icon: '🔥', ready: false },
-                                    { id: 'POLL', name: 'Poll', icon: '📊', ready: false },
-                                ].map((game) => (
-                                    <div
-                                        key={game.id}
-                                        onClick={() => {
-                                            if (game.id === 'TRIVIA') {
-                                                setShowCategorySelect(true);
-                                            } else {
-                                                selectGame(game.id);
-                                            }
-                                        }}
-                                        className="aspect-[4/5] bg-white/5 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center gap-6 group hover:bg-white/10 hover:border-game-primary/50 transition-all cursor-pointer opacity-100 hover:scale-[1.02]"
-                                    >
-                                        <div className="text-6xl group-hover:scale-110 transition-all duration-300">
-                                            {game.icon}
-                                        </div>
-                                        <div className="text-center">
-                                            <h3 className="text-xl font-black uppercase tracking-widest mb-2">{game.name}</h3>
-                                            {!game.ready && <span className="text-xs font-mono text-white/30 uppercase border border-white/10 px-2 py-1 rounded">Coming Soon</span>}
-                                        </div>
-                                    </div>
-                                ))}
-
-                                {/* Add more slots */}
-                                {Array.from({ length: 4 }).map((_, i) => (
-                                    <div key={`empty-${i}`} className="aspect-[4/5] border-2 border-dashed border-white/5 rounded-3xl flex items-center justify-center opacity-20">
-                                        <span className="text-4xl">+</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                    </motion.div>
-                    }
 
                     {/* PLAYING - Active Game Area */}
                     {gameState.status === 'PLAYING' && (
@@ -459,7 +367,12 @@ const HostLogic = () => {
                                     players={gameState.players}
                                 />
                             )}
-                            {gameState.currentGame !== 'TRIVIA' && gameState.currentGame !== 'REACTION' && gameState.currentGame !== 'BRAIN_BURST' && gameState.currentGame !== 'GLOBAL_AVERAGES' && gameState.currentGame !== 'SKILL_SHOWDOWN' && (
+                            {gameState.currentGame === 'AI_MASHUP' && gameState.gameData && (
+                                <AIMashupHost />
+                            )}
+
+                            {/* Fallback for un-implemented games */}
+                            {gameState.currentGame !== 'TRIVIA' && gameState.currentGame !== 'REACTION' && gameState.currentGame !== 'BRAIN_BURST' && gameState.currentGame !== 'GLOBAL_AVERAGES' && gameState.currentGame !== 'SKILL_SHOWDOWN' && gameState.currentGame !== 'AI_MASHUP' && (
                                 <div className="flex flex-col items-center justify-center text-center">
                                     <h2 className="text-4xl font-black text-white mb-4 uppercase">
                                         Loading {gameState.currentGame}...
@@ -470,7 +383,7 @@ const HostLogic = () => {
                                         onClick={backToLobby}
                                         className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold mt-8 border border-white/10 backdrop-blur-sm"
                                     >
-                                        Back to Lounge
+                                        Next Game
                                     </motion.button>
                                 </div>
                             )}
@@ -489,7 +402,7 @@ const HostLogic = () => {
                                 onClick={backToLobby}
                                 className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold mt-8"
                             >
-                                Back to Lounge
+                                Play Again
                             </motion.button>
                         </div>
                     )}

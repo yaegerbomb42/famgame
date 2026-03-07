@@ -91,7 +91,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     },
 
     startGame: () => {
-        get().socket?.emit('startGame');
+        get().socket?.emit('startGameSequence');
     },
 
     selectGame: (gameId: string | { type: string; category: string }) => {

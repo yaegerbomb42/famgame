@@ -3,6 +3,7 @@ export type GameMode =
     | 'TRIVIA' | 'REACTION' | 'BRAIN_BURST' | 'GLOBAL_AVERAGES' | 'SKILL_SHOWDOWN'
     | 'ROAST_MASTER' | 'SPEED_DRAW' | 'THIS_OR_THAT' | 'TWO_TRUTHS' | 'WORD_RACE'
     | 'BLUFF' | 'BUZZ' | 'CHAIN_REACTION' | 'COMPETE' | 'EMOJI_STORY' | 'HOT_TAKES' | 'MIND_MELD' | 'POLL'
+    | 'AI_MASHUP'
     | string; // Allow for future/unlisted modes
 
 export interface ChatMessage {
