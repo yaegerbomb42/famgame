@@ -199,7 +199,7 @@ const TriviaPlayer = () => {
                     <span className="text-3xl font-black text-white">{me?.score || 0}</span>
                 </div>
                 <div className="px-4 py-2 bg-zinc-900 rounded-full border border-white/10">
-                    <span className="text-xs font-mono text-blue-400">ROUND {gameData?.round + 1 || 1}</span>
+                    <span className="text-xs font-mono text-blue-400">ROUND {(gameData?.round ?? 0) + 1}</span>
                 </div>
             </header>
 

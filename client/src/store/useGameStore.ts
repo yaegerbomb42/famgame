@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
-import type { GameMode, AllGameData } from '../types/game';
+import type { GameMode, AllGameData, ChatMessage, AiPersona } from '../types/game';
 
 const SOCKET_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
 
@@ -20,6 +20,8 @@ export interface GameState {
     status: GameMode;
     currentGame: string | null;
     gameData: AllGameData;
+    chat: ChatMessage[];
+    aiPersona: AiPersona;
 }
 
 export interface GameStore {

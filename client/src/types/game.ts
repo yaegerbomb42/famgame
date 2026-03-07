@@ -1,4 +1,31 @@
-export type GameMode = 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'TRIVIA' | 'REACTION' | 'BRAIN_BURST' | 'GLOBAL_AVERAGES' | 'SKILL_SHOWDOWN' | 'RESULTS';
+export type GameMode =
+    | 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS'
+    | 'TRIVIA' | 'REACTION' | 'BRAIN_BURST' | 'GLOBAL_AVERAGES' | 'SKILL_SHOWDOWN'
+    | 'ROAST_MASTER' | 'SPEED_DRAW' | 'THIS_OR_THAT' | 'TWO_TRUTHS' | 'WORD_RACE'
+    | 'BLUFF' | 'BUZZ' | 'CHAIN_REACTION' | 'COMPETE' | 'EMOJI_STORY' | 'HOT_TAKES' | 'MIND_MELD' | 'POLL'
+    | string; // Allow for future/unlisted modes
+
+export interface ChatMessage {
+    id: string;
+    text: string;
+    name: string;
+    avatar?: string;
+    isAi?: boolean;
+    isSystem?: boolean;
+    timestamp?: number;
+}
+
+export interface AiPersona {
+    name: string;
+    avatar: string;
+}
+
+export type SkillSubmitData =
+    | { circularity: number }
+    | { grid: boolean[] }
+    | { consistency: number }
+    | { color: { r: number; g: number; b: number } }
+    | { angle: number };
 
 export interface TriviaGameData {
     round: number;
@@ -85,13 +112,22 @@ export interface SkillShowdownGameData {
         targetAngle?: number;
         targetBPM?: number;
     };
-    submissions: Record<string, any>; // Complex union types sometimes struggle with any in Record value
+    submissions: Record<string, SkillSubmitData>;
     scores: Record<string, number>;
 }
 
-export type AllGameData =
-    | TriviaGameData
-    | ReactionGameData
-    | BrainBurstGameData
-    | GlobalAveragesGameData
-    | SkillShowdownGameData;
+export interface BaseGameData {
+    phase?: string;
+    timer?: number;
+    round?: number;
+    showResult?: boolean;
+    [key: string]: any; // Catch-all for other games while we incrementally type them
+}
+
+export interface AllGameData {
+    phase?: string;
+    timer?: number;
+    round?: number;
+    showResult?: boolean;
+    [key: string]: any;
+}
