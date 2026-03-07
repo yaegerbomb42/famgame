@@ -12,6 +12,12 @@ import ReactionHost from '../games/reaction/Host';
 import BrainBurstHost from '../games/brain-burst/Host';
 import GlobalAveragesHost from '../games/global-averages/Host';
 import SkillShowdownHost from '../games/skill-showdown/Host';
+import type {
+    BrainBurstGameData,
+    GlobalAveragesGameData,
+    SkillShowdownGameData,
+    TriviaGameData
+} from '../types/game';
 
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=000000&margin=10`;
@@ -228,7 +234,7 @@ const HostLogic = () => {
                                                 {gameState.roomCode}
                                             </div>
                                             <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/50">
-                                                gamewithfam.vercel.app
+                                                {window.location.hostname}
                                             </p>
                                         </div>
                                     </div>
@@ -355,7 +361,7 @@ const HostLogic = () => {
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => {
                                                 setShowCategorySelect(false);
-                                                selectGame({ type: 'TRIVIA', category: cat } as any);
+                                                selectGame({ type: 'TRIVIA', category: cat });
                                             }}
                                             className="aspect-square bg-white/5 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center p-6 cursor-pointer hover:border-game-primary transition-all group"
                                         >
@@ -427,9 +433,9 @@ const HostLogic = () => {
                         >
                             {gameState.currentGame === 'TRIVIA' && (
                                 <TriviaHost
-                                    question={gameState.gameData?.question}
-                                    timer={gameState.gameData?.timer}
-                                    showResult={gameState.gameData?.showResult}
+                                    question={(gameState.gameData as TriviaGameData)?.currentQuestion}
+                                    timer={(gameState.gameData as TriviaGameData)?.timer}
+                                    showResult={(gameState.gameData as TriviaGameData)?.showResult}
                                 />
                             )}
                             {gameState.currentGame === 'REACTION' && (
@@ -437,40 +443,19 @@ const HostLogic = () => {
                             )}
                             {gameState.currentGame === 'BRAIN_BURST' && (
                                 <BrainBurstHost
-                                    phase={gameState.gameData.phase}
-                                    currentQuestion={gameState.gameData.currentQuestion}
-                                    tier={gameState.gameData.tier}
-                                    tiers={gameState.gameData.tiers}
-                                    timer={gameState.gameData.timer}
-                                    showResult={gameState.gameData.showResult}
-                                    answers={gameState.gameData.answers}
-                                    fiftyFiftyDisabled={gameState.gameData.fiftyFiftyDisabled}
-                                    questionIndex={gameState.gameData.questionIndex}
+                                    {...(gameState.gameData as BrainBurstGameData)}
                                     players={gameState.players}
-                                    streaks={gameState.gameData.streaks}
                                 />
                             )}
                             {gameState.currentGame === 'GLOBAL_AVERAGES' && (
                                 <GlobalAveragesHost
-                                    phase={gameState.gameData.phase}
-                                    question={gameState.gameData.question}
-                                    correct={gameState.gameData.correct}
-                                    guesses={gameState.gameData.guesses}
+                                    {...(gameState.gameData as GlobalAveragesGameData)}
                                     players={gameState.players}
-                                    closestPid={gameState.gameData.closestPid}
-                                    pointsAwarded={gameState.gameData.pointsAwarded}
-                                    timerEnd={gameState.gameData.timerEnd}
-                                    submissionCount={gameState.gameData.submissionCount}
-                                    totalPlayers={gameState.gameData.totalPlayers}
                                 />
                             )}
                             {gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData && (
                                 <SkillShowdownHost
-                                    phase={gameState.gameData.phase}
-                                    challengeIndex={gameState.gameData.challengeIndex}
-                                    challenge={gameState.gameData.challenge}
-                                    submissions={gameState.gameData.submissions}
-                                    scores={gameState.gameData.scores}
+                                    {...(gameState.gameData as SkillShowdownGameData)}
                                     players={gameState.players}
                                 />
                             )}

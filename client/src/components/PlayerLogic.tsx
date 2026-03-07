@@ -7,6 +7,11 @@ import ReactionPlayer from '../games/reaction/Player';
 import BrainBurstPlayer from '../games/brain-burst/Player';
 import GlobalAveragesPlayer from '../games/global-averages/Player';
 import SkillShowdownPlayer from '../games/skill-showdown/Player';
+import type {
+    BrainBurstGameData,
+    GlobalAveragesGameData,
+    SkillShowdownGameData
+} from '../types/game';
 
 // Extended Avatar List
 const AVATARS = [
@@ -173,13 +178,8 @@ const PlayerLogic = () => {
 
                                 {gameState.currentGame === 'BRAIN_BURST' && gameState.gameData && (
                                     <BrainBurstPlayer
-                                        phase={gameState.gameData.phase}
-                                        currentQuestion={gameState.gameData.currentQuestion}
-                                        tier={gameState.gameData.tier}
-                                        questionIndex={gameState.gameData.questionIndex}
-                                        fiftyFiftyDisabled={gameState.gameData.fiftyFiftyDisabled || []}
-                                        lifelineUsed={!!gameState.gameData.lifelinesUsed?.[socket?.id || '']}
-                                        showResult={gameState.gameData.showResult}
+                                        {...(gameState.gameData as BrainBurstGameData)}
+                                        lifelineUsed={!!(gameState.gameData as BrainBurstGameData).lifelinesUsed?.[socket?.id || '']}
                                         onAnswer={handleBrainBurstAnswer}
                                         onUseLifeline={handleBrainBurstLifeline}
                                     />
@@ -187,24 +187,17 @@ const PlayerLogic = () => {
 
                                 {gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData && (
                                     <GlobalAveragesPlayer
-                                        phase={gameState.gameData.phase}
-                                        question={gameState.gameData.question}
-                                        socket={socket}
-                                        hasGuessed={gameState.gameData.guesses?.[socket?.id || ''] !== undefined}
-                                        timerEnd={gameState.gameData.timerEnd}
-                                        submissionCount={gameState.gameData.submissionCount}
-                                        totalPlayers={gameState.gameData.totalPlayers}
+                                        {...(gameState.gameData as GlobalAveragesGameData)}
+                                        socket={socket!}
+                                        hasGuessed={(gameState.gameData as GlobalAveragesGameData).guesses?.[socket?.id || ''] !== undefined}
                                     />
                                 )}
 
                                 {gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData && (
                                     <SkillShowdownPlayer
-                                        phase={gameState.gameData.phase}
-                                        challengeIndex={gameState.gameData.challengeIndex}
-                                        challenge={gameState.gameData.challenge}
-                                        submitted={!!gameState.gameData.submissions?.[socket?.id || '']}
-                                        socket={socket}
-                                        scores={gameState.gameData.scores || {}}
+                                        {...(gameState.gameData as SkillShowdownGameData)}
+                                        submitted={!!(gameState.gameData as SkillShowdownGameData).submissions?.[socket?.id || '']}
+                                        socket={socket!}
                                         myId={socket?.id || ''}
                                     />
                                 )}
