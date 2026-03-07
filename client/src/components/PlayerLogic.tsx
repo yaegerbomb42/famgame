@@ -191,6 +191,9 @@ const PlayerLogic = () => {
                                         question={gameState.gameData.question}
                                         socket={socket}
                                         hasGuessed={gameState.gameData.guesses?.[socket?.id || ''] !== undefined}
+                                        timerEnd={gameState.gameData.timerEnd}
+                                        submissionCount={gameState.gameData.submissionCount}
+                                        totalPlayers={gameState.gameData.totalPlayers}
                                     />
                                 )}
 
@@ -304,18 +307,23 @@ const PlayerLogic = () => {
                         </div>
 
                         {/* Avatar Grid */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-widest text-white/40 ml-1">Choose Avatar</label>
-                            <div className="bg-white/5 rounded-2xl p-4 h-48 overflow-y-auto grid grid-cols-6 gap-2 border border-white/10">
+                        <div className="space-y-4">
+                            <label className="text-xs font-black uppercase tracking-[0.2em] text-white/40 ml-1">Choose Your Avatar</label>
+                            <div className="bg-white/5 backdrop-blur-md rounded-3xl p-4 h-64 overflow-y-auto grid grid-cols-5 gap-3 border border-white/10 custom-scrollbar shadow-inner">
                                 {AVATARS.map((a) => (
-                                    <button
+                                    <motion.button
                                         key={a}
                                         type="button"
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
                                         onClick={() => { playClick(); setAvatar(a); }}
-                                        className={`aspect-square flex items-center justify-center text-2xl rounded-lg transition-colors ${avatar === a ? 'bg-white/20 scale-110' : 'hover:bg-white/10'}`}
+                                        className={`aspect-square flex items-center justify-center text-3xl rounded-2xl transition-all duration-300 ${avatar === a
+                                            ? 'bg-gradient-to-br from-game-primary to-game-secondary shadow-[0_0_20px_rgba(255,255,255,0.3)] border-2 border-white'
+                                            : 'bg-white/5 border-2 border-transparent hover:bg-white/10'
+                                            }`}
                                     >
-                                        {a}
-                                    </button>
+                                        <span className={avatar === a ? 'filter-none' : 'grayscale-[40%] group-hover:grayscale-0 transition-all'}>{a}</span>
+                                    </motion.button>
                                 ))}
                             </div>
                         </div>

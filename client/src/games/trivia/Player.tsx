@@ -4,13 +4,14 @@ import { useGameStore } from '../../store/useGameStore';
 import { useSound } from '../../context/SoundContext';
 
 const TriviaPlayer = () => {
-    const { gameState, gameInput, socket } = useGameStore();
-    const { playClick } = useSound();
+    const { gameState, socket } = useGameStore();
+    const { playClick, playSuccess } = useSound();
     const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+    const [confidence, setConfidence] = useState<number | null>(null);
+    const [step, setStep] = useState<'ANSWER' | 'CONFIDENCE'>('ANSWER');
 
     const gameData = gameState?.gameData;
     const me = socket?.id ? gameState?.players[socket.id] : null;
-    const roundScore = gameData?.roundScores?.[socket?.id || ''];
 
     // Pattern: Adjust state during rendering to reset on round change
     // This avoids "synchronous setState in effect" warnings
@@ -20,12 +21,16 @@ const TriviaPlayer = () => {
     if (gameData?.round !== prevRound) {
         setPrevRound(gameData?.round);
         setSelectedIdx(null);
+        setConfidence(null);
+        setStep('ANSWER');
     }
 
     if (gameData?.showResult !== prevResultState) {
         setPrevResultState(gameData?.showResult);
         if (!gameData?.showResult) {
             setSelectedIdx(null);
+            setConfidence(null);
+            setStep('ANSWER');
         }
     }
 
@@ -40,9 +45,17 @@ const TriviaPlayer = () => {
     const handleSelect = (i: number) => {
         if (selectedIdx !== null || gameData?.showResult) return;
         setSelectedIdx(i);
-        gameInput({ answerIndex: i });
+        setStep('CONFIDENCE');
         playClick();
-        if (navigator.vibrate) navigator.vibrate(50);
+        if (navigator.vibrate) navigator.vibrate(30);
+    }
+
+    const handleConfirm = (bet: number) => {
+        if (confidence !== null || gameData?.showResult) return;
+        setConfidence(bet);
+        socket?.emit('submitTriviaAnswer', { answerIndex: selectedIdx, confidence: bet });
+        playSuccess();
+        if (navigator.vibrate) navigator.vibrate([50, 30]);
     }
 
     if (gameData?.phase === 'SETTINGS') {
@@ -57,75 +70,122 @@ const TriviaPlayer = () => {
         );
     }
 
-    if (selectedIdx !== null && !gameData?.showResult) {
+    if (step === 'CONFIDENCE' && confidence === null && !gameData?.showResult) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex-1 flex flex-col items-center justify-center p-6 space-y-8 bg-zinc-950"
+            >
+                <div className="text-center space-y-2">
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Level of Confidence?</h2>
+                    <p className="text-zinc-500 font-bold uppercase text-xs tracking-widest">How sure are you about {labels[selectedIdx!] || ''}?</p>
+                </div>
+
+                <div className="grid grid-cols-5 gap-3 w-full max-w-sm">
+                    {Array.from({ length: 10 }).map((_, i) => {
+                        const val = i + 1;
+                        const isHigh = val > 7;
+                        const isMid = val > 4;
+                        return (
+                            <motion.button
+                                key={val}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => handleConfirm(val)}
+                                className={`aspect-square rounded-xl flex items-center justify-center text-xl font-black border-2 transition-all ${isHigh ? 'bg-red-500/20 border-red-500 text-red-500' :
+                                    isMid ? 'bg-yellow-500/20 border-yellow-500 text-yellow-500' :
+                                        'bg-blue-500/20 border-blue-500 text-blue-500'
+                                    } shadow-lg shadow-black/40`}
+                            >
+                                {val}
+                            </motion.button>
+                        );
+                    })}
+                </div>
+
+                <div className="w-full max-w-[200px] h-2 bg-zinc-900 rounded-full overflow-hidden">
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: '100%' }}
+                        transition={{ duration: 15, ease: "linear" }}
+                        className="h-full bg-gradient-to-r from-blue-500 via-yellow-500 to-red-500"
+                    />
+                </div>
+
+                <button
+                    onClick={() => setStep('ANSWER')}
+                    className="text-zinc-600 font-bold uppercase text-xs hover:text-white transition-colors"
+                >
+                    ← Change Answer
+                </button>
+            </motion.div>
+        );
+    }
+
+    if (confidence !== null && !gameData?.showResult) {
         return (
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex-1 flex flex-col items-center justify-center p-8 space-y-12 bg-zinc-900"
             >
-                <div className="flex flex-col items-center animate-pulse">
-                    <span className="text-8xl">🔒</span>
-                    <span className="text-2xl font-bold text-white mt-4 uppercase tracking-widest">Locked In</span>
+                <div className="flex flex-col items-center">
+                    <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="text-[10rem] filter drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                    >
+                        {confidence > 7 ? '🔥' : confidence > 4 ? '🤔' : '🎲'}
+                    </motion.div>
+                    <span className="text-2xl font-black text-white mt-8 uppercase tracking-[0.3em]">Bet Locked: {confidence}</span>
                 </div>
 
-                <div className={`w-40 h-40 rounded-[2.5rem] ${colors[selectedIdx].split(' ')[0]} flex items-center justify-center text-7xl font-black border-4 border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.5)]`}>
-                    {labels[selectedIdx]}
+                <div className={`w-32 h-32 rounded-[2rem] ${colors[selectedIdx!].split(' ')[0]} flex items-center justify-center text-6xl font-black border-4 border-white/20 shadow-2xl`}>
+                    {labels[selectedIdx!]}
                 </div>
 
-                <p className="text-zinc-500 font-mono text-sm max-w-[200px] text-center">
-                    Wait for the timer to expire...
+                <p className="text-zinc-500 font-bold uppercase text-xs tracking-widest text-center animate-pulse">
+                    Waiting for others to risk it all...
                 </p>
             </motion.div>
         )
     }
 
     if (gameData?.showResult) {
-        const isCorrect = roundScore?.isCorrect;
-        const totalPoints = roundScore?.points || 0;
-        const streak = roundScore?.streak || 0;
-        const multiplier = roundScore?.multiplier || 1;
+        const myResult = gameData.roundScores?.[socket?.id || ''];
+        const isCorrect = myResult?.isCorrect;
+        const points = myResult?.points || 0;
+        const bet = myResult?.confidence || 0;
 
         return (
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`flex-1 flex flex-col items-center justify-center p-8 space-y-8 ${isCorrect ? 'bg-green-900/20' : 'bg-red-900/20'}`}
+                className={`flex-1 flex flex-col items-center justify-center p-8 space-y-8 ${isCorrect ? 'bg-green-900/20' : 'bg-red-900/40'}`}
             >
-                <div className="text-[8rem] drop-shadow-2xl">
-                    {isCorrect ? (streak > 2 ? '🔥' : '✅') : '❌'}
+                <div className="text-[10rem] drop-shadow-2xl">
+                    {isCorrect ? '💎' : '📉'}
                 </div>
 
-                <div className="text-center space-y-2">
+                <div className="text-center space-y-4">
                     <h2 className={`text-6xl font-black uppercase tracking-tighter ${isCorrect ? 'text-green-400' : 'text-red-500'}`}>
-                        {isCorrect ? 'CORRECT!' : 'MISSED IT'}
+                        {isCorrect ? 'BANKED!' : 'LIQUIDATED'}
                     </h2>
 
-                    {isCorrect && (
-                        <div className="flex flex-col items-center gap-2 mt-4">
-                            <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="text-5xl font-black text-white"
-                            >
-                                +{totalPoints} PTS
-                            </motion.div>
+                    <div className="flex flex-col items-center gap-2">
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1.2 }}
+                            className={`text-6xl font-black ${isCorrect ? 'text-white' : 'text-red-400'}`}
+                        >
+                            {points > 0 ? '+' : ''}{points} PTS
+                        </motion.div>
 
-                            {multiplier > 1 && (
-                                <motion.div
-                                    initial={{ x: -20, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    className="px-4 py-1 bg-yellow-500 text-black font-bold rounded-full text-sm uppercase tracking-wide"
-                                >
-                                    {multiplier}x Streak Bonus!
-                                </motion.div>
-                            )}
-
-                            {roundScore?.speedBonus > 50 && (
-                                <span className="text-xs font-mono text-blue-300">⚡️ Speed Demon (+{roundScore.speedBonus})</span>
-                            )}
+                        <div className="px-6 py-2 bg-white/5 rounded-2xl border border-white/10 mt-4">
+                            <span className="text-sm font-bold text-white/40 uppercase tracking-widest">Confidence Risk: {bet}</span>
                         </div>
-                    )}
+                    </div>
                 </div>
             </motion.div>
         )

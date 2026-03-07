@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSound } from '../context/SoundContext';
 import { Persona } from './Persona';
 import { useVoiceStore } from '../store/useVoiceStore';
 import { useNarratorStore } from '../store/useNarratorStore';
+import type { Player, GameState } from '../store/useGameStore';
 import { Narrator } from './Narrator';
 import TriviaHost from '../games/trivia/Host';
 import ReactionHost from '../games/reaction/Host';
@@ -24,14 +25,69 @@ const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
     );
 };
 
+// --- SUB-COMPONENTS ---
+const PersistentLeaderboard = ({ gameState, players }: { gameState: GameState, players: Player[] }) => {
+    if (gameState?.status === 'LOBBY' || gameState?.status === 'GAME_SELECT') return null;
+
+    const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+
+    return (
+        <motion.div
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="fixed right-4 top-24 bottom-24 w-56 bg-black/20 hover:bg-black/60 backdrop-blur-md hover:backdrop-blur-xl border border-white/5 hover:border-white/20 rounded-[2rem] p-5 z-[60] flex flex-col gap-4 shadow-2xl transition-all duration-500 group/board"
+        >
+            <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <h2 className="text-xs font-black uppercase tracking-[0.2em] text-cyan-400">Standings</h2>
+                <div className="flex gap-1">
+                    <div className="w-1 h-1 bg-cyan-500 rounded-full animate-pulse" />
+                    <div className="w-1 h-1 bg-cyan-500 rounded-full animate-pulse delay-75" />
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
+                {sortedPlayers.map((p, i) => (
+                    <motion.div
+                        key={p.id}
+                        layout
+                        className="flex items-center justify-between group/player"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <span className="text-xl group-hover/player:scale-125 transition-transform block">{p.avatar}</span>
+                                {i === 0 && <span className="absolute -top-1 -right-1 text-[10px]">👑</span>}
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-black text-[10px] uppercase tracking-wider truncate w-24 group-hover/player:text-cyan-400 transition-colors">
+                                    {p.name}
+                                </span>
+                                <span className="text-[9px] font-mono text-white/30 tracking-tighter">RANK #{i + 1}</span>
+                            </div>
+                        </div>
+                        <span className="font-black text-white group-hover/player:text-cyan-400 transition-colors tabular-nums">{p.score}</span>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* Hint */}
+            <div className="text-[8px] font-bold text-white/10 uppercase text-center tracking-widest mt-auto">
+                Live Data Feed
+            </div>
+        </motion.div>
+    );
+};
+
 const HostLogic = () => {
     const { gameState, createRoom, backToLobby, startGame, selectGame } = useGameStore();
     const { setBGM } = useSound();
     const { activeSpeakers } = useVoiceStore();
     const { speak } = useNarratorStore();
 
+    // --- HOST STATE ---
+    const [showCategorySelect, setShowCategorySelect] = useState(false);
+
     // Narrator: Lobby Join Remarks
-    const players = Object.values(gameState?.players || {}).filter((p: any) => !p.isHost);
+    const players = Object.values(gameState?.players || {}).filter(p => !p.isHost);
     const playerCount = players.length;
 
     useEffect(() => {
@@ -55,7 +111,7 @@ const HostLogic = () => {
 
     useEffect(() => {
         if (gameState?.status === 'LOBBY' && playerCount > prevPlayerCountRef.current) {
-            const newPlayer: any = players[playerCount - 1];
+            const newPlayer = players[playerCount - 1];
             if (newPlayer) {
                 const remarks = [
                     `Oh look, it's ${newPlayer.name}. Lower your expectations, everyone.`,
@@ -87,6 +143,7 @@ const HostLogic = () => {
         <div className="min-h-screen flex flex-col bg-game-bg text-white overflow-hidden">
             <Narrator />
             <Persona />
+            <PersistentLeaderboard gameState={gameState} players={players} />
             {/* Header */}
             <header className="flex justify-between items-center p-6 z-20">
                 <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/10">
@@ -234,24 +291,33 @@ const HostLogic = () => {
                                         </div>
                                     </div>
 
-                                    {/* START BUTTON FIXED BOTTOM RIGHT */}
-                                    <div className="pointer-events-auto pt-8">
+                                    {/* START BUTTON REPOSITIONED - CENTER FLOATING */}
+                                    <div className="absolute bottom-12 left-1/2 -translate-x-1/2 pointer-events-auto w-full max-w-md">
                                         <motion.button
-                                            whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(0, 255, 255, 0.4)" }}
+                                            whileHover={{ scale: 1.05, boxShadow: "0 0 50px rgba(0, 255, 255, 0.6)" }}
                                             whileTap={{ scale: 0.95 }}
                                             onClick={startGame}
                                             disabled={playerCount === 0}
-                                            className={`w-full py-6 rounded-2xl text-2xl font-black uppercase tracking-widest transition-all relative overflow-hidden group ${playerCount === 0
-                                                ? 'bg-white/5 text-white/20 cursor-not-allowed'
-                                                : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white'
+                                            className={`w-full py-8 rounded-[2.5rem] text-3xl font-black uppercase tracking-[0.2em] transition-all relative overflow-hidden group shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border-t-2 border-white/20 ${playerCount === 0
+                                                ? 'bg-white/5 text-white/20 cursor-not-allowed border-none'
+                                                : 'bg-gradient-to-r from-game-primary to-game-secondary text-white'
                                                 }`}
                                         >
                                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 skew-x-12" />
-                                            <span className="relative z-10">
-                                                {playerCount === 0 ? 'WAITING...' : 'INITIATE_LAUNCH'}
+                                            <span className="relative z-10 flex items-center justify-center gap-4">
+                                                {playerCount === 0 ? (
+                                                    'WAITING FOR SQUAD'
+                                                ) : (
+                                                    <>
+                                                        <span className="animate-pulse">🚀</span>
+                                                        INITIATE_GAME
+                                                        <span className="animate-pulse">🚀</span>
+                                                    </>
+                                                )}
                                             </span>
                                         </motion.button>
                                     </div>
+
                                 </div>
                             </div>
                         </motion.div>
@@ -268,42 +334,86 @@ const HostLogic = () => {
                         <div className="text-center mb-12">
                             <h1 className="text-6xl font-black uppercase tracking-tighter mb-4">
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-game-primary to-game-secondary">
-                                    Game Night
+                                    {showCategorySelect ? 'Choose Category' : 'Game Night'}
                                 </span>
                             </h1>
                             <p className="text-2xl text-white/50 font-bold uppercase tracking-widest">
-                                Select a Game to Begin
+                                {showCategorySelect ? 'Pick the perfect set of questions' : 'Select a Game to Begin'}
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-4 gap-8 w-full overflow-y-auto">
-                            {[
-                                { id: 'TRIVIA', name: 'Trivia', icon: '🧠', ready: true },
-                                { id: 'REACTION', name: 'Reaction', icon: '⚡️', ready: true },
-                                { id: 'BRAIN_BURST', name: 'Brain Burst', icon: '💰', ready: true },
-                                { id: 'GLOBAL_AVERAGES', name: 'Global Avg', icon: '🌍', ready: true },
-                                { id: 'SKILL_SHOWDOWN', name: 'Showdown', icon: '🏆', ready: true },
-                                { id: 'ROAST_MASTER', name: 'Roast', icon: '🔥', ready: false },
-                                { id: 'POLL', name: 'Poll', icon: '📊', ready: false },
-                            ].map((game) => (
-                                <div key={game.id} onClick={() => selectGame(game.id as any)} className="aspect-[4/5] bg-white/5 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center gap-6 group hover:bg-white/10 hover:border-game-primary/50 transition-all cursor-pointer opacity-100 hover:scale-[1.02]">
-                                    <div className="text-6xl group-hover:scale-110 transition-all duration-300">
-                                        {game.icon}
-                                    </div>
-                                    <div className="text-center">
-                                        <h3 className="text-xl font-black uppercase tracking-widest mb-2">{game.name}</h3>
-                                        {!game.ready && <span className="text-xs font-mono text-white/30 uppercase border border-white/10 px-2 py-1 rounded">Coming Soon</span>}
-                                    </div>
+                        {showCategorySelect ? (
+                            <div className="flex-1 flex flex-col items-center">
+                                <div className="grid grid-cols-4 gap-8 w-full overflow-y-auto max-h-[60vh] p-4 custom-scrollbar">
+                                    {[
+                                        "General", "Pop Culture", "Science & Tech", "History & Geo",
+                                        "Food & Drink", "Sports", "Movies & TV"
+                                    ].map((cat) => (
+                                        <motion.div
+                                            key={cat}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => {
+                                                setShowCategorySelect(false);
+                                                selectGame({ type: 'TRIVIA', category: cat } as any);
+                                            }}
+                                            className="aspect-square bg-white/5 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center p-6 cursor-pointer hover:border-game-primary transition-all group"
+                                        >
+                                            <div className="text-4xl mb-4 group-hover:animate-bounce">
+                                                {cat === 'General' ? '🧠' : cat === 'Pop Culture' ? '🎸' : cat === 'Science & Tech' ? '🧪' : cat === 'History & Geo' ? '🏛️' : cat === 'Food & Drink' ? '🍕' : cat === 'Sports' ? '⚽' : '🎬'}
+                                            </div>
+                                            <div className="text-center font-black uppercase text-xl leading-tight">{cat}</div>
+                                        </motion.div>
+                                    ))}
                                 </div>
-                            ))}
+                                <button
+                                    onClick={() => setShowCategorySelect(false)}
+                                    className="mt-8 px-12 py-4 rounded-full bg-white/10 hover:bg-white/20 font-bold uppercase tracking-widest transition-colors border border-white/10"
+                                >
+                                    BACK TO GAMES
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-4 gap-8 w-full overflow-y-auto custom-scrollbar">
+                                {[
+                                    { id: 'TRIVIA', name: 'Trivia', icon: '🧠', ready: true },
+                                    { id: 'REACTION', name: 'Reaction', icon: '⚡️', ready: true },
+                                    { id: 'BRAIN_BURST', name: 'Brain Burst', icon: '💰', ready: true },
+                                    { id: 'GLOBAL_AVERAGES', name: 'Global Avg', icon: '🌍', ready: true },
+                                    { id: 'SKILL_SHOWDOWN', name: 'Showdown', icon: '🏆', ready: true },
+                                    { id: 'ROAST_MASTER', name: 'Roast', icon: '🔥', ready: false },
+                                    { id: 'POLL', name: 'Poll', icon: '📊', ready: false },
+                                ].map((game) => (
+                                    <div
+                                        key={game.id}
+                                        onClick={() => {
+                                            if (game.id === 'TRIVIA') {
+                                                setShowCategorySelect(true);
+                                            } else {
+                                                selectGame(game.id);
+                                            }
+                                        }}
+                                        className="aspect-[4/5] bg-white/5 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center gap-6 group hover:bg-white/10 hover:border-game-primary/50 transition-all cursor-pointer opacity-100 hover:scale-[1.02]"
+                                    >
+                                        <div className="text-6xl group-hover:scale-110 transition-all duration-300">
+                                            {game.icon}
+                                        </div>
+                                        <div className="text-center">
+                                            <h3 className="text-xl font-black uppercase tracking-widest mb-2">{game.name}</h3>
+                                            {!game.ready && <span className="text-xs font-mono text-white/30 uppercase border border-white/10 px-2 py-1 rounded">Coming Soon</span>}
+                                        </div>
+                                    </div>
+                                ))}
 
-                            {/* Add more slots */}
-                            {Array.from({ length: 4 }).map((_, i) => (
-                                <div key={`empty-${i}`} className="aspect-[4/5] border-2 border-dashed border-white/5 rounded-3xl flex items-center justify-center opacity-20">
-                                    <span className="text-4xl">+</span>
-                                </div>
-                            ))}
-                        </div>
+                                {/* Add more slots */}
+                                {Array.from({ length: 4 }).map((_, i) => (
+                                    <div key={`empty-${i}`} className="aspect-[4/5] border-2 border-dashed border-white/5 rounded-3xl flex items-center justify-center opacity-20">
+                                        <span className="text-4xl">+</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                     </motion.div>
                     }
 
@@ -349,6 +459,9 @@ const HostLogic = () => {
                                     players={gameState.players}
                                     closestPid={gameState.gameData.closestPid}
                                     pointsAwarded={gameState.gameData.pointsAwarded}
+                                    timerEnd={gameState.gameData.timerEnd}
+                                    submissionCount={gameState.gameData.submissionCount}
+                                    totalPlayers={gameState.gameData.totalPlayers}
                                 />
                             )}
                             {gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData && (

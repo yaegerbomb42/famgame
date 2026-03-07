@@ -122,23 +122,59 @@ function updateLeaderboard() {
 }
 
 // --- CONTENT LIBRARIES ---
-const TRIVIA_QUESTIONS = [
-    { q: "Who is most likely to trip over nothing?", a: ["Dad", "Mom", "The Dog", "Grandma"], correct: 0 },
-    { q: "What is the capital of Australia?", a: ["Sydney", "Melbourne", "Canberra", "Perth"], correct: 2 },
-    { q: "Which planet is known as the Red Planet?", a: ["Venus", "Jupiter", "Mars", "Saturn"], correct: 2 },
-    { q: "What does HTML stand for?", a: ["Hyper Text Markup Language", "High Tech Modern Life", "Hyperlinks and Text Markup Language", "Home Tool Markup Language"], correct: 0 },
-    { q: "Where is the Eiffel Tower located?", a: ["London", "Berlin", "Paris", "Rome"], correct: 2 },
-    { q: "Which is the largest ocean?", a: ["Atlantic", "Indian", "Arctic", "Pacific"], correct: 3 },
-    { q: "What comes after Trillion?", a: ["Quadrillion", "Billion", "Quintillion", "Zillion"], correct: 0 },
-    { q: "How many legs does a spider have?", a: ["6", "8", "10", "12"], correct: 1 },
-    { q: "Which element has the chemical symbol 'O'?", a: ["Gold", "Silver", "Oxygen", "Iron"], correct: 2 },
-    { q: "Who painted the Mona Lisa?", a: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], correct: 2 },
-    { q: "What is the fastest land animal?", a: ["Cheetah", "Lion", "Horse", "Eagle"], correct: 0 },
-    { q: "What year did the Titanic sink?", a: ["1912", "1905", "1920", "1899"], correct: 0 },
-    { q: "Which fruit has its seeds on the outside?", a: ["Apple", "Banana", "Strawberry", "Kiwi"], correct: 2 },
-    { q: "Which gas do plants absorb?", a: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Helium"], correct: 2 },
-    { q: "What is the hardest natural substance?", a: ["Gold", "Iron", "Diamond", "Platinum"], correct: 2 },
-];
+const TRIVIA_CATEGORIES: Record<string, { q: string; a: string[]; correct: number }[]> = {
+    "General": [
+        { q: "What is the capital of Australia?", a: ["Sydney", "Melbourne", "Canberra", "Perth"], correct: 2 },
+        { q: "Which planet is known as the Red Planet?", a: ["Venus", "Jupiter", "Mars", "Saturn"], correct: 2 },
+        { q: "What does HTML stand for?", a: ["Hyper Text Markup Language", "High Tech Modern Life", "Hyperlinks and Text Markup Language", "Home Tool Markup Language"], correct: 0 },
+        { q: "Where is the Eiffel Tower located?", a: ["London", "Berlin", "Paris", "Rome"], correct: 2 },
+        { q: "Which is the largest ocean?", a: ["Atlantic", "Indian", "Arctic", "Pacific"], correct: 3 },
+    ],
+    "Pop Culture": [
+        { q: "What is the highest grossing media franchise of all time?", a: ["Star Wars", "Marvel", "Pokemon", "Mickey Mouse"], correct: 2 },
+        { q: "Which artist released the album 'Midnights' in 2022?", a: ["Taylor Swift", "Adele", "Beyonce", "Harry Styles"], correct: 0 },
+        { q: "In 'The Office', what is the name of Dwight's beet farm?", a: ["Schrute Farms", "Beet Haven", "Dwight's Dirt", "The Root"], correct: 0 },
+        { q: "What is the name of the fictional kingdom in 'Frozen'?", a: ["Agrabah", "Arendelle", "Genovia", "Far Far Away"], correct: 1 },
+        { q: "Who played the character of Iron Man?", a: ["Chris Evans", "Robert Downey Jr.", "Chris Pratt", "Tom Hiddleston"], correct: 1 },
+    ],
+    "Science & Tech": [
+        { q: "Which gas do plants absorb?", a: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Helium"], correct: 2 },
+        { q: "What is the hardest natural substance?", a: ["Gold", "Iron", "Diamond", "Platinum"], correct: 2 },
+        { q: "What does DNA stand for?", a: ["Deoxyribonucleic Acid", "Dioxin Natural Acid", "Dynamic Neural Acid", "Digital Network Array"], correct: 0 },
+        { q: "Which element has the chemical symbol 'O'?", a: ["Gold", "Silver", "Oxygen", "Iron"], correct: 2 },
+        { q: "How many bones does an adult human have?", a: ["106", "156", "206", "306"], correct: 2 },
+    ],
+    "History & Geo": [
+        { q: "What year did the Titanic sink?", a: ["1912", "1905", "1920", "1899"], correct: 0 },
+        { q: "Which country is shaped like a boot?", a: ["France", "Spain", "Italy", "Greece"], correct: 2 },
+        { q: "Who was the first person to walk on the moon?", a: ["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin", "Michael Collins"], correct: 1 },
+        { q: "What is the smallest country in the world?", a: ["Monaco", "Vatican City", "Nauru", "Malta"], correct: 1 },
+        { q: "Which ancient civilization built the pyramids of Giza?", a: ["Mayan", "Roman", "Egyptian", "Aztec"], correct: 2 },
+    ],
+    "Food & Drink": [
+        { q: "Which fruit has its seeds on the outside?", a: ["Apple", "Banana", "Strawberry", "Kiwi"], correct: 2 },
+        { q: "What is the main ingredient in hummus?", a: ["Lentils", "Black Beans", "Chickpeas", "Edamame"], correct: 2 },
+        { q: "What is sushi traditionally wrapped in?", a: ["Lettuce", "Seaweed", "Rice Paper", "Tortilla"], correct: 1 },
+        { q: "Which country invented ice cream?", a: ["Italy", "France", "China", "USA"], correct: 2 },
+        { q: "What is the most stolen food in the world?", a: ["Candy", "Bread", "Cheese", "Meat"], correct: 2 },
+    ],
+    "Sports": [
+        { q: "How many rings are on the Olympic flag?", a: ["3", "4", "5", "6"], correct: 2 },
+        { q: "Which sport is played at Wimbledon?", a: ["Golf", "Cricket", "Tennis", "Rugby"], correct: 2 },
+        { q: "In which sport would you use a 'shuttlecock'?", a: ["Badminton", "Squash", "Tennis", "Lacrosse"], correct: 0 },
+        { q: "Who has won the most Ballon d'Or awards?", a: ["Cristiano Ronaldo", "Lionel Messi", "Pele", "Zinedine Zidane"], correct: 1 },
+        { q: "What is the maximum score possible in a single frame of bowling?", a: ["10", "20", "30", "50"], correct: 2 },
+    ],
+    "Movies & TV": [
+        { q: "Which movie won the first ever Academy Award for Best Picture?", a: ["The Jazz Singer", "Wings", "Sunrise", "Metropolis"], correct: 1 },
+        { q: "What is the name of the main protagonist in 'Die Hard'?", a: ["Jack Traven", "John McClane", "Ethan Hunt", "Jason Bourne"], correct: 1 },
+        { q: "Which TV show features a character named Eleven?", a: ["Stranger Things", "Lost", "Black Mirror", "Dark"], correct: 0 },
+        { q: "In 'Star Wars', what is the name of Han Solo's ship?", a: ["Enterprise", "Serenity", "Millennium Falcon", "Discovery"], correct: 2 },
+        { q: "Who directed 'Jurassic Park'?", a: ["James Cameron", "Steven Spielberg", "George Lucas", "Christopher Nolan"], correct: 1 },
+    ],
+};
+
+const TRIVIA_QUESTIONS = TRIVIA_CATEGORIES["General"]; // Default for legacy code
 
 const POLL_PROMPTS = [
     "Who would survive the longest in a zombie apocalypse?",
@@ -401,20 +437,24 @@ const revealGlobalAveragesLogic = () => {
                     question: question.q,
                     correct: question.correct,
                     guesses: {},
+                    timerEnd: Date.now() + 30000,
+                    submissionCount: 0,
+                    totalPlayers: Object.values(gameState.players).filter(p => !p.isHost).length,
                 };
                 io.emit('gameState', gameState);
 
-                // Auto-Reveal Timer for the new round
+                // Auto-Reveal Timer for the new round (30s)
                 const currentRound = gameState.gameData.round;
                 setTimeout(() => {
                     if (gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData?.phase === 'WAITING' && gameState.gameData?.round === currentRound) {
                         revealGlobalAveragesLogic();
                     }
-                }, 20000);
+                }, 30000);
             } else {
-                // Chain into Skill Showdown instead of RESULTS
-                gameState.currentGame = 'SKILL_SHOWDOWN';
-                startSkillShowdown();
+                // Game complete — go to RESULTS
+                gameState.status = 'RESULTS';
+                updateLeaderboard();
+                io.emit('gameState', gameState);
             }
         }
     }, 10000);
@@ -422,11 +462,11 @@ const revealGlobalAveragesLogic = () => {
 
 // --- SKILL SHOWDOWN CHALLENGE DEFINITIONS ---
 const SKILL_SHOWDOWN_CHALLENGES = [
-    { type: 'CIRCLE_DRAW', title: '🎯 Perfect Circle', instruction: 'Draw the most perfect circle you can!', timeLimit: 10 },
-    { type: 'MEMORY_GRID', title: '🧠 Memory Grid', instruction: 'Memorize the pattern, then recreate it!', timeLimit: 12, gridSize: 4, litCount: 6 },
-    { type: 'TEMPO_TAP', title: '⏱️ Tempo Tap', instruction: 'Tap to the beat! Keep a steady rhythm.', timeLimit: 10, targetBPM: 120 },
-    { type: 'COLOR_MATCH', title: '🎨 Color Match', instruction: 'Match the target color as closely as possible!', timeLimit: 10 },
-    { type: 'ANGLE_GUESS', title: '📐 Angle Guess', instruction: 'Estimate the angle shown on screen!', timeLimit: 8 },
+    { type: 'CIRCLE_DRAW', title: '🎯 Perfect Circle', instruction: 'Draw the most perfect circle you can!', timeLimit: 15 },
+    { type: 'MEMORY_GRID', title: '🧠 Memory Grid', instruction: 'Memorize the pattern, then recreate it!', timeLimit: 18, gridSize: 4, litCount: 6 },
+    { type: 'TEMPO_TAP', title: '⏱️ Tempo Tap', instruction: 'Tap to the beat! Keep a steady rhythm.', timeLimit: 15, targetBPM: 120 },
+    { type: 'COLOR_MATCH', title: '🎨 Color Match', instruction: 'Match the target color as closely as possible!', timeLimit: 15 },
+    { type: 'ANGLE_GUESS', title: '📐 Angle Guess', instruction: 'Estimate the angle shown on screen!', timeLimit: 12 },
 ];
 
 const startSkillShowdown = () => {
@@ -621,15 +661,18 @@ const startGlobalAveragesRound = (roundNum: number) => {
         question: question.q,
         correct: question.correct,
         guesses: {},
+        timerEnd: Date.now() + 30000,
+        submissionCount: 0,
+        totalPlayers: Object.values(gameState.players).filter(p => !p.isHost).length,
     };
     io.emit('gameState', gameState);
 
-    // Auto-Reveal Timer (20 Seconds)
+    // Auto-Reveal Timer (30 Seconds)
     setTimeout(() => {
         if (gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData?.phase === 'WAITING' && gameState.gameData?.round === roundNum) {
             revealGlobalAveragesLogic();
         }
-    }, 20000);
+    }, 30000);
 };
 
 io.on('connection', (socket: any) => {
@@ -729,14 +772,22 @@ io.on('connection', (socket: any) => {
             gameState.players[pid].bannedUntil = 0;
         });
 
-        if (gameId === 'TRIVIA') {
+        if (gameId === 'TRIVIA' || (gameId && typeof gameId === 'object' && gameId.type === 'TRIVIA')) {
+            const category = (typeof gameId === 'object') ? gameId.category : 'General';
+            const questions = TRIVIA_CATEGORIES[category] || TRIVIA_CATEGORIES["General"];
+
+            gameState.currentGame = 'TRIVIA';
             gameState.gameData = {
+                phase: 'WAITING',
                 questionIndex: 0,
-                question: TRIVIA_QUESTIONS[0],
+                question: questions[0],
                 timer: 30,
+                answers: {},
                 showResult: false,
-                answers: {}
+                currentQuestions: questions // Store the chosen set for advanceTriviaRound
             };
+            startTriviaRound();
+            return;
         } else if (gameId === '2TRUTHS') {
             gameState.gameData = {
                 phase: 'INPUT',
@@ -940,6 +991,9 @@ io.on('connection', (socket: any) => {
         } else if (gameId === 'GLOBAL_AVERAGES') {
             startGlobalAveragesRound(1);
             return; // `startGlobalAveragesRound` emits its own initial state
+        } else if (gameId === 'SKILL_SHOWDOWN') {
+            startSkillShowdown();
+            return; // `startSkillShowdown` emits its own initial state
         }
         io.emit('gameState', gameState);
     });
@@ -1082,16 +1136,13 @@ io.on('connection', (socket: any) => {
             updateLeaderboard();
             io.emit('gameState', gameState);
 
-            // Auto-chain into Global Averages after 10 seconds of scoreboard
+            // Game complete — go to RESULTS (no auto-chain)
             setTimeout(() => {
-                gameState.currentGame = 'GLOBAL_AVERAGES';
-                startGlobalAveragesRound(1);
-
-                Object.keys(gameState.players).forEach(pid => {
-                    gameState.players[pid].bannedUntil = 0;
-                    gameState.players[pid].gameVote = undefined;
-                });
-                io.emit('gameState', gameState);
+                if (gameState.currentGame === 'BRAIN_BURST' && gameState.gameData?.phase === 'GAME_OVER') {
+                    gameState.status = 'RESULTS';
+                    updateLeaderboard();
+                    io.emit('gameState', gameState);
+                }
             }, 10000);
         } else {
             gameState.gameData.questionIndex = nextIdx;
@@ -1118,14 +1169,19 @@ io.on('connection', (socket: any) => {
             io.emit('gameState', gameState);
         }
     };
+    const startTriviaRound = () => {
+        // Handled in selectGame or here
+        io.emit('gameState', gameState);
+    };
 
     // GAME FLOW CONTROLS
     socket.on('nextRound', () => {
         if (gameState.currentGame === 'TRIVIA') {
+            const questions = gameState.gameData.currentQuestions || TRIVIA_CATEGORIES["General"];
             const nextIdx = gameState.gameData.questionIndex + 1;
-            if (nextIdx < TRIVIA_QUESTIONS.length) {
+            if (nextIdx < questions.length) {
                 gameState.gameData.questionIndex = nextIdx;
-                gameState.gameData.question = TRIVIA_QUESTIONS[nextIdx];
+                gameState.gameData.question = questions[nextIdx];
                 gameState.gameData.showResult = false;
                 gameState.gameData.answers = {};
             } else {
@@ -1232,20 +1288,32 @@ io.on('connection', (socket: any) => {
     });
 
     // --- TRIVIA LOGIC ---
-    socket.on('submitAnswer', (answerIndex: number) => {
+    socket.on('submitTriviaAnswer', (data: { answerIndex: number, confidence: number }) => {
         if (gameState.status === 'PLAYING' && gameState.currentGame === 'TRIVIA') {
             if (!gameState.gameData.answers) gameState.gameData.answers = {};
-            gameState.gameData.answers[socket.id] = answerIndex;
+            gameState.gameData.answers[socket.id] = data;
 
-            const playerCount = Object.keys(gameState.players).length;
+            const playersArr = Object.values(gameState.players).filter(p => !p.isHost);
+            const playerCount = playersArr.length;
             const answerCount = Object.keys(gameState.gameData.answers).length;
 
             if (answerCount >= playerCount) {
                 gameState.gameData.showResult = true;
-                Object.entries(gameState.gameData.answers).forEach(([pid, ans]: [string, any]) => {
-                    if (ans === gameState.gameData.question.correct) {
-                        if (gameState.players[pid]) gameState.players[pid].score += 100;
-                    }
+                gameState.gameData.roundScores = {};
+
+                Object.entries(gameState.gameData.answers).forEach(([pid, ansObj]: [string, any]) => {
+                    if (!gameState.players[pid]) return;
+
+                    const isCorrect = ansObj.answerIndex === gameState.gameData.question.correct;
+                    const points = isCorrect ? ansObj.confidence : -ansObj.confidence;
+
+                    gameState.players[pid].score += points;
+                    gameState.gameData.roundScores[pid] = {
+                        isCorrect,
+                        points,
+                        answerIndex: ansObj.answerIndex,
+                        confidence: ansObj.confidence
+                    };
                 });
             }
             io.emit('gameState', gameState);
@@ -1385,6 +1453,7 @@ io.on('connection', (socket: any) => {
     socket.on('submitAverageGuess', (guess: number) => {
         if (gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData?.phase === 'WAITING') {
             gameState.gameData.guesses[socket.id] = guess;
+            gameState.gameData.submissionCount = Object.keys(gameState.gameData.guesses).length;
 
             // Check if everyone has guessed, if so, trigger reveal early
             const playerCount = Object.keys(gameState.players).filter((p: string) => !gameState.players[p].isHost).length;

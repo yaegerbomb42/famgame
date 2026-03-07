@@ -23,12 +23,13 @@ function Home() {
   }, [initSocket, setRole]);
 
   return (
-    <div className="fixed inset-0 bg-game-bg text-white font-sans overflow-auto flex flex-col">
-      {/* Animated gradient orbs */}
-      <div className="fixed -top-[20%] -left-[15%] w-[70vw] h-[70vw] max-w-[600px] max-h-[600px] bg-radial-gradient-purple blur-[60px] opacity-50 animate-float pointer-events-none z-0"
-        style={{ background: 'radial-gradient(circle, rgba(255,0,255,0.4) 0%, transparent 70%)' }} />
-      <div className="fixed -bottom-[20%] -right-[15%] w-[70vw] h-[70vw] max-w-[600px] max-h-[600px] bg-radial-gradient-cyan blur-[60px] opacity-50 animate-float-reverse pointer-events-none z-0"
-        style={{ background: 'radial-gradient(circle, rgba(0,255,255,0.4) 0%, transparent 70%)' }} />
+    <div className="fixed inset-0 bg-[#0f0a1e] text-white font-sans overflow-hidden flex flex-col">
+      {/* Premium Dynamic Background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-game-primary/20 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-game-secondary/20 blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20" />
+      </div>
 
       <main className="relative flex-1 flex flex-col items-center justify-center min-h-screen p-4 md:p-8 z-10">
         <motion.h1

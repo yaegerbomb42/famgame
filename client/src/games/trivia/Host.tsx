@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Timer } from '../../components/Shared/Timer';
 import { useGameStore } from '../../store/useGameStore';
+import type { Player } from '../../store/useGameStore';
 import { useNarratorStore } from '../../store/useNarratorStore';
 
 interface TriviaQuestion {
@@ -12,7 +13,7 @@ interface TriviaQuestion {
 }
 
 interface TriviaHostProps {
-    question: any; // Keep 'any' but cast internally
+    question: TriviaQuestion | null;
     timer: number;
     showResult: boolean;
 }
@@ -39,11 +40,13 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
     useEffect(() => {
         if (qText && qText !== prevQRef.current && phase === 'ROUND') {
             const intros = [
-                `Question incoming. Try not to embarrass yourselves.`,
+                `Question incoming. Try not to embarrass yourselves more than usual.`,
                 `Next question. Let's see who's been paying attention to life.`,
-                `Here we go. A topic I know everything about, and you know nothing about.`,
-                `Let's test your pathetic human brains.`,
-                `I hope you studied... nah, who am I kidding.`
+                `Here we go. A topic I know everything about, and you know... well, nothing.`,
+                `Let's test your pathetic human brains. Hope you brought yours today.`,
+                `I hope you studied... nah, who am I kidding. You're just guessing.`,
+                `Confidence is key. Or in your case, a very expensive delusion.`,
+                `Go ahead, bet high. I love watching digital fortunes crumble.`
             ];
             speak(intros[Math.floor(Math.random() * intros.length)]);
             prevQRef.current = qText;
@@ -55,11 +58,12 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
     useEffect(() => {
         if (showResult && !prevShowResultRef.current && answers[correctIndex]) {
             const reveals = [
-                `The answer is ${answers[correctIndex]}. Obviously.`,
-                `If you didn't guess ${answers[correctIndex]}, I weep for the future.`,
-                `It's ${answers[correctIndex]}. Some of you got that right. Some of you.`,
-                `The correct human string is ${answers[correctIndex]}.`,
-                `${answers[correctIndex]}. My databanks confirm.`
+                `The answer is ${answers[correctIndex]}. Obviously. Even my toaster knew that.`,
+                `If you didn't guess ${answers[correctIndex]}, I weep for the future of your species.`,
+                `It's ${answers[correctIndex]}. Some of you got that right. Pure luck, I'm sure.`,
+                `The correct human string is ${answers[correctIndex]}. How... expected.`,
+                `${answers[correctIndex]}. My databanks confirm, and your bank accounts suffer.`,
+                `Wait, did someone actually bet 10 on that? Brave. Or stupid. Mostly stupid.`
             ];
             speak(reveals[Math.floor(Math.random() * reveals.length)]);
         }
@@ -68,8 +72,8 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
 
     // Get scores for podium
     const players = Object.values(gameState?.players || {})
-        .filter((p: any) => !p.isHost)
-        .sort((a: any, b: any) => b.score - a.score);
+        .filter((p: Player) => !p.isHost)
+        .sort((a: Player, b: Player) => b.score - a.score);
 
     if (phase === 'SETTINGS') {
         return (
@@ -86,7 +90,7 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
                             onChange={e => setSelectedCategory(e.target.value)}
                             className="bg-black/60 border-2 border-white/20 rounded-2xl p-4 text-white text-2xl font-bold uppercase appearance-none outline-none focus:border-cyan-500 min-w-[300px]"
                         >
-                            {gameData?.availableCategories?.map((c: string) => (
+                            {(gameData?.availableCategories as string[] | undefined)?.map((c) => (
                                 <option key={c} value={c} className="bg-slate-900">{c}</option>
                             ))}
                         </select>
@@ -99,7 +103,7 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
                             onChange={e => setSelectedDifficulty(e.target.value)}
                             className="bg-black/60 border-2 border-white/20 rounded-2xl p-4 text-white text-2xl font-bold uppercase appearance-none outline-none focus:border-fuchsia-500 min-w-[300px]"
                         >
-                            {gameData?.availableDifficulties?.map((d: string) => (
+                            {(gameData?.availableDifficulties as string[] | undefined)?.map((d) => (
                                 <option key={d} value={d} className="bg-slate-900">{d}</option>
                             ))}
                         </select>
@@ -149,7 +153,7 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
             </motion.div>
 
             <div className="absolute top-8 right-8 z-20 scale-125">
-                <Timer seconds={timer} total={20} />
+                <Timer seconds={timer} total={45} />
             </div>
 
             {/* Main Stage */}
@@ -213,7 +217,7 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
 
             {/* Live Leaderboard (Mini Podiums) */}
             <div className="absolute bottom-0 inset-x-0 h-32 flex items-end justify-center gap-4 bg-gradient-to-t from-black/80 to-transparent pb-4 z-20">
-                {players.slice(0, 5).map((p: any, i: number) => (
+                {players.slice(0, 5).map((p, i) => (
                     <motion.div
                         key={p.id}
                         layout

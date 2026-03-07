@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 
 const SOCKET_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
 
-interface Player {
+export interface Player {
     id: string;
     name: string;
     avatar?: string;
@@ -13,16 +13,16 @@ interface Player {
     gameVote?: string;
 }
 
-interface GameState {
+export interface GameState {
     roomCode: string;
     players: Record<string, Player>;
     status: 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS';
     currentGame?: string;
-    gameData?: any;
+    gameData: Record<string, unknown>;
     timer?: number;
-    chat?: any[];
-    aiPersona?: any;
-    gameVotes?: Record<string, number>;
+    chat: unknown[];
+    aiPersona: Record<string, unknown>;
+    gameVotes: Record<string, number>;
 }
 
 export interface GameStore {
@@ -37,9 +37,9 @@ export interface GameStore {
     createRoom: (name: string) => void;
     joinRoom: (name: string, code: string, avatar?: string, color?: string) => void;
     startGame: () => void;
-    selectGame: (gameId: string) => void;
+    selectGame: (gameId: string | { type: string; category: string }) => void;
     voteGame: (gameId: string) => void;
-    gameInput: (data: any) => void;
+    gameInput: (data: Record<string, unknown>) => void;
     sendChat: (message: string) => void;
     nextRound: () => void;
     backToLobby: () => void;
@@ -95,7 +95,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         get().socket?.emit('startGame');
     },
 
-    selectGame: (gameId: string) => {
+    selectGame: (gameId: string | { type: string; category: string }) => {
         get().socket?.emit('selectGame', gameId);
     },
 
@@ -103,7 +103,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         get().socket?.emit('voteGame', gameId);
     },
 
-    gameInput: (data: any) => {
+    gameInput: (data: Record<string, unknown>) => {
         get().socket?.emit('gameInput', data);
     },
 
