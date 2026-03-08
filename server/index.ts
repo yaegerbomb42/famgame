@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
+console.log('🚀🚀🚀 FAMGAME MONOLITH STARTING UP - BUILD DATE: 2026-03-08 🚀🚀🚀');
 
 import express from 'express';
 import { createServer } from 'http';
