@@ -685,7 +685,8 @@ io.on('connection', (socket: any) => {
     socket.emit('gameState', gameState);
 
     // CREATE ROOM (Host)
-    socket.on('createRoom', ({ name }: { name: string }) => {
+    socket.on('createRoom', (data: { name?: string } | undefined) => {
+        const name = data?.name || 'Host';
         gameState.roomCode = generateRoomCode();
         gameState.hostId = socket.id;
         gameState.players = {};
