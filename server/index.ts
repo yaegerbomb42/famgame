@@ -685,8 +685,9 @@ io.on('connection', (socket: any) => {
     socket.emit('gameState', gameState);
 
     // CREATE ROOM (Host)
-    socket.on('createRoom', (data: { name?: string } | undefined) => {
-        const name = data?.name || 'Host';
+    socket.on('createRoom', (payload: any) => {
+        console.log('Room creation requested with payload:', payload);
+        const name = payload?.name || 'Host';
         gameState.roomCode = generateRoomCode();
         gameState.hostId = socket.id;
         gameState.players = {};
