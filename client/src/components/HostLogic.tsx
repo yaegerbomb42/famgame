@@ -187,7 +187,7 @@ const HostLogic = () => {
     const playerCount = Object.values(gameState.players).filter(p => !p.isHost).length;
 
     return (
-        <div className="min-h-screen flex flex-col bg-[#0a0518] text-white overflow-auto">
+        <div className="h-screen flex flex-col bg-[#0a0518] text-white overflow-hidden">
             {/* Header - Always visible */}
             <header className="flex justify-between items-center p-4 md:p-6 shrink-0">
                 <div className="flex items-center gap-2">
@@ -218,42 +218,41 @@ const HostLogic = () => {
                             exit={{ opacity: 0, y: -20 }}
                             className="w-full max-w-6xl flex flex-col items-center"
                         >
-                            <div className="flex flex-row items-center justify-between w-full mb-8">
-                                {/* Join Section Left */}
-                                <div className="flex flex-row items-center gap-8 glass-card p-6 rounded-[2rem] border-2 border-white/10 shadow-2xl">
-                                    <div className="bg-white p-2 rounded-2xl">
-                                        <QRCode url={joinUrl} size={150} />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <p className="text-xl text-white/50 mb-1 uppercase tracking-widest font-black">Scan to Join</p>
-                                        <p className="text-sm text-game-secondary mb-2 uppercase tracking-widest">gamewithfam.vercel.app</p>
+                            {/* Hero Section: Room Code & Join QR Stacked */}
+                            <div className="flex flex-col items-center justify-center w-full mb-12 space-y-8">
+                                <div className="text-center">
+                                    <p className="text-3xl text-white/40 mb-2 uppercase tracking-[0.5em] font-black">Room Code</p>
+                                    <div className="text-[10rem] md:text-[14rem] leading-none font-black tracking-[0.1em] text-white drop-shadow-[0_0_50px_rgba(255,255,255,0.4)] animate-pulse-glow">
+                                        {gameState.roomCode}
                                     </div>
                                 </div>
 
-                                {/* Room Code Center-Right */}
-                                <div className="text-center flex flex-col items-center">
-                                    <p className="text-2xl text-white/40 mb-2 uppercase tracking-[0.5em] font-black">Room Code</p>
-                                    <div className="text-8xl md:text-9xl leading-none font-black tracking-[0.1em] text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.4)] animate-pulse-glow">
-                                        {gameState.roomCode}
+                                <div className="flex items-center gap-10 glass-card p-8 rounded-[3rem] border-2 border-white/10 shadow-2xl scale-125">
+                                    <div className="bg-white p-3 rounded-2xl">
+                                        <QRCode url={joinUrl} size={180} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <p className="text-2xl text-white/50 mb-1 uppercase tracking-widest font-black">Scan to Join</p>
+                                        <p className="text-lg text-game-secondary mb-2 uppercase tracking-widest font-bold">gamewithfam.vercel.app</p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Players Section */}
-                            <div className="w-full flex-1 flex flex-col min-h-0 bg-black/20 rounded-[3rem] p-8 border-2 border-white/5">
-                                <h2 className="text-4xl md:text-5xl font-black text-center mb-8 uppercase tracking-[0.2em]">
+                            {/* Players Section: Flex-1 to take up remaining space with scroll */}
+                            <div className="w-full flex-1 flex flex-col min-h-0 bg-black/20 rounded-[4rem] p-10 border-2 border-white/5 overflow-hidden">
+                                <h2 className="text-5xl font-black text-center mb-10 uppercase tracking-[0.2em]">
                                     <span className="text-white/40">Players </span>
                                     <span className="text-[#f9ca24]">({playerCount})</span>
                                 </h2>
 
                                 {playerCount === 0 ? (
-                                    <div className="flex-1 flex flex-col items-center justify-center space-y-8 opacity-20 border-4 border-dashed border-white/10 rounded-[4rem] m-4">
-                                        <div className="text-9xl animate-bounce">📱</div>
-                                        <p className="text-4xl font-black uppercase tracking-widest">Waiting for players...</p>
+                                    <div className="flex-1 flex flex-col items-center justify-center space-y-8 opacity-20 border-4 border-dashed border-white/10 rounded-[5rem] m-2">
+                                        <div className="text-[10rem] animate-bounce">📱</div>
+                                        <p className="text-5xl font-black uppercase tracking-widest text-center">Waiting for players...</p>
                                     </div>
                                 ) : (
-                                    <div className="flex-1 overflow-y-auto px-4 pb-4 custom-scrollbar">
-                                        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-6">
+                                    <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
+                                        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-6 md:gap-8">
                                             {Object.values(gameState.players).filter(p => !p.isHost).map((player) => (
                                                 <motion.div
                                                     key={player.id}
@@ -261,19 +260,19 @@ const HostLogic = () => {
                                                     initial={{ scale: 0, y: 20 }}
                                                     animate={{ scale: 1, y: 0 }}
                                                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                                    className="glass-card p-4 md:p-6 rounded-[1.5rem] flex flex-col items-center justify-center relative group border-2 border-white/20 shadow-xl hover:border-[#00d4ff]/50 hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all bg-white/5"
+                                                    className="glass-card p-6 rounded-[2rem] flex flex-col items-center justify-center relative group border-2 border-white/20 shadow-xl hover:border-[#00d4ff]/50 hover:shadow-[0_0_40px_rgba(0,212,255,0.3)] transition-all bg-white/5"
                                                 >
-                                                    <div className="text-5xl md:text-6xl mb-3 transform group-hover:scale-125 group-hover:-rotate-12 transition-transform drop-shadow-lg">
+                                                    <div className="text-7xl mb-4 transform group-hover:scale-125 group-hover:-rotate-12 transition-transform drop-shadow-lg">
                                                         {player.avatar || '👾'}
                                                     </div>
-                                                    <div className="font-black text-lg md:text-xl truncate w-full text-center uppercase tracking-tight text-white">
+                                                    <div className="font-black text-2xl truncate w-full text-center uppercase tracking-tight text-white/90">
                                                         {player.name}
                                                     </div>
                                                     <button
                                                         onClick={() => socket?.emit('kickPlayer', player.id)}
-                                                        className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-lg hover:bg-red-600 hover:scale-110"
+                                                        className="absolute -top-3 -right-3 w-10 h-10 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-lg hover:bg-red-600 hover:scale-110 z-10"
                                                     >
-                                                        <span className="text-xl font-black">✕</span>
+                                                        <span className="text-2xl font-black">✕</span>
                                                     </button>
                                                 </motion.div>
                                             ))}
@@ -282,27 +281,27 @@ const HostLogic = () => {
                                 )}
                             </div>
 
-                            {/* Start Button */}
-                            <div className="w-full flex justify-center mt-6">
+                            {/* Start Button: Always visible at bottom */}
+                            <div className="w-full flex justify-center mt-10 shrink-0 pb-4">
                                 <motion.button
                                     whileHover={playerCount > 0 ? { scale: 1.05, y: -5 } : {}}
                                     whileTap={playerCount > 0 ? { scale: 0.95 } : {}}
                                     animate={playerCount > 0 ? {
                                         boxShadow: [
-                                            '0 0 40px rgba(249,202,36,0.5), inset 0 0 20px rgba(255,255,255,0.2)',
-                                            '0 0 120px rgba(249,202,36,1), inset 0 0 50px rgba(255,255,255,0.6)',
-                                            '0 0 40px rgba(249,202,36,0.5), inset 0 0 20px rgba(255,255,255,0.2)'
+                                            '0 0 50px rgba(249,202,36,0.5), inset 0 0 20px rgba(255,255,255,0.2)',
+                                            '0 0 150px rgba(249,202,36,1), inset 0 0 50px rgba(255,255,255,0.6)',
+                                            '0 0 50px rgba(249,202,36,0.5), inset 0 0 20px rgba(255,255,255,0.2)'
                                         ]
                                     } : {}}
                                     transition={playerCount > 0 ? { repeat: Infinity, duration: 2 } : {}}
                                     onClick={startBrainBurst}
                                     disabled={playerCount === 0}
-                                    className={`relative overflow-hidden text-white font-black rounded-[4rem] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-4 md:gap-8 ${playerCount === 0
-                                        ? 'bg-white/10 border-2 border-white/20 px-12 py-5 md:px-16 md:py-6 text-2xl md:text-3xl opacity-50 cursor-not-allowed text-white/50'
-                                        : 'bg-gradient-to-r from-[#f9ca24] via-[#f0932b] to-[#f9ca24] border-4 border-white px-12 py-5 md:px-20 md:py-8 text-4xl md:text-6xl'
+                                    className={`relative overflow-hidden text-white font-black rounded-[5rem] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-10 ${playerCount === 0
+                                        ? 'bg-white/10 border-2 border-white/20 px-16 py-8 text-4xl opacity-50 cursor-not-allowed text-white/50'
+                                        : 'bg-gradient-to-r from-[#f9ca24] via-[#f0932b] to-[#f9ca24] border-4 border-white px-20 py-10 text-5xl md:text-7xl'
                                         }`}
                                     style={{
-                                        textShadow: playerCount > 0 ? '0 5px 15px rgba(0,0,0,0.5)' : 'none'
+                                        textShadow: playerCount > 0 ? '0 10px 20px rgba(0,0,0,0.5)' : 'none'
                                     }}
                                 >
                                     {playerCount === 0 ? 'WAITING FOR PLAYERS...' : (
@@ -310,10 +309,10 @@ const HostLogic = () => {
                                             <motion.span
                                                 animate={{ rotate: [0, -20, 20, 0], scale: [1, 1.2, 1] }}
                                                 transition={{ repeat: Infinity, duration: 1.5 }}
-                                                className="text-6xl md:text-8xl drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]"
+                                                className="text-8xl md:text-[8rem] drop-shadow-[0_15px_15px_rgba(0,0,0,0.5)]"
                                                 style={{ display: 'inline-block' }}
                                             >🚀</motion.span>
-                                            <span className="drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">START GAME</span>
+                                            <span className="drop-shadow-[0_15px_15px_rgba(0,0,0,0.5)]">START GAME</span>
                                         </>
                                     )}
                                 </motion.button>
@@ -328,30 +327,37 @@ const HostLogic = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="flex-1 flex flex-col items-center p-8 w-full max-w-7xl"
+                            className="flex-1 flex flex-col items-center p-12 w-full max-w-[95vw] overflow-y-auto custom-scrollbar"
                         >
-                            <h1 className="text-6xl md:text-9xl font-black mb-12 text-glow gradient-text-primary uppercase tracking-tighter">
+                            <h1 className="text-8xl md:text-[10rem] font-black mb-16 text-glow gradient-text-primary uppercase tracking-tighter text-center">
                                 Pick Your Battle
                             </h1>
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 w-full">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 w-full pb-12">
                                 {GAMES.map((game) => (
                                     <motion.button
                                         key={game.id}
-                                        whileHover={{ scale: 1.05, y: -10 }}
+                                        whileHover={{ scale: 1.05, y: -15, boxShadow: `0 30px 60px ${game.color}40` }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => selectGame(game.id)}
-                                        className="glass-card p-10 rounded-[2.5rem] flex flex-col items-center justify-center space-y-6 transition-all hover:border-game-primary border-4 border-white/5 group relative overflow-hidden"
-                                        style={{ borderColor: `${game.color}40` }}
+                                        className="glass-card p-12 rounded-[3.5rem] flex flex-col items-center justify-center space-y-8 transition-all hover:border-white border-4 border-white/5 group relative overflow-hidden h-[450px]"
+                                        style={{ borderColor: `${game.color}20` }}
                                     >
-                                        <div className="text-8xl md:text-[9rem] mb-4 drop-shadow-2xl transform group-hover:rotate-12 transition-transform">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50" />
+                                        <div className="text-[10rem] md:text-[12rem] mb-6 drop-shadow-[0_20px_40px_rgba(0,0,0,0.5)] transform group-hover:rotate-12 transition-transform duration-500">
                                             {game.icon}
                                         </div>
-                                        <div className="text-3xl md:text-4xl font-black uppercase tracking-widest text-white/90 group-hover:text-white group-hover:text-glow">
+                                        <div className="text-5xl font-black uppercase tracking-widest text-white/90 group-hover:text-white group-hover:text-glow text-center">
                                             {game.name}
                                         </div>
-                                        <div className="bg-white/10 px-8 py-3 rounded-full text-xl font-black text-white/40 uppercase tracking-[0.2em] group-hover:bg-game-primary group-hover:text-white transition-colors">
-                                            SELECT
+                                        <div className="bg-white/10 px-10 py-4 rounded-full text-2xl font-black text-white/40 uppercase tracking-[0.2em] group-hover:bg-white group-hover:text-black transition-all">
+                                            CHOOSE
                                         </div>
+
+                                        {/* Animated background glow */}
+                                        <div
+                                            className="absolute -bottom-20 -right-20 w-80 h-80 blur-[100px] opacity-0 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none"
+                                            style={{ backgroundColor: game.color }}
+                                        />
                                     </motion.button>
                                 ))}
                             </div>
@@ -558,54 +564,71 @@ const HostLogic = () => {
                     {/* RESULTS STATE */}
                     {gameState.status === 'RESULTS' && (
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="w-full max-w-2xl text-center"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex-1 flex flex-col items-center w-full max-w-5xl p-8 overflow-hidden"
                         >
-                            <h2 className="text-5xl md:text-7xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-500">
-                                🏆 LEADERBOARD 🏆
+                            <h2 className="text-7xl md:text-9xl font-black mb-12 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-400 to-red-500 drop-shadow-[0_10px_30px_rgba(234,179,8,0.3)] text-center uppercase tracking-tighter">
+                                Final Standings
                             </h2>
 
-                            <div className="space-y-4">
+                            <div className="w-full flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar space-y-6">
                                 {Object.values(gameState.players)
                                     .sort((a, b) => b.score - a.score)
                                     .map((player, i) => (
                                         <motion.div
                                             key={player.id}
-                                            initial={{ x: -50, opacity: 0 }}
+                                            initial={{ x: -100, opacity: 0 }}
                                             animate={{ x: 0, opacity: 1 }}
-                                            transition={{ delay: i * 0.1 }}
-                                            className={`p-6 rounded-2xl flex items-center justify-between ${i === 0
-                                                ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50'
-                                                : 'glass-card'
+                                            transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
+                                            className={`p-8 rounded-[2.5rem] flex items-center justify-between shadow-2xl transition-all hover:scale-[1.02] ${i === 0
+                                                ? 'bg-gradient-to-r from-yellow-500/30 via-orange-500/20 to-yellow-500/30 border-4 border-yellow-400/50 shadow-[0_0_50px_rgba(234,179,8,0.2)]'
+                                                : i === 1
+                                                    ? 'bg-gradient-to-r from-slate-400/20 to-slate-400/10 border-4 border-slate-400/30'
+                                                    : i === 2
+                                                        ? 'bg-gradient-to-r from-amber-700/20 to-amber-700/10 border-4 border-amber-700/30'
+                                                        : 'glass-card border-2 border-white/5'
                                                 }`}
                                         >
-                                            <div className="flex items-center gap-4 md:gap-6">
-                                                <span className={`text-3xl md:text-4xl font-black ${i === 0 ? 'text-yellow-400' : 'text-white/50'}`}>
-                                                    #{i + 1}
-                                                </span>
-                                                <span className="text-2xl md:text-3xl font-bold">{player.name}</span>
+                                            <div className="flex items-center gap-8">
+                                                <div className="relative">
+                                                    <span className={`text-6xl md:text-7xl font-black italic ${i === 0 ? 'text-yellow-400 text-glow' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-white/20'}`}>
+                                                        #{i + 1}
+                                                    </span>
+                                                    {i === 0 && <div className="absolute -top-6 -left-6 text-4xl animate-bounce">👑</div>}
+                                                </div>
+                                                <div className="flex items-center gap-6">
+                                                    <span className="text-6xl md:text-7xl drop-shadow-lg">{player.avatar || '👾'}</span>
+                                                    <span className="text-4xl md:text-5xl font-black uppercase tracking-tight">{player.name}</span>
+                                                </div>
                                             </div>
-                                            <span className="text-3xl md:text-4xl font-mono text-[#00ffff]">{player.score}</span>
+                                            <div className="text-right flex flex-col items-end">
+                                                <span className="text-sm text-white/30 uppercase tracking-[0.3em] font-black">Points</span>
+                                                <span className="text-5xl md:text-7xl font-black font-mono text-transparent bg-clip-text bg-gradient-to-br from-[#00ffff] to-[#00d4ff] drop-shadow-[0_0_20px_rgba(0,212,255,0.4)]">
+                                                    {player.score.toLocaleString()}
+                                                </span>
+                                            </div>
                                         </motion.div>
                                     ))}
                             </div>
 
-                            <div className="flex gap-6 justify-center mt-12">
+                            <div className="flex gap-10 justify-center mt-12 shrink-0 pb-6 w-full">
                                 <motion.button
-                                    whileHover={{ scale: 1.05 }}
+                                    whileHover={{ scale: 1.05, y: -5 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={startGame}
-                                    className="px-10 py-5 bg-white text-black font-bold text-xl md:text-2xl rounded-full"
+                                    className="px-16 py-8 bg-white text-black font-black text-3xl md:text-4xl rounded-[3rem] shadow-2xl hover:bg-white/90 transition-all uppercase tracking-widest border-4 border-white active:scale-95"
                                 >
-                                    Play Again
+                                    PLAY AGAIN
                                 </motion.button>
-                                <button
+                                <motion.button
+                                    whileHover={{ scale: 1.05, y: -5 }}
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={backToLobby}
-                                    className="px-10 py-5 border-2 border-white/30 text-white font-bold text-xl md:text-2xl rounded-full hover:border-white/50 transition-colors"
+                                    className="px-16 py-8 border-4 border-white/20 text-white font-black text-3xl md:text-4xl rounded-[3rem] hover:border-white/50 transition-all uppercase tracking-widest active:scale-95"
                                 >
-                                    New Players
-                                </button>
+                                    NEW PLAYERS
+                                </motion.button>
                             </div>
                         </motion.div>
                     )}
