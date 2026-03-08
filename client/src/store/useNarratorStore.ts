@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create, type StateCreator } from 'zustand';
 
 interface NarratorState {
     isPlaying: boolean;
@@ -12,7 +12,7 @@ interface NarratorState {
     initVoice: () => void;
 }
 
-export const useNarratorStore = create<NarratorState>((set, get) => ({
+const narratorStore: StateCreator<NarratorState> = (set, get) => ({
     isPlaying: false,
     currentSubtitle: '',
     queue: [],
@@ -47,7 +47,7 @@ export const useNarratorStore = create<NarratorState>((set, get) => ({
     speak: (text: string) => {
         const id = Math.random().toString(36).substring(7);
 
-        set(state => ({
+        set((state) => ({
             queue: [...state.queue, { text, id }]
         }));
 
@@ -67,18 +67,18 @@ export const useNarratorStore = create<NarratorState>((set, get) => ({
             };
 
             utterance.onend = () => {
-                set(state => ({
+                set((state) => ({
                     isPlaying: false,
                     currentSubtitle: '',
                     queue: state.queue.slice(1)
                 }));
                 // Short delay before next line
-                setTimeout(() => get().speak(''), 100); // Hack to trigger queue check
+                setTimeout(() => (get() as any).speak(''), 100); // Hack to trigger queue check
             };
 
             utterance.onerror = (e) => {
                 console.error("Speech Synthesis Error:", e);
-                set(state => ({
+                set((state) => ({
                     isPlaying: false,
                     currentSubtitle: '',
                     queue: state.queue.slice(1)
@@ -90,7 +90,7 @@ export const useNarratorStore = create<NarratorState>((set, get) => ({
 
         // If 'speak' was called just to poke the queue (hack above)
         if (text === '') {
-            set(state => ({ queue: state.queue.filter(q => q.text !== '') }));
+            set((state) => ({ queue: state.queue.filter((q: { text: string }) => q.text !== '') }));
             processQueue();
             return;
         }
@@ -102,4 +102,6 @@ export const useNarratorStore = create<NarratorState>((set, get) => ({
         window.speechSynthesis.cancel();
         set({ isPlaying: false, currentSubtitle: '', queue: [] });
     }
-}));
+});
+
+export const useNarratorStore = create<NarratorState>(narratorStore);

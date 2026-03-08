@@ -18,6 +18,7 @@ import CompeteHost from '../games/compete/Host';
 import BrainBurstHost from '../games/brain-burst/Host';
 import GlobalAveragesHost from '../games/global-averages/Host';
 import SkillShowdownHost from '../games/skill-showdown/Host';
+import type { Player } from '../store/useGameStore';
 
 // QR Code component using Google Charts API
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
@@ -109,10 +110,10 @@ const HostLogic = () => {
 
     // Create room when host mounts and is connected
     useEffect(() => {
-        if (isConnected && socket && (!gameState || !gameState.roomCode)) {
-            socket.emit('createRoom', { name: 'Host' });
+        if (gameState?.status === 'LOBBY' && isConnected) {
+            socket?.emit('createRoom');
         }
-    }, [isConnected, socket]);
+    }, [gameState?.status, socket, isConnected]);
 
     // Narrator — auto-narrate game events with emotional flair
     useEffect(() => {
@@ -154,8 +155,8 @@ const HostLogic = () => {
             mood = 'epic';
         }
         if (text && text !== lastNarratedRef.current) {
-            lastNarratedRef.current = text;
-            narrate(text, mood);
+            lastNarratedRef.current = text as string;
+            narrate(text as string, mood);
         }
     }, [gameState?.gameData?.phase, gameState?.gameData?.questionIndex]);
 
@@ -184,7 +185,7 @@ const HostLogic = () => {
     };
 
     const joinUrl = `https://gamewithfam.vercel.app?code=${gameState.roomCode}`;
-    const playerCount = Object.values(gameState.players).filter(p => !p.isHost).length;
+    const playerCount = (Object.values(gameState.players) as Player[]).filter(p => !p.isHost).length;
 
     return (
         <div className="h-screen flex flex-col bg-[#0a0518] text-white overflow-hidden">
@@ -253,23 +254,23 @@ const HostLogic = () => {
                                 ) : (
                                     <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
                                         <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-6 md:gap-8">
-                                            {Object.values(gameState.players).filter(p => !p.isHost).map((player) => (
+                                            {Object.keys(gameState.players).map((p: string) => (
                                                 <motion.div
-                                                    key={player.id}
-                                                    layout
-                                                    initial={{ scale: 0, y: 20 }}
-                                                    animate={{ scale: 1, y: 0 }}
-                                                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                                    className="glass-card p-6 rounded-[2rem] flex flex-col items-center justify-center relative group border-2 border-white/20 shadow-xl hover:border-[#00d4ff]/50 hover:shadow-[0_0_40px_rgba(0,212,255,0.3)] transition-all bg-white/5"
+                                                    key={p}
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    className="w-20 h-20 md:w-28 md:h-28 rounded-3xl bg-white/10 border-2 border-white/20 flex items-center justify-center text-3xl md:text-5xl shadow-2xl overflow-hidden relative group"
                                                 >
-                                                    <div className="text-7xl mb-4 transform group-hover:scale-125 group-hover:-rotate-12 transition-transform drop-shadow-lg">
-                                                        {player.avatar || '👾'}
-                                                    </div>
-                                                    <div className="font-black text-2xl truncate w-full text-center uppercase tracking-tight text-white/90">
-                                                        {player.name}
-                                                    </div>
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+                                                    {gameState.players[p]?.avatar ? (
+                                                        <span className="drop-shadow-lg transform group-hover:scale-110 transition-transform">{gameState.players[p].avatar}</span>
+                                                    ) : (
+                                                        <span className="text-white/20 font-black italic">
+                                                            {(gameState.players[p]?.name as string || 'Waiting...').charAt(0)}
+                                                        </span>
+                                                    )}
                                                     <button
-                                                        onClick={() => socket?.emit('kickPlayer', player.id)}
+                                                        onClick={() => socket?.emit('kickPlayer', p)}
                                                         className="absolute -top-3 -right-3 w-10 h-10 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shadow-lg hover:bg-red-600 hover:scale-110 z-10"
                                                     >
                                                         <span className="text-2xl font-black">✕</span>
@@ -369,18 +370,16 @@ const HostLogic = () => {
                         <>
                             {gameState.currentGame === 'TRIVIA' && (
                                 <TriviaHost
-                                    question={gameState.gameData.question.q}
-                                    answers={gameState.gameData.question.a}
-                                    timer={gameState.gameData.timer}
-                                    showResult={gameState.gameData.showResult}
-                                    correctIndex={gameState.gameData.question.correct}
+                                    question={gameState.gameData.question}
+                                    timer={gameState.gameData.timer ?? 0}
+                                    showResult={gameState.gameData.showResult ?? false}
                                 />
                             )}
 
                             {gameState.currentGame === '2TRUTHS' && (
                                 <TwoTruthsHost
-                                    phase={gameState.gameData.phase}
-                                    inputs={gameState.gameData.inputs}
+                                    phase={(gameState.gameData.phase || 'INPUT') as 'VOTING' | 'REVEAL' | 'INPUT'}
+                                    inputs={gameState.gameData.inputs || {}}
                                     currentSubjectId={gameState.gameData.currentSubjectId}
                                     players={gameState.players}
                                     votes={gameState.gameData.votes}
@@ -390,18 +389,18 @@ const HostLogic = () => {
 
                             {gameState.currentGame === 'HOT_TAKES' && (
                                 <HotTakesHost
-                                    phase={gameState.gameData.phase}
-                                    prompt={gameState.gameData.prompt}
-                                    inputs={gameState.gameData.inputs}
+                                    phase={(gameState.gameData.phase || 'INPUT') as 'VOTING' | 'RESULTS' | 'INPUT'}
+                                    prompt={gameState.gameData.prompt || ''}
+                                    inputs={gameState.gameData.inputs || {}}
                                     players={gameState.players}
-                                    votes={gameState.gameData.votes}
+                                    votes={gameState.gameData.votes || {}}
                                 />
                             )}
 
                             {gameState.currentGame === 'POLL' && (
                                 <PollHost
-                                    phase={gameState.gameData.phase}
-                                    prompt={gameState.gameData.prompt}
+                                    phase={(gameState.gameData.phase || 'VOTING') as 'VOTING' | 'RESULTS'}
+                                    prompt={gameState.gameData.prompt || ''}
                                     players={gameState.players}
                                     votes={gameState.gameData.votes}
                                 />
@@ -409,8 +408,8 @@ const HostLogic = () => {
 
                             {gameState.currentGame === 'BUZZ_IN' && (
                                 <BuzzHost
-                                    phase={gameState.gameData.phase}
-                                    winnerId={gameState.gameData.winnerId}
+                                    phase={(gameState.gameData.phase || 'WAITING') as 'WAITING' | 'ACTIVE' | 'BUZZED'}
+                                    winnerId={gameState.gameData.winnerId || null}
                                     players={gameState.players}
                                 />
                             )}
@@ -425,16 +424,12 @@ const HostLogic = () => {
                             )}
 
                             {gameState.currentGame === 'REACTION' && (
-                                <ReactionHost
-                                    phase={gameState.gameData.phase}
-                                    results={gameState.gameData.results}
-                                    players={gameState.players}
-                                />
+                                <ReactionHost />
                             )}
 
                             {gameState.currentGame === 'EMOJI_STORY' && (
                                 <EmojiStoryHost
-                                    phase={gameState.gameData.phase}
+                                    phase={(gameState.gameData.phase || 'INPUT') as 'INPUT' | 'GUESSING' | 'REVEAL'}
                                     currentStory={gameState.gameData.currentStory}
                                     inputs={gameState.gameData.inputs}
                                     guesses={gameState.gameData.guesses}
@@ -445,7 +440,7 @@ const HostLogic = () => {
 
                             {gameState.currentGame === 'BLUFF' && (
                                 <BluffHost
-                                    phase={gameState.gameData.phase}
+                                    phase={(gameState.gameData.phase || 'CLAIM') as 'CLAIM' | 'VOTING' | 'REVEAL'}
                                     currentClaimerId={gameState.gameData.currentClaimerId}
                                     claim={gameState.gameData.claim}
                                     isLying={gameState.gameData.isLying}
@@ -456,8 +451,8 @@ const HostLogic = () => {
 
                             {gameState.currentGame === 'THIS_OR_THAT' && (
                                 <ThisOrThatHost
-                                    phase={gameState.gameData.phase}
-                                    optionA={gameState.gameData.optionA}
+                                    phase={(gameState.gameData.phase || 'CHOOSING') as 'CHOOSING' | 'REVEAL'}
+                                    optionA={gameState.gameData.optionA || ''}
                                     optionB={gameState.gameData.optionB}
                                     votes={gameState.gameData.votes}
                                     players={gameState.players}
@@ -466,85 +461,85 @@ const HostLogic = () => {
 
                             {gameState.currentGame === 'SPEED_DRAW' && (
                                 <SpeedDrawHost
-                                    phase={gameState.gameData.phase}
-                                    prompt={gameState.gameData.prompt}
+                                    phase={(gameState.gameData.phase || 'DRAWING') as 'DRAWING' | 'VOTING' | 'RESULTS'}
+                                    prompt={gameState.gameData.prompt || ''}
                                     drawings={gameState.gameData.drawings}
                                     votes={gameState.gameData.votes}
                                     players={gameState.players}
-                                    timer={gameState.gameData.timer}
+                                    timer={gameState.gameData.timer ?? 0}
                                 />
                             )}
 
                             {gameState.currentGame === 'CHAIN_REACTION' && (
                                 <ChainReactionHost
-                                    phase={gameState.gameData.phase}
-                                    chain={gameState.gameData.chain}
+                                    phase={(gameState.gameData.phase || 'WAITING') as 'WAITING' | 'ACTIVE' | 'RESULTS'}
+                                    chain={gameState.gameData.chain || []}
                                     currentPlayerId={gameState.gameData.currentPlayerId}
                                     players={gameState.players}
-                                    timer={gameState.gameData.timer}
+                                    timer={gameState.gameData.timer ?? 0}
                                     failedPlayerId={gameState.gameData.failedPlayerId}
                                 />
                             )}
 
                             {gameState.currentGame === 'MIND_MELD' && (
                                 <MindMeldHost
-                                    phase={gameState.gameData.phase}
-                                    prompt={gameState.gameData.prompt}
-                                    answers={gameState.gameData.answers}
-                                    matches={gameState.gameData.matches}
+                                    phase={(gameState.gameData.phase || 'PROMPT') as 'PROMPT' | 'ANSWERING' | 'MATCHING' | 'RESULTS'}
+                                    prompt={gameState.gameData.prompt || ''}
+                                    answers={gameState.gameData.answers || {}}
+                                    matches={gameState.gameData.matches || []}
                                     players={gameState.players}
-                                    timer={gameState.gameData.timer}
+                                    timer={gameState.gameData.timer ?? 0}
                                 />
                             )}
 
                             {gameState.currentGame === 'COMPETE' && (
                                 <CompeteHost
-                                    phase={gameState.gameData.phase}
-                                    challenger1Id={gameState.gameData.challenger1Id}
-                                    challenger2Id={gameState.gameData.challenger2Id}
-                                    challenge={gameState.gameData.challenge}
-                                    progress={gameState.gameData.progress}
+                                    phase={(gameState.gameData.phase || 'COUNTDOWN') as 'COUNTDOWN' | 'SELECTING' | 'ACTIVE' | 'RESULTS'}
+                                    challenger1Id={gameState.gameData.challenger1Id || ''}
+                                    challenger2Id={gameState.gameData.challenger2Id || ''}
+                                    challenge={gameState.gameData.challenge || { type: 'TAP', target: null }}
+                                    progress={gameState.gameData.progress || {}}
                                     players={gameState.players}
                                     winnerId={gameState.gameData.winnerId}
-                                    timer={gameState.gameData.timer}
+                                    timer={gameState.gameData.timer ?? 0}
                                 />
                             )}
 
                             {gameState.currentGame === 'BRAIN_BURST' && (
                                 <BrainBurstHost
-                                    phase={gameState.gameData.phase}
-                                    currentQuestion={gameState.gameData.currentQuestion}
-                                    tier={gameState.gameData.tier}
-                                    tiers={gameState.gameData.tiers}
-                                    timer={gameState.gameData.timer}
-                                    showResult={gameState.gameData.showResult}
-                                    answers={gameState.gameData.answers}
-                                    fiftyFiftyDisabled={gameState.gameData.fiftyFiftyDisabled}
-                                    questionIndex={gameState.gameData.questionIndex}
+                                    phase={(gameState.gameData.phase || 'INTRO') as 'INTRO' | 'QUESTION' | 'REVEAL' | 'GAME_OVER' | 'CELEBRATION'}
+                                    currentQuestion={gameState.gameData.currentQuestion || { q: '', a: [], correct: 0 }}
+                                    tier={gameState.gameData.tier || { level: 0, prize: '', points: 0 }}
+                                    tiers={gameState.gameData.tiers || []}
+                                    timer={gameState.gameData.timer ?? 0}
+                                    showResult={gameState.gameData.showResult ?? false}
+                                    answers={gameState.gameData.answers || {}}
+                                    fiftyFiftyDisabled={gameState.gameData.fiftyFiftyDisabled || []}
+                                    questionIndex={gameState.gameData.questionIndex ?? 0}
                                     players={gameState.players}
-                                    streaks={gameState.gameData.streaks}
+                                    streaks={gameState.gameData.streaks || {}}
                                 />
                             )}
 
                             {gameState.currentGame === 'GLOBAL_AVERAGES' && (
                                 <GlobalAveragesHost
-                                    phase={gameState.gameData.phase}
-                                    question={gameState.gameData.question}
-                                    correct={gameState.gameData.correct}
-                                    guesses={gameState.gameData.guesses}
+                                    phase={(gameState.gameData.phase || 'WAITING') as 'WAITING' | 'REVEAL'}
+                                    question={gameState.gameData.question || ''}
+                                    correct={gameState.gameData.correct ?? 0}
+                                    guesses={gameState.gameData.guesses || {}}
                                     players={gameState.players}
                                     closestPid={gameState.gameData.closestPid}
                                     pointsAwarded={gameState.gameData.pointsAwarded}
                                 />
                             )}
 
-                            {gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData && (
+                            {gameState.currentGame === 'SKILL_SHOWDOWN' && (
                                 <SkillShowdownHost
-                                    phase={gameState.gameData.phase}
-                                    challengeIndex={gameState.gameData.challengeIndex}
-                                    challenge={gameState.gameData.challenge}
-                                    submissions={gameState.gameData.submissions}
-                                    scores={gameState.gameData.scores}
+                                    phase={(gameState.gameData.phase || 'PREVIEW') as 'PREVIEW' | 'PLAYING' | 'REVEAL'}
+                                    challengeIndex={gameState.gameData.challengeIndex ?? 0}
+                                    challenge={gameState.gameData.challenge || { title: '', description: '', criteria: '' }}
+                                    submissions={gameState.gameData.submissions || {}}
+                                    scores={gameState.gameData.scores || {}}
                                     players={gameState.players}
                                 />
                             )}
@@ -573,9 +568,9 @@ const HostLogic = () => {
                             </h2>
 
                             <div className="w-full flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar space-y-6">
-                                {Object.values(gameState.players)
+                                {(Object.values(gameState.players) as Player[])
                                     .sort((a, b) => b.score - a.score)
-                                    .map((player, i) => (
+                                    .map((player: Player, i: number) => (
                                         <motion.div
                                             key={player.id}
                                             initial={{ x: -100, opacity: 0 }}
