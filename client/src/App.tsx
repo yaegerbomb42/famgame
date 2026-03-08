@@ -1,258 +1,115 @@
-import { useState } from 'react';
-import { GameProvider } from './context/GameContext';
+import { useEffect, useState } from 'react';
+import { useGameStore } from './store/useGameStore';
+import type { GameStore } from './store/useGameStore';
 import HostLogic from './components/HostLogic';
 import PlayerLogic from './components/PlayerLogic';
 import { SoundProvider } from './context/SoundContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const GAME_MODES = [
-  { name: 'Trivia', icon: '🧠', color: '#ff6b6b' },
-  { name: 'Two Truths', icon: '🤥', color: '#4ecdc4' },
-  { name: 'Hot Takes', icon: '🔥', color: '#ff9f43' },
-  { name: 'Poll Party', icon: '📊', color: '#a55eea' },
-  { name: 'Buzz In', icon: '🔔', color: '#26de81' },
-  { name: 'Word Race', icon: '⌨️', color: '#45aaf2' },
-  { name: 'Reaction', icon: '⚡', color: '#fed330' },
-  // New games
-  { name: 'Emoji Story', icon: '📖', color: '#ff6b9d' },
-  { name: 'Bluff', icon: '🎭', color: '#5f27cd' },
-  { name: 'Speed Draw', icon: '🎨', color: '#00d2d3' },
-  { name: 'This or That', icon: '⚖️', color: '#ff9ff3' },
-  { name: 'Brain Burst', icon: '💰', color: '#f9ca24' },
-  { name: 'Global Averages', icon: '🌍', color: '#00d4ff' },
-  { name: 'Chain Reaction', icon: '⛓️', color: '#ff4757' },
-  { name: 'Mind Meld', icon: '🧠', color: '#70a1ff' },
-  { name: 'Compete', icon: '⚔️', color: '#eccc68' },
-  { name: 'Skill Showdown', icon: '🏆', color: '#ff6348' },
-];
 
-function GameContent() {
-  // Auto-detect join code in URL — QR deep link
-  const hasJoinCode = new URLSearchParams(window.location.search).has('code');
-  const [role, setRole] = useState<'NONE' | 'HOST' | 'PLAYER'>(hasJoinCode ? 'PLAYER' : 'NONE');
+function Home() {
+  const setRole = useGameStore((state: GameStore) => state.setRole);
+  const initSocket = useGameStore((state: GameStore) => state.initSocket);
 
-  if (role === 'HOST') {
-    return <HostLogic />;
-  }
+  useEffect(() => {
+    // Check for room code in URL
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      setRole('PLAYER');
+    }
 
-  if (role === 'PLAYER') {
-    return <PlayerLogic />;
-  }
+    initSocket();
+  }, [initSocket, setRole]);
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: '#0a0518',
-      color: 'white',
-      fontFamily: "'Outfit', system-ui, sans-serif",
-      overflow: 'auto', // Allow scrolling on mobile
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
-      {/* Animated gradient orbs */}
-      <div style={{
-        position: 'fixed',
-        top: '-20%',
-        left: '-15%',
-        width: 'min(70vw, 600px)',
-        height: 'min(70vw, 600px)',
-        background: 'radial-gradient(circle, rgba(255,0,255,0.4) 0%, transparent 70%)',
-        filter: 'blur(60px)',
-        opacity: 0.5,
-        animation: 'float 8s ease-in-out infinite',
-        zIndex: 1,
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'fixed',
-        bottom: '-20%',
-        right: '-15%',
-        width: 'min(70vw, 600px)',
-        height: 'min(70vw, 600px)',
-        background: 'radial-gradient(circle, rgba(0,255,255,0.4) 0%, transparent 70%)',
-        filter: 'blur(60px)',
-        opacity: 0.5,
-        animation: 'float 8s ease-in-out infinite reverse',
-        zIndex: 1,
-        pointerEvents: 'none',
-      }} />
+    <div className="fixed inset-0 bg-[#0f0a1e] text-white font-sans overflow-hidden flex flex-col">
+      {/* Premium Dynamic Background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-game-primary/20 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-game-secondary/20 blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20" />
+      </div>
 
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(20px, -20px) scale(1.05); }
-        }
-        * { box-sizing: border-box; }
-      `}</style>
+      <main className="relative flex-1 flex flex-col items-center justify-center min-h-screen p-4 md:p-8 z-10">
+        <motion.h1
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-[clamp(3rem,12vw,10rem)] font-black mb-8 tracking-tighter text-center leading-none"
+        >
+          GAME<span className="text-transparent bg-clip-text bg-gradient-to-r from-game-primary to-game-secondary drop-shadow-[0_0_60px_rgba(255,0,255,0.3)]">NIGHT</span>
+        </motion.h1>
 
-      {/* Main content - scrollable */}
-      <div style={{
-        position: 'relative',
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        padding: 'max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))',
-        zIndex: 10,
-      }}>
-        {/* Title */}
-        <h1 style={{
-          fontSize: 'clamp(3rem, 12vw, 10rem)',
-          fontWeight: 900,
-          marginBottom: '8px',
-          letterSpacing: '-0.03em',
-          textAlign: 'center',
-          textShadow: '0 0 60px rgba(255,0,255,0.3), 0 0 120px rgba(0,255,255,0.2)',
-          lineHeight: 1,
-        }}>
-          FAM<span style={{
-            background: 'linear-gradient(135deg, #ff00ff, #00ffff)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}>GAME</span>
-        </h1>
-
-        {/* Game modes chips - responsive wrap */}
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: 'clamp(6px, 1.5vw, 12px)',
-          marginBottom: 'clamp(12px, 3vh, 24px)',
-          maxWidth: '700px',
-          padding: '0 8px',
-        }}>
-          {GAME_MODES.map((game) => (
-            <div key={game.name} style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: 'clamp(4px, 1vw, 8px) clamp(8px, 2vw, 14px)',
-              background: 'rgba(255,255,255,0.08)',
-              borderRadius: '16px',
-              fontSize: 'clamp(0.65rem, 1.8vw, 0.9rem)',
-              whiteSpace: 'nowrap',
-            }}>
-              <span>{game.icon}</span>
-              <span style={{ color: 'rgba(255,255,255,0.75)' }}>{game.name}</span>
-            </div>
-          ))}
-        </div>
-
-        <p style={{
-          fontSize: 'clamp(0.9rem, 2.5vw, 1.4rem)',
-          color: 'rgba(255,255,255,0.5)',
-          marginBottom: 'clamp(16px, 4vh, 40px)',
-          textAlign: 'center',
-        }}>
-          {GAME_MODES.length} Party Games • 2-20 Players
+        <p className="text-[clamp(1.2rem,3vw,1.8rem)] text-white/80 mb-16 text-center font-bold tracking-wide max-w-2xl leading-relaxed">
+          The ultimate social hub for your next game night.
+          <br />
+          <span className="text-game-secondary">Connect, Chat, Play.</span>
         </p>
 
-        {/* Buttons - stack on mobile */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: 'clamp(12px, 3vw, 32px)',
-          justifyContent: 'center',
-          width: '100%',
-          maxWidth: '900px',
-          padding: '0 16px',
-        }}>
-          <button
+        <div className="flex flex-col md:flex-row gap-6 md:gap-12 w-full max-w-4xl px-4">
+          <motion.button
+            whileHover={{ scale: 1.05, y: -5 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setRole('HOST')}
-            style={{
-              flex: '1 1 250px',
-              maxWidth: '400px',
-              minHeight: 'clamp(140px, 25vh, 220px)',
-              padding: 'clamp(20px, 4vw, 48px)',
-              borderRadius: 'clamp(20px, 4vw, 32px)',
-              backgroundColor: 'rgba(255,255,255,0.08)',
-              border: '2px solid rgba(255,255,255,0.12)',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              color: 'white',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'scale(1.03) translateY(-4px)';
-              e.currentTarget.style.borderColor = '#ff00ff';
-              e.currentTarget.style.boxShadow = '0 20px 50px rgba(255,0,255,0.25)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
+            className="flex-1 min-h-[160px] md:min-h-[240px] p-8 md:p-12 rounded-[2.5rem] bg-gradient-to-br from-white/10 to-white/5 border-[3px] border-white/10 hover:border-game-primary/50 transition-all flex flex-col items-center justify-center gap-4 group shadow-xl hover:shadow-[0_0_50px_rgba(255,0,255,0.2)]"
           >
-            <div style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)' }}>📺</div>
-            <div style={{ textAlign: 'center' }}>
-              <h2 style={{ fontSize: 'clamp(1.3rem, 4vw, 2.5rem)', fontWeight: 'bold', marginBottom: '4px' }}>HOST</h2>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 'clamp(0.75rem, 2vw, 1.1rem)' }}>TV / Big Screen</p>
+            <div className="text-6xl md:text-8xl group-hover:scale-110 transition-transform duration-300">📺</div>
+            <div className="text-center">
+              <h2 className="text-3xl md:text-5xl font-black mb-2 uppercase tracking-tight">Host</h2>
+              <p className="text-white/50 text-base md:text-xl font-medium">Create a Room on TV</p>
             </div>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05, y: -5 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setRole('PLAYER')}
-            style={{
-              flex: '1 1 250px',
-              maxWidth: '400px',
-              minHeight: 'clamp(140px, 25vh, 220px)',
-              padding: 'clamp(20px, 4vw, 48px)',
-              borderRadius: 'clamp(20px, 4vw, 32px)',
-              backgroundColor: 'rgba(255,255,255,0.08)',
-              border: '2px solid rgba(255,255,255,0.12)',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              color: 'white',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'scale(1.03) translateY(-4px)';
-              e.currentTarget.style.borderColor = '#00ffff';
-              e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,255,255,0.25)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
+            className="flex-1 min-h-[160px] md:min-h-[240px] p-8 md:p-12 rounded-[2.5rem] bg-gradient-to-br from-white/10 to-white/5 border-[3px] border-white/10 hover:border-game-secondary/50 transition-all flex flex-col items-center justify-center gap-4 group shadow-xl hover:shadow-[0_0_50px_rgba(0,255,255,0.2)]"
           >
-            <div style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)' }}>📱</div>
-            <div style={{ textAlign: 'center' }}>
-              <h2 style={{ fontSize: 'clamp(1.3rem, 4vw, 2.5rem)', fontWeight: 'bold', marginBottom: '4px' }}>PLAYER</h2>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 'clamp(0.75rem, 2vw, 1.1rem)' }}>Phone / Tablet</p>
+            <div className="text-6xl md:text-8xl group-hover:scale-110 transition-transform duration-300">📱</div>
+            <div className="text-center">
+              <h2 className="text-3xl md:text-5xl font-black mb-2 uppercase tracking-tight">Join</h2>
+              <p className="text-white/50 text-base md:text-xl font-medium">Enter Code on Phone</p>
             </div>
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
 
+import { VoiceChat } from './components/VoiceChat';
+import { PersonaProvider } from './context/PersonaContext';
+import LoadingScreen from './components/LoadingScreen';
+
 function App() {
+  const role = useGameStore((state: GameStore) => state.role);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <GameProvider>
-      <SoundProvider>
-        <GameContent />
-      </SoundProvider>
-    </GameProvider>
+    <SoundProvider>
+      <PersonaProvider>
+        <VoiceChat />
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <LoadingScreen key="loading" />
+          ) : (
+            <>
+              {role === 'NONE' && <Home key="home" />}
+              {role === 'HOST' && <HostLogic key="host" />}
+              {role === 'PLAYER' && <PlayerLogic key="player" />}
+            </>
+          )}
+        </AnimatePresence>
+      </PersonaProvider>
+    </SoundProvider>
   );
 }
 

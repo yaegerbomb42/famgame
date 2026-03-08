@@ -1,88 +1,110 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGameStore } from '../../store/useGameStore';
+import { useSound } from '../../context/SoundContext';
 
-interface ChainReactionPlayerProps {
-    phase: 'WAITING' | 'ACTIVE' | 'RESULTS';
-    isMyTurn: boolean;
-    lastWord: string;
-    timer: number;
-    onSubmitWord: (word: string) => void;
-}
-
-const ChainReactionPlayer = ({ phase, isMyTurn, lastWord, timer, onSubmitWord }: ChainReactionPlayerProps) => {
+const ChainReactionPlayer = () => {
+    const { socket, gameState } = useGameStore();
+    const { playSuccess, playError } = useSound();
     const [word, setWord] = useState('');
-    const [submitted, setSubmitted] = useState(false);
 
-    const handleSubmit = () => {
-        if (word.trim() && !submitted) {
-            setSubmitted(true);
-            onSubmitWord(word.trim());
+    const phase = gameState?.gameData?.phase || 'WAITING';
+    const isMyTurn = socket?.id === gameState?.gameData?.currentPlayerId;
+    const lastWord = gameState?.gameData?.chain?.[gameState?.gameData?.chain.length - 1]?.word || '...';
+    const timer = gameState?.gameData?.timer || 0;
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const trimmed = word.trim();
+        if (trimmed.length > 0 && isMyTurn) {
+            socket?.emit('submitChainWord', trimmed);
             setWord('');
+            playSuccess();
+            if (navigator.vibrate) navigator.vibrate(50);
+        } else {
+            playError();
         }
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex-1 flex flex-col items-center justify-center p-8 w-full max-w-4xl mx-auto"
-        >
-            {phase === 'WAITING' && (
-                <div className="text-center space-y-8">
-                    <div className="text-huge animate-pulse shadow-glow">⛓️</div>
-                    <h2 className="text-5xl font-black uppercase tracking-widest gradient-text-primary">Chain Reaction</h2>
-                    <p className="text-2xl font-black text-white/40 uppercase tracking-[0.3em] animate-bounce">Get ready!</p>
-                </div>
-            )}
-
-            {phase === 'ACTIVE' && isMyTurn && (
-                <div className="w-full text-center space-y-10">
-                    <div className={`text-[12rem] leading-none font-black my-8 ${timer <= 3 ? 'text-red-500 animate-pulse' : 'text-game-primary'}`}>
-                        {timer}
-                    </div>
-
-                    <div className="space-y-4">
-                        <p className="text-2xl uppercase tracking-[0.5em] font-black text-white/30">Connect to:</p>
-                        <div className="text-6xl font-black uppercase tracking-tighter text-game-secondary drop-shadow-[0_0_30px_rgba(0,255,255,0.3)]">{lastWord}</div>
-                    </div>
-
-                    <input
-                        type="text"
-                        value={word}
-                        onChange={(e) => setWord(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                        placeholder="TYPE CONNECTED WORD..."
-                        className="w-full p-10 bg-white/5 border-4 border-white/10 rounded-[3rem] text-5xl font-black uppercase text-center focus:outline-none focus:border-game-primary transition-all placeholder:text-white/5 shadow-2xl"
-                        autoFocus
-                        autoComplete="off"
-                    />
-
-                    <button
-                        onClick={handleSubmit}
-                        disabled={!word.trim()}
-                        className="w-full py-12 bg-game-primary rounded-[3.5rem] font-black text-4xl shadow-[0_20px_50px_rgba(255,0,255,0.4)] transition-all uppercase tracking-widest border-t-8 border-white/20 active:scale-95 disabled:opacity-20"
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <AnimatePresence mode="wait">
+                {phase === 'WAITING' && (
+                    <motion.div
+                        key="waiting"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex-1 flex flex-col items-center justify-center text-center space-y-8"
                     >
-                        SUBMIT! ⚡
-                    </button>
-                </div>
-            )}
+                        <div className="text-[10rem] animate-pulse">⛓️</div>
+                        <h3 className="text-4xl font-black uppercase tracking-widest text-game-primary">CHAIN REACTION</h3>
+                        <p className="text-white/40 text-xl font-black uppercase tracking-[0.3em] animate-bounce">Prepare to connect!</p>
+                    </motion.div>
+                )}
 
-            {phase === 'ACTIVE' && !isMyTurn && (
-                <div className="text-center space-y-8 opacity-40">
-                    <div className="text-huge animate-spin-slow">👀</div>
-                    <p className="text-4xl font-black text-white uppercase tracking-widest">Watching the chain...</p>
-                    <p className="text-2xl font-black text-white/40 uppercase tracking-[0.2em]">Your turn is coming!</p>
-                </div>
-            )}
+                {phase === 'ACTIVE' && (
+                    <motion.div
+                        key="active"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex-1 flex flex-col p-4 space-y-6 justify-center"
+                    >
+                        {isMyTurn ? (
+                            <div className="w-full flex flex-col items-center space-y-8">
+                                <div className={`text-[10rem] font-black font-mono leading-none ${timer <= 2 ? 'text-red-500 animate-ping' : 'text-game-primary'}`}>
+                                    {timer}
+                                </div>
 
-            {phase === 'RESULTS' && (
-                <div className="text-center space-y-8">
-                    <div className="text-huge animate-shake">💥</div>
-                    <p className="text-5xl font-black uppercase tracking-widest text-red-500">CHAIN BROKEN!</p>
-                    <p className="text-3xl font-black text-white/40 uppercase">Check the TV!</p>
-                </div>
-            )}
-        </motion.div>
+                                <div className="text-center">
+                                    <span className="text-xs uppercase tracking-[0.4em] font-black text-white/20">Connect to</span>
+                                    <h3 className="text-5xl font-black text-game-secondary italic uppercase tracking-tighter drop-shadow-glow">
+                                        {lastWord}
+                                    </h3>
+                                </div>
+
+                                <form onSubmit={handleSubmit} className="w-full space-y-6">
+                                    <input
+                                        type="text"
+                                        value={word}
+                                        onChange={(e) => setWord(e.target.value)}
+                                        placeholder="NEXT WORD..."
+                                        className="w-full py-8 bg-white/5 border-4 border-white/10 rounded-[2.5rem] text-center text-4xl font-black focus:outline-none focus:border-game-primary transition-all uppercase placeholder:text-white/5"
+                                        autoFocus
+                                        autoComplete="off"
+                                    />
+                                    <motion.button
+                                        whileTap={{ scale: 0.95 }}
+                                        type="submit"
+                                        className="w-full py-8 bg-game-primary rounded-[2rem] font-black text-3xl shadow-2xl uppercase tracking-widest border-t-4 border-white/20"
+                                    >
+                                        CONNECT! ⚡
+                                    </motion.button>
+                                </form>
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 opacity-40">
+                                <div className="text-[10rem] animate-spin-slow">👀</div>
+                                <h3 className="text-4xl font-black uppercase tracking-tighter italic">WATCH THE CHAIN</h3>
+                                <p className="text-white/40 text-xl font-bold uppercase tracking-widest">Your turn is coming...</p>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+
+                {phase === 'RESULTS' && (
+                    <motion.div
+                        key="results"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-8"
+                    >
+                        <div className="text-[12rem] animate-shake">💥</div>
+                        <h3 className="text-5xl font-black text-red-500 uppercase tracking-tighter italic">CHAIN BROKEN!</h3>
+                        <p className="text-white/30 text-xl font-bold uppercase tracking-widest">Check the TV!</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 };
 

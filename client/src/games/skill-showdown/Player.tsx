@@ -1,6 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
+import type { Socket } from 'socket.io-client';
+
+type SkillSubmitData =
+    | { circularity: number }
+    | { grid: boolean[] }
+    | { consistency: number }
+    | { color: { r: number; g: number; b: number } }
+    | { angle: number };
+
 interface SkillShowdownPlayerProps {
     phase: 'PREVIEW' | 'PLAYING' | 'REVEAL';
     challengeIndex: number;
@@ -15,13 +24,13 @@ interface SkillShowdownPlayerProps {
         targetBPM?: number;
     };
     submitted: boolean;
-    socket: any;
+    socket: Socket;
     scores: Record<string, number>;
     myId: string;
 }
 
 // ---- CIRCLE DRAW ----
-function CircleDraw({ onSubmit }: { onSubmit: (data: any) => void }) {
+function CircleDraw({ onSubmit }: { onSubmit: (data: SkillSubmitData) => void }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const pointsRef = useRef<{ x: number; y: number }[]>([]);
     const drawingRef = useRef(false);
@@ -32,21 +41,23 @@ function CircleDraw({ onSubmit }: { onSubmit: (data: any) => void }) {
         return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
     };
 
-    const startDraw = (e: any) => {
+    const startDraw = (e: React.TouchEvent | React.MouseEvent) => {
         e.preventDefault();
         drawingRef.current = true;
         pointsRef.current = [getPos(e)];
         const ctx = canvasRef.current!.getContext('2d')!;
         ctx.clearRect(0, 0, 300, 300);
         ctx.beginPath();
-        ctx.strokeStyle = '#00ffff';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#22d3ee'; // cyan-400
+        ctx.lineWidth = 4;
         ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         const p = getPos(e);
         ctx.moveTo(p.x, p.y);
+        if (navigator.vibrate) navigator.vibrate(5);
     };
 
-    const draw = (e: any) => {
+    const draw = (e: React.TouchEvent | React.MouseEvent) => {
         e.preventDefault();
         if (!drawingRef.current) return;
         const p = getPos(e);
@@ -61,7 +72,6 @@ function CircleDraw({ onSubmit }: { onSubmit: (data: any) => void }) {
         const pts = pointsRef.current;
         if (pts.length < 10) return;
 
-        // Calculate circularity: find center, avg radius, then variance
         const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
         const cy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
         const radii = pts.map(p => Math.sqrt((p.x - cx) ** 2 + (p.y - cy) ** 2));
@@ -70,16 +80,17 @@ function CircleDraw({ onSubmit }: { onSubmit: (data: any) => void }) {
         const stdDev = Math.sqrt(variance);
         const circularity = Math.max(0, 100 - (stdDev / avgR) * 100);
 
+        if (navigator.vibrate) navigator.vibrate(20);
         onSubmit({ circularity: Math.round(circularity * 10) / 10 });
     };
 
     return (
-        <div className="ss-player-circle">
+        <div className="flex flex-col items-center">
             <canvas
                 ref={canvasRef}
                 width={300}
                 height={300}
-                className="ss-canvas"
+                className="bg-zinc-900/50 border-2 border-white/5 rounded-3xl touch-none shadow-2xl"
                 onTouchStart={startDraw}
                 onTouchMove={draw}
                 onTouchEnd={endDraw}
@@ -87,16 +98,16 @@ function CircleDraw({ onSubmit }: { onSubmit: (data: any) => void }) {
                 onMouseMove={draw}
                 onMouseUp={endDraw}
             />
-            <p className="ss-hint">Draw with your finger, then lift to submit</p>
+            <p className="mt-4 text-[10px] font-black uppercase tracking-[0.3em] text-white/30">Draw a Circle & Release</p>
         </div>
     );
 }
 
 // ---- MEMORY GRID ----
-function MemoryGrid({ grid, onSubmit }: { grid: boolean[]; onSubmit: (data: any) => void }) {
+function MemoryGrid({ grid, onSubmit }: { grid: boolean[]; onSubmit: (data: SkillSubmitData) => void }) {
     const [showPattern, setShowPattern] = useState(true);
     const [playerGrid, setPlayerGrid] = useState(Array(16).fill(false));
-    const [submitted, setSubmitted] = useState(false);
+    const [isInternalSubmitted, setInternalSubmitted] = useState(false);
 
     useEffect(() => {
         const timer = setTimeout(() => setShowPattern(false), 3000);
@@ -104,7 +115,8 @@ function MemoryGrid({ grid, onSubmit }: { grid: boolean[]; onSubmit: (data: any)
     }, []);
 
     const toggle = (i: number) => {
-        if (showPattern || submitted) return;
+        if (showPattern || isInternalSubmitted) return;
+        if (navigator.vibrate) navigator.vibrate(10);
         setPlayerGrid(prev => {
             const next = [...prev];
             next[i] = !next[i];
@@ -113,45 +125,54 @@ function MemoryGrid({ grid, onSubmit }: { grid: boolean[]; onSubmit: (data: any)
     };
 
     const submit = () => {
-        if (submitted) return;
-        setSubmitted(true);
+        if (isInternalSubmitted) return;
+        setInternalSubmitted(true);
+        if (navigator.vibrate) navigator.vibrate(30);
         onSubmit({ grid: playerGrid });
     };
 
     return (
-        <div className="ss-player-memory">
-            <div className="ss-grid">
+        <div className="flex flex-col items-center gap-6">
+            <div className="grid grid-cols-4 gap-3 w-[280px]">
                 {(showPattern ? grid : playerGrid).map((lit, i) => (
-                    <button
+                    <motion.button
                         key={i}
-                        className={`ss-grid-btn ${lit ? 'lit' : ''} ${showPattern ? 'preview' : ''}`}
+                        whileTap={!showPattern && !isInternalSubmitted ? { scale: 0.9 } : {}}
+                        className={`aspect-square rounded-xl border-2 transition-all duration-300 ${lit
+                            ? 'bg-cyan-500 border-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.5)]'
+                            : 'bg-white/5 border-white/5 hover:border-white/20'
+                            } ${showPattern ? 'pointer-events-none' : ''}`}
                         onClick={() => toggle(i)}
                     />
                 ))}
             </div>
-            {!showPattern && !submitted && (
-                <button className="ss-submit-btn" onClick={submit}>SUBMIT</button>
+            {!showPattern && !isInternalSubmitted && (
+                <button
+                    className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl text-lg font-black uppercase tracking-widest shadow-xl shadow-cyan-900/20"
+                    onClick={submit}
+                >
+                    Confirm Pattern
+                </button>
             )}
-            {showPattern && <p className="ss-hint">Memorize!</p>}
-            {submitted && <p className="ss-hint">Submitted! ✓</p>}
+            {showPattern && <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 animate-pulse">Memorize Now!</p>}
         </div>
     );
 }
 
 // ---- TEMPO TAP ----
-function TempoTap({ targetBPM, onSubmit }: { targetBPM: number; onSubmit: (data: any) => void }) {
+function TempoTap({ targetBPM, onSubmit }: { onSubmit: (data: SkillSubmitData) => void; targetBPM: number }) {
     const tapsRef = useRef<number[]>([]);
     const [tapCount, setTapCount] = useState(0);
-    const [submitted, setSubmitted] = useState(false);
+    const [isInternalSubmitted, setInternalSubmitted] = useState(false);
 
     const tap = useCallback(() => {
-        if (submitted) return;
+        if (isInternalSubmitted) return;
         const now = Date.now();
         tapsRef.current.push(now);
         setTapCount(c => c + 1);
+        if (navigator.vibrate) navigator.vibrate(15);
 
         if (tapsRef.current.length >= 12) {
-            // Calculate consistency
             const intervals = [];
             for (let i = 1; i < tapsRef.current.length; i++) {
                 intervals.push(tapsRef.current[i] - tapsRef.current[i - 1]);
@@ -159,96 +180,153 @@ function TempoTap({ targetBPM, onSubmit }: { targetBPM: number; onSubmit: (data:
             const targetInterval = 60000 / targetBPM;
             const avgDiff = intervals.reduce((s, iv) => s + Math.abs(iv - targetInterval), 0) / intervals.length;
             const consistency = Math.max(0, 100 - (avgDiff / targetInterval) * 100);
-            setSubmitted(true);
+            setInternalSubmitted(true);
+            if (navigator.vibrate) navigator.vibrate(50);
             onSubmit({ consistency: Math.round(consistency * 10) / 10 });
         }
-    }, [submitted, targetBPM, onSubmit]);
+    }, [isInternalSubmitted, targetBPM, onSubmit]);
 
     return (
-        <div className="ss-player-tempo">
+        <div className="flex flex-col items-center gap-8">
             <motion.button
-                className="ss-tap-btn"
-                whileTap={{ scale: 0.9, backgroundColor: '#ff00ff' }}
+                className="w-40 h-40 rounded-full border-4 border-fuchsia-500/50 bg-fuchsia-500/10 flex items-center justify-center text-6xl shadow-[0_0_40px_rgba(217,70,239,0.2)]"
+                whileTap={{ scale: 0.85, backgroundColor: 'rgba(217,70,239,0.3)', boxShadow: '0_0_60px_rgba(217,70,239,0.5)' }}
                 onClick={tap}
-                disabled={submitted}
+                disabled={isInternalSubmitted}
             >
-                {submitted ? '✓' : '👆'}
+                {isInternalSubmitted ? '✨' : '👆'}
             </motion.button>
-            <p className="ss-hint">{submitted ? 'Submitted!' : `Tap ${12 - tapCount} more times`}</p>
+            <div className="text-center">
+                <p className="text-4xl font-black text-white italic tracking-tighter mb-2">
+                    {isInternalSubmitted ? 'SYNCED' : `${12 - tapCount}`}
+                </p>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
+                    {isInternalSubmitted ? 'Transmission Received' : 'Taps Remaining'}
+                </p>
+            </div>
         </div>
     );
 }
 
 // ---- COLOR MATCH ----
-function ColorMatch({ target, onSubmit }: { target: { r: number; g: number; b: number }; onSubmit: (data: any) => void }) {
+function ColorMatch({ target, onSubmit }: { onSubmit: (data: SkillSubmitData) => void; target: { r: number; g: number; b: number } }) {
     const [r, setR] = useState(128);
     const [g, setG] = useState(128);
     const [b, setB] = useState(128);
-    const [submitted, setSubmitted] = useState(false);
+    const [isInternalSubmitted, setInternalSubmitted] = useState(false);
 
     const submit = () => {
-        if (submitted) return;
-        setSubmitted(true);
+        if (isInternalSubmitted) return;
+        setInternalSubmitted(true);
+        if (navigator.vibrate) navigator.vibrate(30);
         onSubmit({ color: { r, g, b } });
     };
 
     return (
-        <div className="ss-player-color">
-            <div className="ss-color-compare">
-                <div className="ss-color-box">
-                    <div className="ss-color-swatch-sm" style={{ backgroundColor: `rgb(${target.r},${target.g},${target.b})` }} />
-                    <span className="ss-color-lbl">Target</span>
+        <div className="flex flex-col items-center gap-8 w-full max-w-sm">
+            <div className="flex gap-4 w-full h-32">
+                <div className="flex-1 flex flex-col gap-2">
+                    <motion.div
+                        initial={false}
+                        animate={{ backgroundColor: `rgb(${target.r},${target.g},${target.b})` }}
+                        className="flex-1 rounded-3xl border-2 border-white/10 shadow-inner"
+                    />
+                    <span className="text-[9px] font-black uppercase text-center text-white/40 tracking-widest">Target</span>
                 </div>
-                <div className="ss-color-box">
-                    <div className="ss-color-swatch-sm" style={{ backgroundColor: `rgb(${r},${g},${b})` }} />
-                    <span className="ss-color-lbl">Yours</span>
+                <div className="flex-1 flex flex-col gap-2">
+                    <motion.div
+                        initial={false}
+                        animate={{ backgroundColor: `rgb(${r},${g},${b})` }}
+                        className="flex-1 rounded-3xl border-2 border-white/20 shadow-2xl"
+                    />
+                    <span className="text-[9px] font-black uppercase text-center text-white/40 tracking-widest">Yours</span>
                 </div>
             </div>
-            <div className="ss-sliders">
-                <label className="ss-slider-row">
-                    <span style={{ color: '#ff4444' }}>R</span>
-                    <input type="range" min="0" max="255" value={r} onChange={e => setR(+e.target.value)} disabled={submitted} />
-                </label>
-                <label className="ss-slider-row">
-                    <span style={{ color: '#44ff44' }}>G</span>
-                    <input type="range" min="0" max="255" value={g} onChange={e => setG(+e.target.value)} disabled={submitted} />
-                </label>
-                <label className="ss-slider-row">
-                    <span style={{ color: '#4444ff' }}>B</span>
-                    <input type="range" min="0" max="255" value={b} onChange={e => setB(+e.target.value)} disabled={submitted} />
-                </label>
+
+            <div className="w-full space-y-6 bg-zinc-900/50 p-6 rounded-[2.5rem] border border-white/5">
+                {[
+                    { label: 'R', val: r, set: setR, color: 'text-red-500' },
+                    { label: 'G', val: g, set: setG, color: 'text-green-500' },
+                    { label: 'B', val: b, set: setB, color: 'text-blue-500' }
+                ].map(s => (
+                    <div key={s.label} className="flex items-center gap-4">
+                        <span className={`w-4 font-black text-xs ${s.color}`}>{s.label}</span>
+                        <input
+                            type="range" min="0" max="255" value={s.val}
+                            aria-label={`Adjust ${s.label} channel`}
+                            onChange={e => {
+                                if (!isInternalSubmitted) {
+                                    s.set(+e.target.value);
+                                    if (navigator.vibrate) navigator.vibrate(5);
+                                }
+                            }}
+                            disabled={isInternalSubmitted}
+                            className="flex-1 accent-white h-8 opacity-60 hover:opacity-100"
+                        />
+                    </div>
+                ))}
             </div>
-            {!submitted && <button className="ss-submit-btn" onClick={submit}>LOCK IN</button>}
-            {submitted && <p className="ss-hint">Submitted! ✓</p>}
+
+            {!isInternalSubmitted && (
+                <button
+                    className="w-full py-4 bg-gradient-to-r from-indigo-600 to-fuchsia-600 rounded-2xl text-lg font-black uppercase tracking-widest shadow-xl shadow-fuchsia-900/20"
+                    onClick={submit}
+                >
+                    Lock Tint
+                </button>
+            )}
         </div>
     );
 }
 
 // ---- ANGLE GUESS ----
-function AngleGuess({ onSubmit }: { onSubmit: (data: any) => void }) {
+function AngleGuess({ onSubmit }: { onSubmit: (data: SkillSubmitData) => void }) {
     const [angle, setAngle] = useState(90);
-    const [submitted, setSubmitted] = useState(false);
+    const [isInternalSubmitted, setInternalSubmitted] = useState(false);
 
     const submit = () => {
-        if (submitted) return;
-        setSubmitted(true);
+        if (isInternalSubmitted) return;
+        setInternalSubmitted(true);
+        if (navigator.vibrate) navigator.vibrate(30);
         onSubmit({ angle });
     };
 
     return (
-        <div className="ss-player-angle">
-            <div className="ss-angle-value">{angle}°</div>
-            <input
-                type="range"
-                min="0"
-                max="360"
-                value={angle}
-                onChange={e => setAngle(+e.target.value)}
-                disabled={submitted}
-                className="ss-angle-slider"
-            />
-            {!submitted && <button className="ss-submit-btn" onClick={submit}>SUBMIT</button>}
-            {submitted && <p className="ss-hint">Submitted! ✓</p>}
+        <div className="flex flex-col items-center gap-12 w-full max-w-sm">
+            <div className="relative w-48 h-48 rounded-full border-4 border-white/5 bg-zinc-900/50 flex items-center justify-center shadow-2xl">
+                <motion.div
+                    style={{ rotate: angle }}
+                    className="absolute w-32 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-cyan-400 origin-[center_center]"
+                >
+                    <div className="absolute right-0 -top-1 w-2 h-2 bg-cyan-400 rounded-full shadow-[0_0_15px_rgba(34,211,238,0.8)]" />
+                </motion.div>
+                <span className="text-4xl font-black text-white italic tabular-nums">{angle}°</span>
+            </div>
+
+            <div className="w-full bg-zinc-900/50 p-6 rounded-[2.5rem] border border-white/5 text-center">
+                <input
+                    type="range" min="0" max="360" value={angle}
+                    aria-label="Adjust Trajectory Angle"
+                    onChange={e => {
+                        if (!isInternalSubmitted) {
+                            setAngle(+e.target.value);
+                            if (navigator.vibrate) navigator.vibrate(5);
+                        }
+                    }}
+                    disabled={isInternalSubmitted}
+                    className="w-full accent-cyan-400 h-12"
+                />
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mt-2">Adjust Trajectory</p>
+            </div>
+
+            {!isInternalSubmitted && (
+                <button
+                    className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl text-lg font-black uppercase tracking-widest shadow-xl shadow-cyan-900/20"
+                    onClick={submit}
+                >
+                    Final Angle
+                </button>
+            )}
         </div>
     );
 }
@@ -256,13 +334,15 @@ function AngleGuess({ onSubmit }: { onSubmit: (data: any) => void }) {
 // ---- MAIN COMPONENT ----
 export default function SkillShowdownPlayer({ phase, challengeIndex, challenge, submitted: alreadySubmitted, socket, scores, myId }: SkillShowdownPlayerProps) {
     const [hasSubmitted, setHasSubmitted] = useState(false);
+    const [prevChallengeIndex, setPrevChallengeIndex] = useState(challengeIndex);
 
-    // Reset submission state on new challenge
-    useEffect(() => {
+    // Pattern: Adjust state during rendering to reset on challenge change
+    if (challengeIndex !== prevChallengeIndex) {
         setHasSubmitted(false);
-    }, [challengeIndex]);
+        setPrevChallengeIndex(challengeIndex);
+    }
 
-    const handleSubmit = (data: any) => {
+    const handleSubmit = (data: SkillSubmitData) => {
         if (hasSubmitted || alreadySubmitted) return;
         setHasSubmitted(true);
         socket.emit('submitSkillResult', data);
@@ -271,21 +351,29 @@ export default function SkillShowdownPlayer({ phase, challengeIndex, challenge, 
     const isSubmitted = hasSubmitted || alreadySubmitted;
 
     return (
-        <div className="ss-player">
+        <div className="flex flex-col h-full bg-zinc-950 p-6 items-center justify-center relative overflow-hidden text-white">
+            {/* Ambient Background Glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-fuchsia-500/5 blur-[100px] rounded-full pointer-events-none" />
+
             {phase === 'PREVIEW' && (
                 <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="ss-player-preview"
+                    className="flex flex-col items-center gap-6 text-center max-w-sm"
                 >
-                    <div className="ss-p-title">{challenge.title}</div>
-                    <div className="ss-p-instruction">{challenge.instruction}</div>
                     <motion.div
-                        className="ss-p-ready"
-                        animate={{ opacity: [0.3, 1, 0.3] }}
-                        transition={{ repeat: Infinity, duration: 1 }}
+                        animate={{ y: [0, -10, 0] }}
+                        transition={{ repeat: Infinity, duration: 4 }}
+                        className="text-6xl mb-4"
                     >
-                        GET READY...
+                        {challenge.type === 'CIRCLE_DRAW' ? '🔘' : challenge.type === 'MEMORY_GRID' ? '🧩' : challenge.type === 'TEMPO_TAP' ? '🥁' : challenge.type === 'COLOR_MATCH' ? '🎨' : '📐'}
+                    </motion.div>
+                    <div className="text-4xl font-black uppercase tracking-tighter leading-none">{challenge.title}</div>
+                    <div className="text-zinc-500 font-bold uppercase tracking-widest text-xs px-8 italic">{challenge.instruction}</div>
+                    <motion.div
+                        className="mt-12 text-yellow-400 font-black tracking-[0.3em] text-sm animate-pulse"
+                    >
+                        STAY FOCUSED...
                     </motion.div>
                 </motion.div>
             )}
@@ -294,7 +382,7 @@ export default function SkillShowdownPlayer({ phase, challengeIndex, challenge, 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="ss-player-game"
+                    className="w-full max-w-sm"
                 >
                     {challenge.type === 'CIRCLE_DRAW' && <CircleDraw onSubmit={handleSubmit} />}
                     {challenge.type === 'MEMORY_GRID' && challenge.grid && <MemoryGrid grid={challenge.grid} onSubmit={handleSubmit} />}
@@ -305,229 +393,39 @@ export default function SkillShowdownPlayer({ phase, challengeIndex, challenge, 
             )}
 
             {phase === 'PLAYING' && isSubmitted && (
-                <div className="ss-player-waiting">
-                    <div className="ss-waiting-icon">✓</div>
-                    <div className="ss-waiting-text">Waiting for others...</div>
+                <div className="flex flex-col items-center gap-6">
+                    <motion.div
+                        animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                        transition={{ repeat: Infinity, duration: 2 }}
+                        className="text-7xl"
+                    >
+                        📡
+                    </motion.div>
+                    <div className="text-center">
+                        <div className="text-2xl font-black uppercase tracking-tight">Signal Sent</div>
+                        <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.3em] mt-1">Awaiting Competitors</div>
+                    </div>
                 </div>
             )}
 
             {phase === 'REVEAL' && (
-                <div className="ss-player-reveal">
-                    <div className="ss-reveal-title">Results</div>
+                <div className="flex flex-col items-center gap-8 text-center">
+                    <div className="text-xs font-black uppercase tracking-[0.4em] text-white/30">Sync Score</div>
                     {scores[myId] !== undefined && (
-                        <motion.div
-                            className="ss-my-score"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 200 }}
-                        >
-                            {scores[myId]}%
-                        </motion.div>
+                        <div className="flex flex-col items-center">
+                            <motion.div
+                                className="text-8xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-blue-600 drop-shadow-[0_0_30px_rgba(6,182,212,0.5)]"
+                                initial={{ scale: 0, rotate: -20 }}
+                                animate={{ scale: 1, rotate: -5 }}
+                                transition={{ type: 'spring', damping: 10 }}
+                            >
+                                {scores[myId]}%
+                            </motion.div>
+                            <p className="mt-8 text-white/50 font-bold uppercase text-[10px] tracking-widest italic">Look at the TV for global rankings</p>
+                        </div>
                     )}
                 </div>
             )}
-
-            <style>{`
-                .ss-player {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    min-height: 100%;
-                    padding: 20px;
-                }
-                .ss-player-preview, .ss-player-game, .ss-player-waiting, .ss-player-reveal {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 12px;
-                    text-align: center;
-                    width: 100%;
-                }
-                .ss-p-title {
-                    font-size: 2rem;
-                    font-weight: 900;
-                    background: linear-gradient(135deg, #ff00ff, #00ffff);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                }
-                .ss-p-instruction {
-                    font-size: 1rem;
-                    color: rgba(255,255,255,0.6);
-                }
-                .ss-p-ready {
-                    font-size: 1.5rem;
-                    font-weight: 900;
-                    color: #f9ca24;
-                    letter-spacing: 0.2em;
-                    margin-top: 16px;
-                }
-                .ss-canvas {
-                    border: 2px solid rgba(255,255,255,0.2);
-                    border-radius: 20px;
-                    background: rgba(255,255,255,0.03);
-                    touch-action: none;
-                    max-width: 100%;
-                }
-                .ss-hint {
-                    font-size: 0.85rem;
-                    color: rgba(255,255,255,0.4);
-                    margin-top: 8px;
-                }
-                .ss-grid {
-                    display: grid;
-                    grid-template-columns: repeat(4, 1fr);
-                    gap: 6px;
-                    width: min(280px, 80vw);
-                    aspect-ratio: 1;
-                }
-                .ss-grid-btn {
-                    border-radius: 10px;
-                    border: 2px solid rgba(255,255,255,0.15);
-                    background: rgba(255,255,255,0.05);
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-                .ss-grid-btn.lit {
-                    background: #00ffff;
-                    border-color: #00ffff;
-                    box-shadow: 0 0 15px rgba(0,255,255,0.4);
-                }
-                .ss-grid-btn.preview {
-                    pointer-events: none;
-                }
-                .ss-submit-btn {
-                    margin-top: 12px;
-                    padding: 12px 40px;
-                    background: linear-gradient(135deg, #ff00ff, #00ffff);
-                    color: white;
-                    border: none;
-                    border-radius: 30px;
-                    font-size: 1.1rem;
-                    font-weight: 900;
-                    text-transform: uppercase;
-                    letter-spacing: 0.15em;
-                    cursor: pointer;
-                    box-shadow: 0 4px 20px rgba(255,0,255,0.3);
-                }
-                .ss-tap-btn {
-                    width: 150px;
-                    height: 150px;
-                    border-radius: 50%;
-                    border: 4px solid rgba(255,0,255,0.5);
-                    background: rgba(255,0,255,0.1);
-                    font-size: 3rem;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                }
-                .ss-color-compare {
-                    display: flex;
-                    gap: 16px;
-                    margin-bottom: 16px;
-                }
-                .ss-color-box {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 6px;
-                }
-                .ss-color-swatch-sm {
-                    width: 80px;
-                    height: 80px;
-                    border-radius: 16px;
-                    border: 2px solid rgba(255,255,255,0.2);
-                }
-                .ss-color-lbl {
-                    font-size: 0.8rem;
-                    color: rgba(255,255,255,0.4);
-                    text-transform: uppercase;
-                    font-weight: 700;
-                }
-                .ss-sliders {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                    width: 100%;
-                    max-width: 280px;
-                }
-                .ss-slider-row {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-weight: 900;
-                    font-size: 1rem;
-                }
-                .ss-slider-row input[type="range"] {
-                    flex: 1;
-                    accent-color: #00ffff;
-                }
-                .ss-angle-value {
-                    font-size: 3rem;
-                    font-weight: 900;
-                    color: #00ffff;
-                    font-family: monospace;
-                }
-                .ss-angle-slider {
-                    width: 100%;
-                    max-width: 280px;
-                    accent-color: #00ffff;
-                }
-                .ss-waiting-icon {
-                    font-size: 4rem;
-                    color: #00ffff;
-                }
-                .ss-waiting-text {
-                    font-size: 1.1rem;
-                    color: rgba(255,255,255,0.4);
-                    font-weight: 700;
-                }
-                .ss-reveal-title {
-                    font-size: 1.5rem;
-                    font-weight: 900;
-                    color: rgba(255,255,255,0.5);
-                    text-transform: uppercase;
-                    letter-spacing: 0.2em;
-                }
-                .ss-my-score {
-                    font-size: 4rem;
-                    font-weight: 900;
-                    color: #00ffff;
-                    font-family: monospace;
-                }
-                .ss-player-circle {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                }
-                .ss-player-memory {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 10px;
-                }
-                .ss-player-tempo {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 16px;
-                }
-                .ss-player-color {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 12px;
-                }
-                .ss-player-angle {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 12px;
-                }
-            `}</style>
         </div>
     );
 }

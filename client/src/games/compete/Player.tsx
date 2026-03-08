@@ -1,19 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGameStore } from '../../store/useGameStore';
+import { useSound } from '../../context/SoundContext';
 
-interface CompetePlayerProps {
-    phase: 'SELECTING' | 'COUNTDOWN' | 'ACTIVE' | 'RESULTS';
-    isCompeting: boolean;
-    challenge: { type: 'TAP' | 'TYPE' | 'SEQUENCE'; target: any };
-    timer: number;
-    onProgress: (progress: number) => void;
-    amWinner?: boolean;
-}
-
-const CompetePlayer = ({ phase, isCompeting, challenge, timer, onProgress, amWinner }: CompetePlayerProps) => {
+const CompetePlayer = () => {
+    const { socket, gameState } = useGameStore();
+    const { playClick, playSuccess, playError } = useSound();
+    
     const [tapCount, setTapCount] = useState(0);
     const [typedText, setTypedText] = useState('');
     const [sequenceIndex, setSequenceIndex] = useState(0);
+
+    const phase = gameState?.gameData?.phase || 'COUNTDOWN';
+    const challenge = gameState?.gameData?.challenge;
+    const isCompeting = socket?.id === gameState?.gameData?.challenger1Id || socket?.id === gameState?.gameData?.challenger2Id;
+    const timer = gameState?.gameData?.timer || 0;
+    const amWinner = socket?.id === gameState?.gameData?.winnerId;
 
     const TAP_TARGET = 30;
     const sequence = challenge?.target?.sequence || [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -22,119 +24,158 @@ const CompetePlayer = ({ phase, isCompeting, challenge, timer, onProgress, amWin
         if (challenge?.type === 'TAP' && phase === 'ACTIVE') {
             const newCount = tapCount + 1;
             setTapCount(newCount);
-            onProgress((newCount / TAP_TARGET) * 100);
+            socket?.emit('competeProgress', (newCount / TAP_TARGET) * 100);
+            playClick();
+            if (newCount >= TAP_TARGET) playSuccess();
         }
-    }, [tapCount, challenge, phase, onProgress]);
+    }, [tapCount, challenge, phase, socket, playClick, playSuccess]);
 
     useEffect(() => {
         if (challenge?.type === 'TYPE' && phase === 'ACTIVE') {
             const target = challenge.target || '';
             const progress = target.length > 0 ? (typedText.length / target.length) * 100 : 0;
-            onProgress(Math.min(progress, 100));
+            socket?.emit('competeProgress', Math.min(progress, 100));
+            if (typedText.length > 0) playClick();
+            if (progress >= 100) playSuccess();
         }
-    }, [typedText, challenge, phase, onProgress]);
+    }, [typedText, challenge, phase, socket, playClick, playSuccess]);
 
     const handleSequenceTap = (num: number) => {
         if (challenge?.type === 'SEQUENCE' && phase === 'ACTIVE') {
             if (sequence[sequenceIndex] === num) {
                 const newIndex = sequenceIndex + 1;
                 setSequenceIndex(newIndex);
-                onProgress((newIndex / sequence.length) * 100);
+                socket?.emit('competeProgress', (newIndex / sequence.length) * 100);
+                playClick();
+                if (newIndex >= sequence.length) playSuccess();
+            } else {
+                playError();
+                if (navigator.vibrate) navigator.vibrate(100);
             }
         }
     };
 
     if (!isCompeting) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                <div className="text-6xl mb-4">👀</div>
-                <p className="text-xl text-white/50">Watch the competition on TV!</p>
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-8">
+                <div className="text-[10rem] animate-pulse">📺</div>
+                <h3 className="text-4xl font-black uppercase tracking-tighter italic">SPECTATOR MODE</h3>
+                <p className="text-white/40 text-xl font-bold uppercase tracking-widest">Watch the showdown on TV!</p>
             </div>
         );
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex-1 flex flex-col items-center justify-center p-8 w-full max-w-4xl mx-auto"
-        >
-            {phase === 'COUNTDOWN' && (
-                <div className="text-center space-y-8">
-                    <div className="text-[15rem] font-black text-white animate-bounce leading-none">{timer}</div>
-                    <p className="text-5xl font-black text-game-accent uppercase tracking-[0.5em] animate-pulse">GET READY!</p>
-                </div>
-            )}
-
-            {phase === 'ACTIVE' && challenge?.type === 'TAP' && (
-                <div className="w-full text-center space-y-10">
-                    <div className="text-4xl font-black text-white/40 uppercase tracking-widest">Tap {TAP_TARGET} times!</div>
-                    <div className="text-[12rem] font-black leading-none text-game-primary drop-shadow-[0_0_50px_rgba(255,0,255,0.4)]">{tapCount}/{TAP_TARGET}</div>
-                    <button
-                        onClick={handleTap}
-                        className="w-full py-20 bg-gradient-to-b from-red-500 to-orange-600 rounded-[4rem] text-[8rem] font-black active:scale-90 transition-all shadow-[0_30px_60px_rgba(239,68,68,0.5)] border-t-8 border-white/30"
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <AnimatePresence mode="wait">
+                {phase === 'COUNTDOWN' && (
+                    <motion.div
+                        key="countdown"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex-1 flex flex-col items-center justify-center text-center space-y-12"
                     >
-                        TAP! 👆
-                    </button>
-                </div>
-            )}
+                        <div className="text-[15rem] font-black text-white animate-bounce leading-none drop-shadow-huge">{timer}</div>
+                        <h2 className="text-6xl font-black text-game-accent uppercase tracking-widest italic animate-pulse">GET READY!</h2>
+                    </motion.div>
+                )}
 
-            {phase === 'ACTIVE' && challenge?.type === 'TYPE' && (
-                <div className="w-full text-center space-y-10">
-                    <p className="text-3xl font-black text-white/40 uppercase tracking-widest leading-none">Type this precisely:</p>
-                    <div className="glass-card p-12 rounded-[3.5rem] border-4 border-white/20 shadow-2xl">
-                        <p className="text-5xl font-black font-mono text-game-secondary tracking-tighter uppercase">{challenge.target}</p>
-                    </div>
-                    <input
-                        type="text"
-                        value={typedText}
-                        onChange={(e) => setTypedText(e.target.value)}
-                        className="w-full p-12 text-5xl bg-white/5 border-4 border-white/10 rounded-[3.5rem] text-center font-black font-mono focus:outline-none focus:border-game-primary transition-all shadow-2xl uppercase placeholder:text-white/5"
-                        placeholder="TYPE HERE..."
-                        autoFocus
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                    />
-                </div>
-            )}
+                {phase === 'ACTIVE' && (
+                    <motion.div
+                        key="active"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex-1 flex flex-col p-4 space-y-6 justify-center"
+                    >
+                        {challenge?.type === 'TAP' && (
+                            <div className="w-full flex flex-col items-center gap-10">
+                                <div className="text-center">
+                                    <span className="text-xs uppercase tracking-[0.4em] font-black text-white/20">Task</span>
+                                    <h3 className="text-4xl font-black text-game-primary italic uppercase tracking-tighter">TAP {TAP_TARGET} TIMES!</h3>
+                                </div>
+                                <div className="text-[8rem] font-black font-mono leading-none">{tapCount}</div>
+                                <motion.button
+                                    whileTap={{ scale: 0.8 }}
+                                    onClick={handleTap}
+                                    className="w-full aspect-square max-w-[20rem] bg-gradient-to-b from-red-500 to-red-700 rounded-full border-[1.5rem] border-white/20 shadow-[0_20px_80px_rgba(239,68,68,0.5)] flex items-center justify-center text-[10rem] active:shadow-none transition-all"
+                                >
+                                    👆
+                                </motion.button>
+                            </div>
+                        )}
 
-            {phase === 'ACTIVE' && challenge?.type === 'SEQUENCE' && (
-                <div className="w-full text-center space-y-10">
-                    <p className="text-3xl font-black text-white/40 uppercase tracking-[0.3em]">Tap in sequence!</p>
-                    <div className="grid grid-cols-3 gap-6">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                            <button
-                                key={num}
-                                onClick={() => handleSequenceTap(num)}
-                                className={`aspect-square text-6xl font-black rounded-[2.5rem] transition-all transform active:scale-90 border-4 ${sequence.indexOf(num) < sequenceIndex
-                                    ? 'bg-green-500 border-white/40 shadow-[0_0_40px_rgba(34,197,94,0.5)]'
-                                    : 'bg-white/5 border-white/10 hover:bg-white/10'
-                                    }`}
-                            >
-                                {num}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
+                        {challenge?.type === 'TYPE' && (
+                            <div className="w-full flex flex-col gap-8">
+                                <div className="text-center">
+                                    <span className="text-xs uppercase tracking-[0.4em] font-black text-white/20">Type Exactly</span>
+                                    <div className="mt-4 p-8 bg-white/5 rounded-[2.5rem] border-4 border-game-secondary shadow-glow">
+                                        <p className="text-3xl font-black font-mono uppercase text-white tracking-tighter">"{challenge.target}"</p>
+                                    </div>
+                                </div>
+                                <input
+                                    type="text"
+                                    value={typedText}
+                                    onChange={(e) => setTypedText(e.target.value)}
+                                    placeholder="TYPE HERE!"
+                                    className="w-full py-10 bg-white/5 border-4 border-white/10 rounded-[2.5rem] text-center text-4xl font-black focus:outline-none focus:border-game-primary transition-all uppercase placeholder:text-white/5"
+                                    autoFocus
+                                    autoComplete="off"
+                                    autoCorrect="off"
+                                />
+                            </div>
+                        )}
 
-            {phase === 'RESULTS' && (
-                <div className="text-center space-y-12">
-                    {amWinner ? (
-                        <div className="space-y-6">
-                            <div className="text-[12rem] animate-bounce drop-shadow-huge">🏆</div>
-                            <p className="text-7xl font-black text-yellow-400 uppercase tracking-tight shadow-glow-yellow">YOU WON!</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-6">
-                            <div className="text-[12rem] animate-shake opacity-40">😢</div>
-                            <p className="text-5xl font-black text-white/30 uppercase tracking-widest">Better luck next time!</p>
-                        </div>
-                    )}
-                </div>
-            )}
-        </motion.div>
+                        {challenge?.type === 'SEQUENCE' && (
+                            <div className="w-full flex flex-col gap-10">
+                                <div className="text-center">
+                                    <span className="text-xs uppercase tracking-[0.4em] font-black text-white/20">Mission</span>
+                                    <h3 className="text-4xl font-black text-game-secondary italic uppercase tracking-tighter">TAP IN ORDER!</h3>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                                        <motion.button
+                                            key={num}
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={() => handleSequenceTap(num)}
+                                            className={`aspect-square text-5xl font-black rounded-3xl transition-all border-4 ${
+                                                sequence.indexOf(num) < sequenceIndex
+                                                    ? 'bg-green-500 border-white text-white shadow-lg'
+                                                    : 'bg-white/5 border-white/10 text-white/40'
+                                            }`}
+                                        >
+                                            {num}
+                                        </motion.button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+
+                {phase === 'RESULTS' && (
+                    <motion.div
+                        key="results"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-8"
+                    >
+                        {amWinner ? (
+                            <>
+                                <div className="text-[12rem] animate-bounce">🏆</div>
+                                <h3 className="text-6xl font-black text-game-accent uppercase tracking-tighter italic drop-shadow-glow">GLORY!</h3>
+                                <p className="text-white/40 text-2xl font-bold uppercase tracking-widest">+500 POINTS EARNED</p>
+                            </>
+                        ) : (
+                            <>
+                                <div className="text-[12rem] opacity-40 grayscale animate-shake">💀</div>
+                                <h3 className="text-6xl font-black text-white/20 uppercase tracking-tighter italic">DEFEAT</h3>
+                                <p className="text-white/10 text-2xl font-bold uppercase tracking-widest">The fam was faster</p>
+                            </>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 };
 

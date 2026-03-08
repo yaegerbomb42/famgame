@@ -1,4 +1,6 @@
-import { useContext } from 'react';
-import { GameContext } from './GameContext';
+import { useGameStore } from '../store/useGameStore';
 
-export const useGame = () => useContext(GameContext);
+export const useGame = () => {
+    const store = useGameStore();
+    return store;
+};

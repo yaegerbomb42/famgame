@@ -1,86 +1,121 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface HotTakesHostProps {
     phase: 'INPUT' | 'VOTING' | 'RESULTS';
     prompt: string;
-    inputs: Record<string, string>; // { playerId: text }
-    players: Record<string, { name: string }>;
+    inputs: Record<string, string>;
+    players: Record<string, { id: string; name: string; avatar?: string; isHost?: boolean }>;
     votes: Record<string, string>;
 }
 
 const HotTakesHost: React.FC<HotTakesHostProps> = ({ phase, prompt, inputs, players, votes }) => {
-    if (phase === 'INPUT') {
-        const submittedCount = Object.keys(inputs).length;
-        const totalCount = Object.keys(players).length;
+    return (
+        <div className="flex flex-col h-full w-full max-w-7xl justify-center items-center px-8 relative">
+            <AnimatePresence mode="wait">
+                {phase === 'INPUT' && (
+                    <motion.div
+                        key="input"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.1 }}
+                        className="flex flex-col items-center text-center"
+                    >
+                        <div className="inline-block px-8 py-3 bg-red-500/20 text-red-500 rounded-full text-2xl font-black mb-12 uppercase tracking-[0.4em] border border-red-500/30">
+                            Hot Takes
+                        </div>
+                        <h2 className="text-8xl font-black mb-16 tracking-tighter leading-none max-w-5xl">
+                            "{prompt}"
+                        </h2>
 
-        return (
-            <div className="flex flex-col h-full justify-center items-center text-center p-8">
-                <h2 className="text-2xl text-game-accent uppercase tracking-widest mb-8 font-bold">Hot Take Topic</h2>
-                <div className="text-5xl md:text-7xl font-display leading-tight mb-16 max-w-4xl">
-                    {prompt}
-                </div>
+                        <div className="flex flex-wrap justify-center gap-6 max-w-4xl">
+                            {Object.values(players).filter(p => !p.isHost).map((p) => (
+                                <motion.div
+                                    key={p.id}
+                                    animate={{ 
+                                        y: inputs[p.id] ? [0, -10, 0] : 0,
+                                        opacity: inputs[p.id] ? 1 : 0.2
+                                    }}
+                                    className={`w-20 h-20 rounded-2xl flex items-center justify-center text-4xl border-4 transition-all ${
+                                        inputs[p.id] ? 'bg-red-500/20 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.3)]' : 'bg-white/5 border-white/10'
+                                    }`}
+                                >
+                                    {p.avatar}
+                                </motion.div>
+                            ))}
+                        </div>
+                        <p className="mt-12 text-2xl font-black text-white/20 uppercase tracking-[0.3em]">Drop your truth on your device</p>
+                    </motion.div>
+                )}
 
-                <div className="glass-card px-12 py-8 rounded-full flex items-center gap-6">
-                    <div className="text-4xl font-mono font-bold">{submittedCount} / {totalCount}</div>
-                    <div className="h-2 w-32 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-game-primary transition-all duration-500" style={{ width: `${(submittedCount / totalCount) * 100}%` }} />
-                    </div>
-                </div>
-            </div>
-        )
-    }
+                {(phase === 'VOTING' || phase === 'RESULTS') && (
+                    <motion.div
+                        key="voting"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="w-full h-full flex flex-col items-center pt-20"
+                    >
+                        <div className="text-center mb-16">
+                            <h2 className="text-5xl font-black tracking-tighter text-white/40 italic">"{prompt}"</h2>
+                        </div>
 
-    // VOTING PHASE: Show answers grid
-    if (phase === 'VOTING' || phase === 'RESULTS') {
-        return (
-            <div className="flex flex-col h-full justify-center items-center p-8">
-                <h2 className="text-3xl font-bold mb-12 text-white/50">{prompt}</h2>
+                        <div className="grid grid-cols-2 gap-8 w-full overflow-y-auto px-4 pb-20 custom-scrollbar">
+                            {Object.entries(inputs).map(([pid, text]) => {
+                                const entryVotes = Object.entries(votes).filter(([, target]) => target === pid);
+                                const isWinner = phase === 'RESULTS' && entryVotes.length > 0 && entryVotes.length === Math.max(...Object.keys(inputs).map(p => Object.values(votes).filter(v => v === p).length));
 
-                <div className="grid grid-cols-2 gap-6 w-full max-w-6xl">
-                    {Object.entries(inputs).map(([pid, text]: [string, any]) => {
-                        // Calculate votes
-                        const myVotes = Object.values(votes).filter(v => v === pid).length;
-                        const isWinner = phase === 'RESULTS' && myVotes > 0 && myVotes === Math.max(...Object.values(inputs).map((pid) => Object.values(votes).filter(v => v === pid).length));
+                                return (
+                                    <motion.div
+                                        key={pid}
+                                        layout
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ 
+                                            scale: isWinner ? 1.05 : 1, 
+                                            opacity: 1,
+                                            y: isWinner ? -20 : 0
+                                        }}
+                                        className={`p-12 rounded-[3.5rem] border-4 flex flex-col items-center justify-center text-center min-h-[300px] relative overflow-hidden transition-all duration-700 ${
+                                            isWinner 
+                                                ? 'bg-game-primary text-white border-white shadow-[0_0_100px_rgba(255,0,255,0.4)]' 
+                                                : 'bg-white/5 border-white/10 text-white'
+                                        }`}
+                                    >
+                                        <div className="absolute top-6 left-10 text-6xl opacity-10 font-black italic">HOT</div>
+                                        <span className="text-4xl md:text-5xl font-black leading-tight z-10 drop-shadow-lg italic">
+                                            "{text}"
+                                        </span>
 
-                        return (
-                            <motion.div
-                                key={pid}
-                                layout
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: isWinner ? 1.1 : 1, opacity: 1, borderColor: isWinner ? '#f59e0b' : 'rgba(255,255,255,0.1)' }}
-                                className={`p-8 rounded-3xl border-2 bg-white/5 flex flex-col items-center justify-center text-center min-h-[200px] relative ${isWinner ? 'shadow-[0_0_50px_rgba(245,158,11,0.4)] bg-game-accent/10' : ''}`}
-                            >
-                                <span className="text-3xl font-bold mb-4">"{text}"</span>
+                                        <div className="flex flex-wrap justify-center gap-3 mt-10 min-h-[4rem]">
+                                            {entryVotes.map(([voterId], idx) => (
+                                                <motion.div
+                                                    key={voterId}
+                                                    initial={{ scale: 0, y: 20 }}
+                                                    animate={{ scale: 1, y: 0 }}
+                                                    transition={{ delay: 0.3 + idx * 0.05 }}
+                                                    className="w-14 h-14 rounded-full bg-game-secondary border-4 border-game-bg flex items-center justify-center text-3xl shadow-lg"
+                                                >
+                                                    {players[voterId]?.avatar || '👾'}
+                                                </motion.div>
+                                            ))}
+                                        </div>
 
-                                {/* Vote Bubbles */}
-                                <div className="flex gap-2 min-h-[20px] flex-wrap justify-center">
-                                    {Object.entries(votes).filter(([, target]) => target === pid).map(([voterId]) => (
-                                        <motion.div
-                                            key={voterId}
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            className="w-8 h-8 rounded-full bg-game-primary border border-white/20 flex items-center justify-center text-[10px]"
-                                            title={players[voterId]?.name}
-                                        >
-                                            {players[voterId]?.name?.charAt(0)}
-                                        </motion.div>
-                                    ))}
-                                </div>
-
-                                {phase === 'RESULTS' && (
-                                    <div className="absolute top-4 right-4 text-xs font-mono opacity-50">
-                                        {players[pid]?.name}
-                                    </div>
-                                )}
-                            </motion.div>
-                        )
-                    })}
-                </div>
-            </div>
-        )
-    }
-
-    return null;
+                                        {phase === 'RESULTS' && (
+                                            <motion.div 
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className={`absolute bottom-6 px-6 py-2 rounded-full text-xl font-black uppercase tracking-widest ${isWinner ? 'bg-black/20 text-white' : 'bg-white/10 text-white/40'}`}
+                                            >
+                                                BY {players[pid]?.name}
+                                            </motion.div>
+                                        )}
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
 };
 
 export default HotTakesHost;

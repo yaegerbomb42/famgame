@@ -1,157 +1,165 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGameStore } from '../../store/useGameStore';
+import { useSound } from '../../context/SoundContext';
 
-interface TwoTruthsPlayerProps {
-    phase: 'INPUT' | 'VOTING' | 'REVEAL';
-    onSubmitStatements: (data: { statements: string[], lieIndex: number }) => void;
-    onVote: (index: number) => void;
-    isSubject: boolean; // Is this player the one being voted on?
-}
-
-const TwoTruthsPlayer: React.FC<TwoTruthsPlayerProps> = ({ phase, onSubmitStatements, onVote, isSubject }) => {
-    // Input State
+const TwoTruthsPlayer = () => {
+    const { socket, gameState } = useGameStore();
+    const { playClick, playSuccess, playError } = useSound();
+    
     const [stmts, setStmts] = useState(['', '', '']);
     const [lieIdx, setLieIdx] = useState<number | null>(null);
     const [submitted, setSubmitted] = useState(false);
-
-    // Voting State
     const [votedIdx, setVotedIdx] = useState<number | null>(null);
+
+    const phase = gameState?.gameData?.phase || 'INPUT';
+    const isSubject = socket?.id === gameState?.gameData?.currentSubjectId;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (stmts.some(s => !s.trim()) || lieIdx === null) return;
-        onSubmitStatements({ statements: stmts, lieIndex: lieIdx });
+        if (stmts.some(s => !s.trim()) || lieIdx === null) {
+            playError();
+            return;
+        }
+        socket?.emit('submitStatements', { statements: stmts, lieIndex: lieIdx });
         setSubmitted(true);
+        playSuccess();
     };
 
-    // --- INPUT PHASE ---
-    if (phase === 'INPUT') {
-        if (submitted) {
-            return (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex-1 flex items-center justify-center flex-col text-center p-12 space-y-10 w-full max-w-4xl mx-auto"
-                >
-                    <div className="text-huge animate-bounce shadow-glow">🤐</div>
-                    <h3 className="text-6xl font-black gradient-text-secondary uppercase tracking-widest">Secrets Locked.</h3>
-                    <p className="text-white/40 text-3xl font-black uppercase tracking-[0.3em] animate-pulse">Waiting for other liars...</p>
-                </motion.div>
-            );
-        }
-
-        return (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex-1 overflow-y-auto p-10 pb-32 w-full max-w-4xl mx-auto custom-scrollbar"
-            >
-                <h3 className="text-center text-5xl font-black mb-12 gradient-text-secondary uppercase tracking-tighter">Write 2 Truths, 1 Lie</h3>
-
-                <form onSubmit={handleSubmit} className="space-y-10">
-                    {stmts.map((st, i) => (
-                        <div key={i} className={`p-8 rounded-[3rem] border-4 transition-all duration-300 ${lieIdx === i ? 'border-red-500 bg-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.4)]' : 'border-white/5 bg-white/5'}`}>
-                            <div className="flex justify-between items-center mb-6">
-                                <span className="text-xl uppercase tracking-[0.4em] font-black text-white/30">Fact {i + 1}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => setLieIdx(i)}
-                                    className={`text-lg px-8 py-3 rounded-full font-black uppercase tracking-widest transition-all ${lieIdx === i ? 'bg-red-500 text-white shadow-huge-red scale-110' : 'bg-white/10 text-white/30 hover:bg-white/20'}`}
-                                >
-                                    {lieIdx === i ? 'THE LIE 🤥' : 'Mark as Lie'}
-                                </button>
-                            </div>
-                            <textarea
-                                value={st}
-                                onChange={(e) => {
-                                    const newStmts = [...stmts];
-                                    newStmts[i] = e.target.value;
-                                    setStmts(newStmts);
-                                }}
-                                placeholder="TYPE SOMETHING SPICY... 🔥"
-                                className="w-full bg-transparent text-3xl font-black focus:outline-none resize-none placeholder:text-white/5 uppercase"
-                                rows={2}
-                            />
-                        </div>
-                    ))}
-
-                    <button
-                        type="submit"
-                        disabled={stmts.some(s => !s.trim()) || lieIdx === null}
-                        className="w-full py-12 bg-game-primary rounded-[3.5rem] font-black text-4xl shadow-[0_20px_60px_rgba(255,0,255,0.4)] disabled:opacity-20 disabled:grayscale transition-all uppercase tracking-widest border-t-8 border-white/20 active:scale-95"
-                    >
-                        LOCK SECRETS 🔒
-                    </button>
-                </form>
-            </motion.div>
-        );
-    }
-
-    // --- VOTING PHASE ---
-    if (phase === 'VOTING') {
-        if (isSubject) {
-            return (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex-1 flex items-center justify-center flex-col text-center p-12 space-y-10 w-full max-w-4xl mx-auto"
-                >
-                    <div className="text-huge animate-pulse shadow-glow">😰</div>
-                    <h3 className="text-6xl font-black text-white uppercase tracking-tighter">THEY ARE JUDGING YOU.</h3>
-                    <p className="text-3xl text-white/40 font-black uppercase tracking-[0.4em] animate-pulse">Stay cold as ice.</p>
-                </motion.div>
-            );
-        }
-
-        if (votedIdx !== null) {
-            return (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex-1 flex items-center justify-center flex-col text-center p-12 space-y-10 w-full max-w-4xl mx-auto"
-                >
-                    <div className="text-huge">🕵️‍♂️</div>
-                    <h3 className="text-6xl font-black gradient-text-primary uppercase tracking-widest shadow-glow">VOTE CAST.</h3>
-                    <p className="text-3xl font-black text-white/40 uppercase tracking-[0.3em]">Did you smell the lie?</p>
-                </motion.div>
-            );
-        }
-
-        return (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex-1 flex flex-col p-10 justify-center space-y-10 w-full max-w-4xl mx-auto"
-            >
-                <h3 className="text-center text-6xl font-black mb-12 uppercase tracking-tighter gradient-text-secondary">Spot the Lie!</h3>
-                {['A', 'B', 'C'].map((label, i) => (
-                    <motion.button
-                        key={i}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => { setVotedIdx(i); onVote(i); }}
-                        className="py-16 bg-white/5 rounded-[3.5rem] border-4 border-white/5 text-9xl font-black hover:bg-white/10 hover:border-game-secondary shadow-2xl transition-all border-t-8 border-white/10"
-                    >
-                        {label}
-                    </motion.button>
-                ))}
-            </motion.div>
-        );
-    }
+    const handleVote = (i: number) => {
+        if (votedIdx !== null) return;
+        setVotedIdx(i);
+        socket?.emit('voteLie', i);
+        playClick();
+    };
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex-1 flex items-center justify-center flex-col text-center p-12 space-y-8 w-full max-w-4xl mx-auto"
-        >
-            <div className="text-huge animate-pulse">😲</div>
-            <h3 className="text-6xl font-black gradient-text-secondary uppercase tracking-widest">Behold the Reveal!</h3>
-            <p className="text-3xl font-black text-white/40 uppercase tracking-[0.4em] animate-bounce">Check the big screen!</p>
-        </motion.div>
-    );
+        <div className="flex-1 flex flex-col h-full">
+            <AnimatePresence mode="wait">
+                {phase === 'INPUT' && (
+                    <motion.div
+                        key="input"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex-1 overflow-y-auto p-4 custom-scrollbar"
+                    >
+                        {submitted ? (
+                            <div className="h-full flex flex-col items-center justify-center text-center space-y-8">
+                                <div className="text-[10rem] animate-bounce">🤐</div>
+                                <h3 className="text-4xl font-black uppercase tracking-tighter italic">LIES SUBMITTED!</h3>
+                                <p className="text-white/40 text-xl font-black uppercase tracking-[0.3em] animate-pulse">Waiting for others...</p>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-6 pb-20">
+                                <h3 className="text-3xl font-black text-center mb-8 uppercase tracking-tighter text-game-secondary">2 Truths, 1 Lie</h3>
+                                {stmts.map((st, i) => (
+                                    <div 
+                                        key={i} 
+                                        className={`p-6 rounded-[2rem] border-4 transition-all duration-300 ${
+                                            lieIdx === i 
+                                                ? 'border-red-500 bg-red-500/10 shadow-[0_0_40px_rgba(239,68,68,0.2)]' 
+                                                : 'border-white/5 bg-white/5'
+                                        }`}
+                                    >
+                                        <div className="flex justify-between items-center mb-4">
+                                            <span className="text-xs font-black uppercase text-white/20 tracking-widest">Fact {i + 1}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => { playClick(); setLieIdx(i); }}
+                                                className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest transition-all ${
+                                                    lieIdx === i 
+                                                        ? 'bg-red-500 text-white shadow-lg scale-110' 
+                                                        : 'bg-white/5 text-white/20 hover:bg-white/10'
+                                                }`}
+                                            >
+                                                {lieIdx === i ? 'THE LIE 🤥' : 'Mark as Lie'}
+                                            </button>
+                                        </div>
+                                        <textarea
+                                            value={st}
+                                            onChange={(e) => {
+                                                const newStmts = [...stmts];
+                                                newStmts[i] = e.target.value;
+                                                setStmts(newStmts);
+                                            }}
+                                            placeholder="Write something..."
+                                            className="w-full bg-transparent text-xl font-bold focus:outline-none resize-none placeholder:text-white/10 uppercase"
+                                            rows={2}
+                                            maxLength={80}
+                                        />
+                                    </div>
+                                ))}
 
-    return null;
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    type="submit"
+                                    disabled={stmts.some(s => !s.trim()) || lieIdx === null}
+                                    className="w-full py-8 bg-game-primary rounded-[2.5rem] font-black text-2xl shadow-2xl disabled:opacity-20 transition-all uppercase tracking-widest border-t-4 border-white/20"
+                                >
+                                    READY! ➔
+                                </motion.button>
+                            </form>
+                        )}
+                    </motion.div>
+                )}
+
+                {phase === 'VOTING' && (
+                    <motion.div
+                        key="voting"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex-1 flex flex-col items-center justify-center p-4 space-y-8"
+                    >
+                        {isSubject ? (
+                            <div className="text-center space-y-8">
+                                <div className="text-[10rem] animate-pulse">😰</div>
+                                <h3 className="text-5xl font-black text-game-primary uppercase tracking-tighter">DON'T FLINCH!</h3>
+                                <p className="text-white/40 text-xl font-bold uppercase tracking-widest">They are hunting the lie...</p>
+                            </div>
+                        ) : votedIdx !== null ? (
+                            <div className="text-center space-y-8">
+                                <div className="text-[10rem]">🕵️‍♂️</div>
+                                <h3 className="text-5xl font-black text-game-secondary uppercase tracking-tighter italic">VOTE CAST!</h3>
+                                <div className="w-24 h-24 rounded-3xl bg-game-secondary/20 border-4 border-game-secondary flex items-center justify-center text-5xl font-black mx-auto">
+                                    {['A', 'B', 'C'][votedIdx]}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="w-full space-y-6">
+                                <h3 className="text-4xl font-black text-center mb-10 uppercase tracking-tighter">SPOT THE LIE!</h3>
+                                {['A', 'B', 'C'].map((label, i) => (
+                                    <motion.button
+                                        key={i}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={() => handleVote(i)}
+                                        className="w-full py-12 bg-white/5 rounded-[2.5rem] border-4 border-white/10 text-8xl font-black hover:border-game-secondary hover:bg-game-secondary/10 transition-all active:scale-95"
+                                    >
+                                        {label}
+                                    </motion.button>
+                                ))}
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+
+                {phase === 'REVEAL' && (
+                    <motion.div
+                        key="reveal"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-8"
+                    >
+                        <div className="text-[12rem] animate-bounce">🤭</div>
+                        <h3 className="text-5xl font-black text-game-primary uppercase tracking-tighter">MOMENT OF TRUTH!</h3>
+                        <p className="text-white/30 text-xl font-bold uppercase tracking-widest">Look at the TV!</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
 };
 
 export default TwoTruthsPlayer;

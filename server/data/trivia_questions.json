@@ -1,0 +1,602 @@
+[
+  {
+    "q": "Who is most likely to trip over nothing?",
+    "a": [
+      "Dad",
+      "Mom",
+      "The Dog",
+      "Grandma"
+    ],
+    "correct": 0,
+    "category": "Family Roast",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Which tech billionaire challenged a rival to a cage match?",
+    "a": [
+      "Jeff Bezos",
+      "Elon Musk",
+      "Mark Zuckerberg",
+      "Bill Gates"
+    ],
+    "correct": 1,
+    "category": "Tech Drama",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "What implies that you are 'drowning' in Gen Z slang?",
+    "a": [
+      "Simp",
+      "Drip",
+      "Cheugy",
+      "Rizz"
+    ],
+    "correct": 3,
+    "category": "Gen Z",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Which movie features a DeLorean time machine?",
+    "a": [
+      "Star Wars",
+      "Back to the Future",
+      "Blade Runner",
+      "E.T."
+    ],
+    "correct": 1,
+    "category": "Pop Culture",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "What is the powerhouse of the cell?",
+    "a": [
+      "Nucleus",
+      "Mitochondria",
+      "Ribosome",
+      "Membrane"
+    ],
+    "correct": 1,
+    "category": "Science",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Who released the hit song 'Espresso' in 2024?",
+    "a": [
+      "Taylor Swift",
+      "Sabrina Carpenter",
+      "Olivia Rodrigo",
+      "Dua Lipa"
+    ],
+    "correct": 1,
+    "category": "Music",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Which fast food chain has the slogan 'I'm Lovin' It'?",
+    "a": [
+      "KFC",
+      "Burger King",
+      "McDonald's",
+      "Wendy's"
+    ],
+    "correct": 2,
+    "category": "Brands",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "In gaming, what does 'FPS' stand for?",
+    "a": [
+      "Frames Per Second",
+      "First Person Shooter",
+      "Both A & B",
+      "Fast Player Speed"
+    ],
+    "correct": 2,
+    "category": "Gaming",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "What is the only fruit that has seeds on the outside?",
+    "a": [
+      "Strawberry",
+      "Raspberry",
+      "Blueberry",
+      "Fig"
+    ],
+    "correct": 0,
+    "category": "Food Facts",
+    "difficulty": "Hard"
+  },
+  {
+    "q": "Which planet is known as the Red Planet?",
+    "a": [
+      "Venus",
+      "Jupiter",
+      "Mars",
+      "Saturn"
+    ],
+    "correct": 2,
+    "category": "Space",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Who painted the Mona Lisa?",
+    "a": [
+      "Van Gogh",
+      "Picasso",
+      "Da Vinci",
+      "Michelangelo"
+    ],
+    "correct": 2,
+    "category": "Art",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "What does the 'www' stand for in a website browser?",
+    "a": [
+      "World Wide Web",
+      "World Web Wide",
+      "Web World Wide",
+      "Wild Wild West"
+    ],
+    "correct": 0,
+    "category": "Tech",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Which animal is known to have the longest memory?",
+    "a": [
+      "Elephant",
+      "Dolphin",
+      "Crow",
+      "Dog"
+    ],
+    "correct": 1,
+    "category": "Nature",
+    "difficulty": "Hard"
+  },
+  {
+    "q": "What is the most visited country in the world?",
+    "a": [
+      "USA",
+      "China",
+      "Spain",
+      "France"
+    ],
+    "correct": 3,
+    "category": "Travel",
+    "difficulty": "Hard"
+  },
+  {
+    "q": "Who is the 'King of Pop'?",
+    "a": [
+      "Elvis",
+      "Prince",
+      "Michael Jackson",
+      "Bruno Mars"
+    ],
+    "correct": 2,
+    "category": "Music",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "What is the capital of Iceland?",
+    "a": [
+      "Reykjavik",
+      "Oslo",
+      "Helsinki",
+      "Copenhagen"
+    ],
+    "correct": 0,
+    "category": "Travel",
+    "difficulty": "Hard"
+  },
+  {
+    "q": "What is the rarest blood type?",
+    "a": [
+      "O-Negative",
+      "B-Negative",
+      "AB-Negative",
+      "A-Negative"
+    ],
+    "correct": 2,
+    "category": "Science",
+    "difficulty": "Hard"
+  },
+  {
+    "q": "How many bones are in the adult human body?",
+    "a": [
+      "206",
+      "208",
+      "210",
+      "212"
+    ],
+    "correct": 0,
+    "category": "Science",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "Which element has the chemical symbol 'O'?",
+    "a": [
+      "Gold",
+      "Oxygen",
+      "Osmium",
+      "Silver"
+    ],
+    "correct": 1,
+    "category": "Science",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "What is the largest ocean on Earth?",
+    "a": [
+      "Atlantic",
+      "Indian",
+      "Arctic",
+      "Pacific"
+    ],
+    "correct": 3,
+    "category": "Geography",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Who wrote 'Romeo and Juliet'?",
+    "a": [
+      "Charles Dickens",
+      "William Shakespeare",
+      "Mark Twain",
+      "Jane Austen"
+    ],
+    "correct": 1,
+    "category": "Literature",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "What is the square root of 64?",
+    "a": [
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    "correct": 2,
+    "category": "Math",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Which country is home to the Kangaroos?",
+    "a": [
+      "Austria",
+      "Australia",
+      "South Africa",
+      "Brazil"
+    ],
+    "correct": 1,
+    "category": "Geography",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "What is the currency of Japan?",
+    "a": [
+      "Yuan",
+      "Won",
+      "Yen",
+      "Baht"
+    ],
+    "correct": 2,
+    "category": "General",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "How many colors are in a rainbow?",
+    "a": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correct": 2,
+    "category": "Science",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "What is the boiling point of water in Celsius?",
+    "a": [
+      "90°C",
+      "100°C",
+      "110°C",
+      "120°C"
+    ],
+    "correct": 1,
+    "category": "Science",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Which city is known as the Big Apple?",
+    "a": [
+      "Los Angeles",
+      "Chicago",
+      "New York City",
+      "Miami"
+    ],
+    "correct": 2,
+    "category": "Geography",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Who was the first person to walk on the moon?",
+    "a": [
+      "Buzz Aldrin",
+      "Neil Armstrong",
+      "Yuri Gagarin",
+      "John Glenn"
+    ],
+    "correct": 1,
+    "category": "History",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "What is the smallest planet in our solar system?",
+    "a": [
+      "Mars",
+      "Venus",
+      "Mercury",
+      "Pluto"
+    ],
+    "correct": 2,
+    "category": "Space",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Which organ is responsible for pumping blood?",
+    "a": [
+      "Lungs",
+      "Brain",
+      "Heart",
+      "Liver"
+    ],
+    "correct": 2,
+    "category": "Science",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "In which year did the Titanic sink?",
+    "a": [
+      "1910",
+      "1912",
+      "1914",
+      "1916"
+    ],
+    "correct": 1,
+    "category": "History",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "What is the hardest natural substance on Earth?",
+    "a": [
+      "Gold",
+      "Iron",
+      "Diamond",
+      "Platinum"
+    ],
+    "correct": 2,
+    "category": "Science",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "Who invented the light bulb?",
+    "a": [
+      "Nikola Tesla",
+      "Alexander Graham Bell",
+      "Thomas Edison",
+      "Isaac Newton"
+    ],
+    "correct": 2,
+    "category": "History",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "What is the longest river in the world?",
+    "a": [
+      "Amazon",
+      "Nile",
+      "Mississippi",
+      "Yangtze"
+    ],
+    "correct": 1,
+    "category": "Geography",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "Which gas do plants absorb from the atmosphere?",
+    "a": [
+      "Oxygen",
+      "Nitrogen",
+      "Carbon Dioxide",
+      "Hydrogen"
+    ],
+    "correct": 2,
+    "category": "Science",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "What is the capital of Italy?",
+    "a": [
+      "Venice",
+      "Milan",
+      "Rome",
+      "Florence"
+    ],
+    "correct": 2,
+    "category": "Geography",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Who wrote 'The Odyssey'?",
+    "a": [
+      "Socrates",
+      "Plato",
+      "Homer",
+      "Aristotle"
+    ],
+    "correct": 2,
+    "category": "Literature",
+    "difficulty": "Hard"
+  },
+  {
+    "q": "What is the most common element in the universe?",
+    "a": [
+      "Oxygen",
+      "Carbon",
+      "Helium",
+      "Hydrogen"
+    ],
+    "correct": 3,
+    "category": "Science",
+    "difficulty": "Hard"
+  },
+  {
+    "q": "Which country won the first ever FIFA World Cup in 1930?",
+    "a": [
+      "Brazil",
+      "Argentina",
+      "Uruguay",
+      "Italy"
+    ],
+    "correct": 2,
+    "category": "Sports",
+    "difficulty": "Hard"
+  },
+  {
+    "q": "What is the speed of light?",
+    "a": [
+      "~300,000 km/s",
+      "~150,000 km/s",
+      "~500,000 km/s",
+      "~1,000,000 km/s"
+    ],
+    "correct": 0,
+    "category": "Science",
+    "difficulty": "Hard"
+  },
+  {
+    "q": "Who discovered Penicillin?",
+    "a": [
+      "Marie Curie",
+      "Alexander Fleming",
+      "Louis Pasteur",
+      "Gregor Mendel"
+    ],
+    "correct": 1,
+    "category": "Science",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "What is the largest desert in the world?",
+    "a": [
+      "Sahara",
+      "Gobi",
+      "Antarctic",
+      "Arabian"
+    ],
+    "correct": 2,
+    "category": "Geography",
+    "difficulty": "Hard"
+  },
+  {
+    "q": "In being 'Sus', what game popularized this term?",
+    "a": [
+      "Fortnite",
+      "Among Us",
+      "Minecraft",
+      "Roblox"
+    ],
+    "correct": 1,
+    "category": "Gen Z",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Which instrument has 88 keys?",
+    "a": [
+      "Guitar",
+      "Violin",
+      "Piano",
+      "Flute"
+    ],
+    "correct": 2,
+    "category": "Music",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "What is the GIF of a cat with a pop-tart body called?",
+    "a": [
+      "Nyan Cat",
+      "Grumpy Cat",
+      "Keyboard Cat",
+      "Pop Cat"
+    ],
+    "correct": 0,
+    "category": "Meme History",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "What is the largest organ in the human body?",
+    "a": [
+      "Brain",
+      "Heart",
+      "Skin",
+      "Liver"
+    ],
+    "correct": 2,
+    "category": "General",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "Which country gifted the Statue of Liberty to the United States?",
+    "a": [
+      "Germany",
+      "France",
+      "United Kingdom",
+      "Italy"
+    ],
+    "correct": 1,
+    "category": "General",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "In what classic novel would you find the characters Elizabeth Bennet and Mr. Darcy?",
+    "a": [
+      "Wuthering Heights",
+      "Jane Eyre",
+      "Pride and Prejudice",
+      "Great Expectations"
+    ],
+    "correct": 2,
+    "category": "General",
+    "difficulty": "Medium"
+  },
+  {
+    "q": "What is the main ingredient in guacamole?",
+    "a": [
+      "Tomato",
+      "Avocado",
+      "Onion",
+      "Lime"
+    ],
+    "correct": 1,
+    "category": "General",
+    "difficulty": "Easy"
+  },
+  {
+    "q": "Which Greek mythological hero was known for his incredible strength and completion of 'Twelve Labours'?",
+    "a": [
+      "Odysseus",
+      "Achilles",
+      "Heracles",
+      "Perseus"
+    ],
+    "correct": 2,
+    "category": "General",
+    "difficulty": "Hard"
+  }
+]
