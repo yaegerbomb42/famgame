@@ -111,7 +111,7 @@ const HostLogic = () => {
     // Create room when host mounts and is connected
     useEffect(() => {
         if (gameState?.status === 'LOBBY' && isConnected) {
-            socket?.emit('createRoom');
+            socket?.emit('createRoom', { name: 'Host' });
         }
     }, [gameState?.status, socket, isConnected]);
 

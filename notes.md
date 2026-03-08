@@ -37,4 +37,7 @@ TRIVIA, 2TRUTHS, HOT_TAKES, POLL, BUZZ_IN, WORD_RACE, REACTION, EMOJI_STORY, BLU
 
 ## Deployment
 
-See `AGENT_HANDOFF.md` for full deployment instructions.
+> [!IMPORTANT]
+> This project does **NOT** use the universal `deploy.sh` script.
+
+See `AGENT_HANDOFF.md` for the correct, manual deployment instructions (standard npm build & host integration).

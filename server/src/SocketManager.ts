@@ -23,7 +23,8 @@ export class SocketManager {
 
     private handleSocketEvents(socket: Socket) {
         // Room Events
-        socket.on('createRoom', ({ name }: { name: string }) => {
+        socket.on('createRoom', (data: { name?: string } | undefined) => {
+            const name = data?.name || 'Host';
             this.roomManager.handleCreateRoom(socket, name);
         });
 
