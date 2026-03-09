@@ -87,7 +87,6 @@ const PlayerLogic = () => {
 
     // Brain Burst
     const handleBrainBurstAnswer = (index: number) => socket?.emit('submitBrainBurstAnswer', index);
-    const handleBrainBurstLifeline = () => socket?.emit('useBrainBurstLifeline');
 
     if (!isConnected) {
         return (
@@ -165,9 +164,7 @@ const PlayerLogic = () => {
                                 {gameState.currentGame === 'BRAIN_BURST' && gameState.gameData && (
                                     <BrainBurstPlayer
                                         {...(gameState.gameData as BrainBurstGameData)}
-                                        lifelineUsed={!!(gameState.gameData as BrainBurstGameData).lifelinesUsed?.[socket?.id || '']}
                                         onAnswer={handleBrainBurstAnswer}
-                                        onUseLifeline={handleBrainBurstLifeline}
                                     />
                                 )}
 

@@ -91,9 +91,9 @@ const narrate = (text: string, mood: NarratorMood = 'calm') => {
     // Pick the best available voice — prioritize premium, deeper, more expressive voices
     const voices = window.speechSynthesis.getVoices();
     const voicePreference = [
-        'Aaron', 'Daniel', 'Google UK English Male',
-        'Samantha', 'Karen', 'Moira', 'Google US English',
-        'Rishi', 'Tessa', 'Alex'
+        'Online', 'Natural', 'Microsoft Aria', 'Google UK English Female',
+        'Daniel', 'Google UK English Male', 'Samantha', 'Microsoft Guy',
+        'Aaron', 'Karen', 'Moira', 'Google US English', 'Rishi', 'Tessa', 'Alex'
     ];
     let chosen = null;
     for (const pref of voicePreference) {
@@ -207,6 +207,37 @@ const HostLogic = () => {
                     {gameState.status === 'RESULTS' ? 'New Game' : ''}
                 </button>
             </header>
+
+            {/* Permanent Mini-Leaderboard Overlay (Only during active games) */}
+            {gameState.status === 'IN_GAME' && (
+                <div className="fixed top-24 right-6 z-50 glass-card p-4 rounded-2xl border border-white/10 shadow-2xl w-64 backdrop-blur-md bg-black/40">
+                    <h3 className="text-white/50 text-xs font-black uppercase tracking-widest mb-3 border-b border-white/10 pb-2">Global Leaderboard</h3>
+                    <div className="space-y-2">
+                        {(() => {
+                            const topPlayers = (Object.values(gameState.players) as Player[])
+                                .filter(p => !p.isHost)
+                                .sort((a, b) => b.score - a.score)
+                                .slice(0, 5);
+                            return topPlayers.map((p, i) => (
+                                <motion.div
+                                    key={p.id}
+                                    layout
+                                    className="flex justify-between items-center"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className={`font-mono text-xs ${i === 0 ? 'text-yellow-400 font-black' : 'text-white/40'}`}>#{i + 1}</span>
+                                        <span className="text-xl">{p.avatar}</span>
+                                        <span className="font-bold text-sm truncate max-w-[80px]">{p.name}</span>
+                                    </div>
+                                    <span className="font-mono font-black text-transparent bg-clip-text bg-gradient-to-br from-[#00ffff] to-[#00d4ff] text-sm">
+                                        {p.score.toLocaleString()}
+                                    </span>
+                                </motion.div>
+                            ));
+                        })()}
+                    </div>
+                </div>
+            )}
 
             <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 pb-8 overflow-hidden">
                 <AnimatePresence mode='wait'>

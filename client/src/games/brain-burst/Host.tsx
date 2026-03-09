@@ -247,7 +247,7 @@ const ANSWER_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
 const ANSWER_LABELS = ['A', 'B', 'C', 'D'];
 
 const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
-    phase, currentQuestion, tier, tiers, timer, showResult, answers,
+    phase, currentQuestion, timer, showResult, answers,
     fiftyFiftyDisabled, questionIndex, players, streaks,
 }) => {
     const sounds = useBrainBurstSounds();
@@ -354,45 +354,11 @@ const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
                         exit={{ opacity: 0 }}
                         style={{ flex: 1, display: 'flex', position: 'relative' }}
                     >
-                        {/* Prize Ladder - Left Side */}
-                        <div style={{
-                            width: '220px', padding: '24px 16px', display: 'flex', flexDirection: 'column',
-                            justifyContent: 'center', gap: '4px', borderRight: '1px solid rgba(255,255,255,0.05)',
-                        }}>
-                            {[...tiers].reverse().map((t) => {
-                                const isCurrent = t.level === tier.level;
-                                const isPast = t.level < tier.level;
-                                return (
-                                    <motion.div
-                                        key={t.level}
-                                        animate={isCurrent ? {
-                                            backgroundColor: 'rgba(249,202,36,0.2)',
-                                            borderColor: 'rgba(249,202,36,0.6)',
-                                            boxShadow: '0 0 20px rgba(249,202,36,0.3)',
-                                        } : {}}
-                                        style={{
-                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                            padding: '6px 14px', borderRadius: '8px',
-                                            border: `1px solid ${isCurrent ? 'rgba(249,202,36,0.6)' : 'transparent'}`,
-                                            opacity: isPast ? 0.3 : isCurrent ? 1 : 0.5,
-                                            fontSize: isCurrent ? '1.1rem' : '0.85rem',
-                                            fontWeight: isCurrent ? 900 : 600,
-                                            color: isCurrent ? '#f9ca24' : 'rgba(255,255,255,0.6)',
-                                            transition: 'all 0.3s ease',
-                                        }}
-                                    >
-                                        <span style={{ fontFamily: 'monospace' }}>{t.level}</span>
-                                        <span>{t.prize}</span>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-
                         {/* Main Content Area */}
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', gap: '40px' }}>
-                            {/* Current Tier Badge */}
+                            {/* Current Question Badge */}
                             <motion.div
-                                key={tier.level}
+                                key={questionIndex}
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 style={{
@@ -400,7 +366,7 @@ const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
                                     color: '#f9ca24', letterSpacing: '0.3em', textTransform: 'uppercase',
                                 }}
                             >
-                                Question {questionIndex + 1} • For {tier.prize}
+                                Question {questionIndex + 1}
                             </motion.div>
 
                             {/* Question */}
@@ -541,7 +507,7 @@ const BrainBurstHost: React.FC<BrainBurstHostProps> = ({
                                                 <span>{player.avatar || '👤'}</span>
                                                 <span>{player.name}</span>
                                                 <span style={{ color: isCorrect ? '#2ecc71' : '#e74c3c' }}>
-                                                    {isCorrect ? `✓ +${tier.points}` : '✗'}
+                                                    {isCorrect ? `✓` : '✗'}
                                                 </span>
                                                 {isCorrect && streak >= 2 && (
                                                     <span style={{ color: '#f9ca24', fontSize: '0.8rem' }}>

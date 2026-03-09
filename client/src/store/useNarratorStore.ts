@@ -23,9 +23,17 @@ const narratorStore: StateCreator<NarratorState> = (set, get) => ({
     initVoice: () => {
         const setVoice = () => {
             const voices = window.speechSynthesis.getVoices();
-            // Try to find a good robotic/snarky voice. 
-            // Varies by OS/Browser, but we'll prioritize English and specific ones if possible.
-            let selectedVoice = voices.find(v => v.name.includes('Daniel') || v.name.includes('Google UK English Male'));
+            // Try to find a high-quality free online/natural voice first
+            const voicePreference = [
+                'Online', 'Natural', 'Microsoft Aria', 'Google UK English Female',
+                'Daniel', 'Google UK English Male', 'Samantha', 'Microsoft Guy'
+            ];
+
+            let selectedVoice = undefined;
+            for (const pref of voicePreference) {
+                selectedVoice = voices.find(v => v.name.includes(pref));
+                if (selectedVoice) break;
+            }
 
             // Fallback to any English male or just the first English voice
             if (!selectedVoice) {

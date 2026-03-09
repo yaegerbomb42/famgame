@@ -4,13 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface BrainBurstPlayerProps {
     phase: 'INTRO' | 'QUESTION' | 'REVEAL' | 'CELEBRATION' | 'GAME_OVER';
     currentQuestion: { q: string; a: string[]; correct: number };
-    tier: { level: number; prize: string; points: number };
     questionIndex: number;
-    fiftyFiftyDisabled: number[];
-    lifelineUsed: boolean;
     showResult: boolean;
     onAnswer: (index: number) => void;
-    onUseLifeline: () => void;
 }
 
 const ANSWER_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
@@ -82,9 +78,8 @@ const usePlayerSounds = () => {
 };
 
 const BrainBurstPlayer: React.FC<BrainBurstPlayerProps> = ({
-    phase, currentQuestion, tier, questionIndex,
-    fiftyFiftyDisabled, lifelineUsed, showResult,
-    onAnswer, onUseLifeline,
+    phase, currentQuestion, questionIndex,
+    showResult, onAnswer,
 }) => {
     const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
     const [locked, setLocked] = useState(false);
@@ -113,7 +108,6 @@ const BrainBurstPlayer: React.FC<BrainBurstPlayerProps> = ({
 
     const handleSelect = (i: number) => {
         if (locked || selectedIdx !== null || phase !== 'QUESTION') return;
-        if (fiftyFiftyDisabled.includes(i)) return;
         sounds.playTap();
         setSelectedIdx(i);
         setLocked(true);
@@ -250,7 +244,7 @@ const BrainBurstPlayer: React.FC<BrainBurstPlayerProps> = ({
                             fontSize: '1.1rem', fontWeight: 700, color: '#2ecc71',
                         }}
                     >
-                        +{tier.points} pts
+                        +{500} pts
                     </motion.div>
                 )}
                 <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', marginTop: '16px' }}>
@@ -266,34 +260,14 @@ const BrainBurstPlayer: React.FC<BrainBurstPlayerProps> = ({
             flex: 1, display: 'flex', flexDirection: 'column',
             padding: '12px', gap: '12px',
         }}>
-            {/* Tier + Lifeline Bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px' }}>
+            {/* Question Header */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4px 8px' }}>
                 <div style={{
-                    fontSize: '0.85rem', fontWeight: 800, color: '#f9ca24',
+                    fontSize: '1rem', fontWeight: 800, color: '#f9ca24',
                     letterSpacing: '0.1em',
                 }}>
-                    Q{questionIndex + 1} • {tier.prize}
+                    QUESTION {questionIndex + 1}
                 </div>
-                <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => {
-                        if (!lifelineUsed) {
-                            sounds.playTap();
-                            onUseLifeline();
-                        }
-                    }}
-                    disabled={lifelineUsed}
-                    style={{
-                        padding: '8px 16px', borderRadius: '12px', border: 'none',
-                        backgroundColor: lifelineUsed ? 'rgba(255,255,255,0.05)' : 'rgba(249,202,36,0.15)',
-                        color: lifelineUsed ? 'rgba(255,255,255,0.15)' : '#f9ca24',
-                        fontSize: '0.85rem', fontWeight: 800, cursor: lifelineUsed ? 'default' : 'pointer',
-                        textDecoration: lifelineUsed ? 'line-through' : 'none',
-                        WebkitTapHighlightColor: 'transparent',
-                    }}
-                >
-                    50:50
-                </motion.button>
             </div>
 
             {/* Answer Buttons — 2×2 grid, maximum tap area */}
@@ -303,28 +277,26 @@ const BrainBurstPlayer: React.FC<BrainBurstPlayerProps> = ({
             }}>
                 <AnimatePresence>
                     {currentQuestion.a.map((answer, i) => {
-                        const isDisabled = fiftyFiftyDisabled.includes(i);
                         return (
                             <motion.button
                                 key={`${questionIndex}-${i}`}
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{
-                                    scale: isDisabled ? 0.85 : 1,
-                                    opacity: isDisabled ? 0.2 : 1,
+                                    scale: 1,
+                                    opacity: 1,
                                 }}
-                                whileTap={!isDisabled ? { scale: 0.92 } : {}}
+                                whileTap={{ scale: 0.92 }}
                                 transition={{ delay: i * 0.06 }}
                                 onClick={() => handleSelect(i)}
-                                disabled={isDisabled}
                                 style={{
                                     background: `linear-gradient(135deg, ${ANSWER_COLORS[i]}cc, ${ANSWER_COLORS[i]}88)`,
                                     border: 'none', borderRadius: '20px',
                                     display: 'flex', flexDirection: 'column',
                                     alignItems: 'center', justifyContent: 'center',
                                     gap: '6px', padding: '16px 12px',
-                                    cursor: isDisabled ? 'default' : 'pointer',
+                                    cursor: 'pointer',
                                     color: 'white',
-                                    boxShadow: isDisabled ? 'none' : `0 8px 24px ${ANSWER_COLORS[i]}40`,
+                                    boxShadow: `0 8px 24px ${ANSWER_COLORS[i]}40`,
                                     WebkitTapHighlightColor: 'transparent',
                                     position: 'relative', overflow: 'hidden',
                                     minHeight: '0',

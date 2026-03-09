@@ -442,19 +442,19 @@ const revealGlobalAveragesLogic = () => {
                     question: question.q,
                     correct: question.correct,
                     guesses: {},
-                    timerEnd: Date.now() + 30000,
+                    timerEnd: Date.now() + 45000,
                     submissionCount: 0,
                     totalPlayers: Object.values(gameState.players).filter(p => !p.isHost).length,
                 };
                 io.emit('gameState', gameState);
 
-                // Auto-Reveal Timer for the new round (30s)
+                // Auto-Reveal Timer for the new round (45s)
                 const currentRound = gameState.gameData.round;
                 setTimeout(() => {
                     if (gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData?.phase === 'WAITING' && gameState.gameData?.round === currentRound) {
                         revealGlobalAveragesLogic();
                     }
-                }, 30000);
+                }, 45000);
             } else {
                 // Game complete — go to RESULTS
                 gameState.status = 'RESULTS';
@@ -653,7 +653,7 @@ const advanceSkillShowdown = () => {
                 if (gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData?.phase === 'PLAYING' && gameState.gameData?.challengeIndex === nextIdx) {
                     scoreAndRevealSkillShowdown();
                 }
-            }, (challengeData.timeLimit || 10) * 1000);
+            }, (challengeData.timeLimit || 30) * 1000);
         }
     }, 3000);
 };
@@ -666,18 +666,18 @@ const startGlobalAveragesRound = (roundNum: number) => {
         question: question.q,
         correct: question.correct,
         guesses: {},
-        timerEnd: Date.now() + 30000,
+        timerEnd: Date.now() + 45000,
         submissionCount: 0,
         totalPlayers: Object.values(gameState.players).filter(p => !p.isHost).length,
     };
     io.emit('gameState', gameState);
 
-    // Auto-Reveal Timer (30 Seconds)
+    // Auto-Reveal Timer (45 Seconds)
     setTimeout(() => {
         if (gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData?.phase === 'WAITING' && gameState.gameData?.round === roundNum) {
             revealGlobalAveragesLogic();
         }
-    }, 30000);
+    }, 45000);
 };
 
 io.on('connection', (socket: any) => {
@@ -1207,14 +1207,14 @@ io.on('connection', (socket: any) => {
     // Helper for scoring Brain Burst round
     const scoreBrainBurstRound = () => {
         const correctIdx = gameState.gameData.currentQuestion.correct;
-        const tierPoints = gameState.gameData.tier.points;
+        const basePoints = 500;
         Object.entries(gameState.gameData.answers).forEach(([pid, ans]: [string, any]) => {
             if (ans === correctIdx) {
                 // Streak bonus
                 if (!gameState.gameData.streaks[pid]) gameState.gameData.streaks[pid] = 0;
                 gameState.gameData.streaks[pid]++;
                 const streakMultiplier = Math.min(gameState.gameData.streaks[pid], 3); // Max 3x
-                const points = Math.round(tierPoints * (1 + (streakMultiplier - 1) * 0.25));
+                const points = Math.round(basePoints * (1 + (streakMultiplier - 1) * 0.25));
                 if (gameState.players[pid]) gameState.players[pid].score += points;
             } else {
                 // Reset streak
