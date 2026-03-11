@@ -22,6 +22,7 @@ export interface GameState {
     gameData: AllGameData;
     chat: ChatMessage[];
     aiPersona: AiPersona;
+    customGames: any[];
 }
 
 export interface GameStore {

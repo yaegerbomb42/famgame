@@ -8,6 +8,8 @@ import BrainBurstPlayer from '../games/brain-burst/Player';
 import GlobalAveragesPlayer from '../games/global-averages/Player';
 import SkillShowdownPlayer from '../games/skill-showdown/Player';
 import AIMashupPlayer from '../games/ai-mashup/Player';
+import FinalBossPlayer from '../games/final-boss/Player';
+import { useNarratorStore } from '../store/useNarratorStore';
 import type {
     BrainBurstGameData,
     GlobalAveragesGameData,
@@ -55,6 +57,8 @@ const PlayerLogic = () => {
     const [avatar, setAvatar] = useState('🙂');
     const [color, setColor] = useState(COLORS[8]); // Default Cyan
     const [hasJoined, setHasJoined] = useState(false);
+    const [customGameIdea, setCustomGameIdea] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const autoFillAttempted = useRef(false);
 
@@ -139,17 +143,82 @@ const PlayerLogic = () => {
                                 exit={{ opacity: 0, scale: 1.1 }}
                                 className="flex-1 flex flex-col items-center justify-center space-y-8 text-center"
                             >
-                                <div className="text-[8rem] animate-bounce-slow filter drop-shadow-2xl">{me.avatar}</div>
-                                <h2 className="text-4xl font-black uppercase tracking-tighter">
+                                <div className="text-[6rem] animate-bounce-slow filter drop-shadow-2xl">{me.avatar}</div>
+                                <h2 className="text-3xl font-black uppercase tracking-tighter">
                                     You're <span style={{ color: me.color }}>IN!</span>
                                 </h2>
-                                <p className="text-white/40 text-lg font-medium max-w-[280px]">
+                                <p className="text-white/40 text-sm font-medium">
                                     Look at the <span className="text-white">Big Screen</span>.
                                 </p>
+
+                                <div className="w-full max-w-sm pt-4">
+                                    <p className="text-[10px] uppercase tracking-widest text-game-primary font-bold mb-2">Build a Custom AI Game</p>
+                                    <div className="flex bg-white/5 rounded-xl border border-white/10 overflow-hidden focus-within:border-game-primary transition-colors">
+                                        <input
+                                            type="text"
+                                            value={customGameIdea}
+                                            onChange={e => setCustomGameIdea(e.target.value)}
+                                            placeholder="e.g. 90s Cartoons"
+                                            className="flex-1 bg-transparent px-4 py-3 text-sm focus:outline-none placeholder:text-white/20"
+                                            maxLength={50}
+                                        />
+                                        <button
+                                            disabled={!customGameIdea.trim() || isGenerating}
+                                            onClick={() => {
+                                                if (customGameIdea.trim() && socket) {
+                                                    socket.emit('submitGameIdea', customGameIdea.trim());
+                                                    setIsGenerating(true);
+                                                    setCustomGameIdea('');
+                                                    // Re-enable after a cool-down
+                                                    setTimeout(() => setIsGenerating(false), 5000);
+                                                }
+                                            }}
+                                            className="bg-game-primary px-4 py-3 font-black text-sm uppercase disabled:opacity-50 transition-opacity"
+                                        >
+                                            {isGenerating ? '...' : 'Send'}
+                                        </button>
+                                    </div>
+                                </div>
                             </motion.div>
                         )}
 
+                        {gameState.status === 'FINAL_SUBMISSION' && (
+                            <motion.div
+                                key="final-sub"
+                                initial={{ opacity: 0, y: 50 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex-1 flex flex-col items-center justify-center space-y-10 text-center"
+                            >
+                                <div className="text-[10rem] animate-pulse">👑</div>
+                                <h2 className="text-4xl font-black uppercase text-[#ff00ff]">THE FINALE</h2>
+                                <p className="text-white/60 font-bold uppercase tracking-widest text-center">
+                                    Submit your idea for the <br />LAST GAME of the night!
+                                </p>
 
+                                <div className="w-full max-w-md space-y-4">
+                                    <input
+                                        type="text"
+                                        value={customGameIdea}
+                                        onChange={e => setCustomGameIdea(e.target.value)}
+                                        placeholder="e.g. Extreme 80s Movie Trivia"
+                                        className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] px-8 py-6 text-xl focus:outline-none focus:border-[#ff00ff] transition-all"
+                                        disabled={isGenerating}
+                                    />
+                                    <motion.button
+                                        whileTap={{ scale: 0.9 }}
+                                        disabled={!customGameIdea.trim() || isGenerating}
+                                        onClick={() => {
+                                            socket?.emit('submitFinalIdea', customGameIdea.trim());
+                                            setIsGenerating(true);
+                                            setCustomGameIdea('');
+                                        }}
+                                        className="w-full bg-[#ff00ff] text-white font-black text-2xl py-6 rounded-[2rem] shadow-2xl disabled:opacity-50"
+                                    >
+                                        {isGenerating ? 'LOCKED IN!' : 'SUBMIT IDEA'}
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        )}
 
                         {/* PLAYING STATE */}
                         {gameState.status === 'PLAYING' && (
@@ -163,14 +232,14 @@ const PlayerLogic = () => {
 
                                 {gameState.currentGame === 'BRAIN_BURST' && gameState.gameData && (
                                     <BrainBurstPlayer
-                                        {...(gameState.gameData as BrainBurstGameData)}
+                                        {...(gameState.gameData as BrainBurstGameData) || {}}
                                         onAnswer={handleBrainBurstAnswer}
                                     />
                                 )}
 
                                 {gameState.currentGame === 'GLOBAL_AVERAGES' && gameState.gameData && (
                                     <GlobalAveragesPlayer
-                                        {...(gameState.gameData as GlobalAveragesGameData)}
+                                        {...(gameState.gameData as GlobalAveragesGameData) || {}}
                                         socket={socket!}
                                         hasGuessed={(gameState.gameData as GlobalAveragesGameData).guesses?.[socket?.id || ''] !== undefined}
                                     />
@@ -178,18 +247,18 @@ const PlayerLogic = () => {
 
                                 {gameState.currentGame === 'SKILL_SHOWDOWN' && gameState.gameData && (
                                     <SkillShowdownPlayer
-                                        {...(gameState.gameData as SkillShowdownGameData)}
+                                        {...(gameState.gameData as SkillShowdownGameData) || {}}
                                         submitted={!!(gameState.gameData as SkillShowdownGameData).submissions?.[socket?.id || '']}
                                         socket={socket!}
                                         myId={socket?.id || ''}
                                     />
                                 )}
-                                {gameState.currentGame === 'AI_MASHUP' && gameState.gameData && (
-                                    <AIMashupPlayer />
-                                )}
+
+                                {gameState.currentGame === 'AI_MASHUP' && <AIMashupPlayer />}
+                                {gameState.currentGame === 'FINAL_BOSS_GAME' && <FinalBossPlayer />}
 
                                 {/* Fallback for unimplemented games */}
-                                {gameState.currentGame !== 'TRIVIA' && gameState.currentGame !== 'REACTION' && gameState.currentGame !== 'BRAIN_BURST' && gameState.currentGame !== 'GLOBAL_AVERAGES' && gameState.currentGame !== 'SKILL_SHOWDOWN' && gameState.currentGame !== 'AI_MASHUP' && (
+                                {!['TRIVIA', 'REACTION', 'BRAIN_BURST', 'GLOBAL_AVERAGES', 'SKILL_SHOWDOWN', 'AI_MASHUP', 'FINAL_BOSS_GAME'].includes(gameState.currentGame || '') && (
                                     <div className="flex flex-col items-center justify-center h-full text-center">
                                         <h1 className="text-2xl font-bold animate-pulse uppercase tracking-widest text-cyan-400">Loading {gameState.currentGame}...</h1>
                                         <p className="text-white/50 mt-4">Look at the Big Screen!</p>

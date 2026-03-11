@@ -3,14 +3,8 @@ import { motion } from 'framer-motion';
 import { Timer } from '../../components/Shared/Timer';
 import { useGameStore } from '../../store/useGameStore';
 import type { Player } from '../../store/useGameStore';
+import type { TriviaGameData, TriviaQuestion } from '../../types/game';
 import { useNarratorStore } from '../../store/useNarratorStore';
-
-interface TriviaQuestion {
-    q: string;
-    a: string[];
-    correct: number;
-    category?: string;
-}
 
 interface TriviaHostProps {
     question: TriviaQuestion | null;
@@ -25,6 +19,7 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
 
     const [selectedCategory, setSelectedCategory] = useState('Any');
     const [selectedDifficulty, setSelectedDifficulty] = useState('Any');
+    const [customTopic, setCustomTopic] = useState('');
 
     // Safely access data
     const safeQ = question as TriviaQuestion;
@@ -39,19 +34,24 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
     const prevQRef = useRef('');
     useEffect(() => {
         if (qText && qText !== prevQRef.current && phase === 'ROUND') {
-            const intros = [
-                `Question incoming. Try not to embarrass yourselves more than usual.`,
-                `Next question. Let's see who's been paying attention to life.`,
-                `Here we go. A topic I know everything about, and you know... well, nothing.`,
-                `Let's test your pathetic human brains. Hope you brought yours today.`,
-                `I hope you studied... nah, who am I kidding. You're just guessing.`,
-                `Confidence is key. Or in your case, a very expensive delusion.`,
-                `Go ahead, bet high. I love watching digital fortunes crumble.`
-            ];
-            speak(intros[Math.floor(Math.random() * intros.length)]);
+            if (gameData?.isCustomAI && gameData?.customIntro && gameData?.questionIndex === 0) {
+                // Speak the custom intro for the FIRST question of an AI game
+                speak(gameData.customIntro);
+            } else {
+                const intros = [
+                    `Question incoming. Try not to embarrass yourselves more than usual.`,
+                    `Next question. Let's see who's been paying attention to life.`,
+                    `Here we go. A topic I know everything about, and you know... well, nothing.`,
+                    `Let's test your pathetic human brains. Hope you brought yours today.`,
+                    `I hope you studied... nah, who am I kidding. You're just guessing.`,
+                    `Confidence is key. Or in your case, a very expensive delusion.`,
+                    `Go ahead, bet high. I love watching digital fortunes crumble.`
+                ];
+                speak(intros[Math.floor(Math.random() * intros.length)]);
+            }
             prevQRef.current = qText;
         }
-    }, [qText, phase, speak]);
+    }, [qText, phase, speak, gameData?.isCustomAI, gameData?.customIntro, gameData?.questionIndex]);
 
     // Trigger narrator when answer is revealed
     const prevShowResultRef = useRef(false);
@@ -108,6 +108,34 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
                             ))}
                         </select>
                     </div>
+
+                    <div className="flex flex-col gap-4">
+                        <label className="text-white/40 font-black uppercase tracking-[0.2em] text-sm">OR TYPE CUSTOM TOPIC</label>
+                        <div className="flex gap-4">
+                            <input
+                                type="text"
+                                placeholder="e.g. Rick and Morty, Space History..."
+                                value={customTopic || ''}
+                                onChange={(e) => setCustomTopic(e.target.value)}
+                                className="bg-black/60 border-2 border-white/20 rounded-2xl p-4 text-white text-2xl font-bold appearance-none outline-none focus:border-cyan-500 w-[500px]"
+                            />
+                            <motion.button
+                                whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(6, 182, 212, 0.6)" }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => {
+                                    if (customTopic?.trim()) {
+                                        gameInput({
+                                            action: 'GENERATE_CUSTOM_TRIVIA',
+                                            topic: customTopic.trim()
+                                        });
+                                    }
+                                }}
+                                className="px-8 py-4 bg-cyan-600 text-white rounded-2xl font-black text-2xl uppercase tracking-widest border border-cyan-400/50"
+                            >
+                                GENERATE
+                            </motion.button>
+                        </div>
+                    </div>
                 </div>
 
                 <motion.button
@@ -124,6 +152,33 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
                 >
                     Start Game
                 </motion.button>
+            </div>
+        );
+    }
+    if (phase === 'GENERATING') {
+        return (
+            <div className="flex flex-col h-full w-full justify-center items-center px-8 relative font-display z-10 text-center">
+                <motion.div
+                    animate={{ rotate: 360, scale: [1, 1.2, 1] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    className="text-9xl mb-12 filter drop-shadow-[0_0_50px_rgba(6,182,212,0.8)]"
+                >
+                    🤖
+                </motion.div>
+                <h2 className="text-7xl font-black text-white mb-6 uppercase tracking-tighter text-glow">
+                    SWARM GENERATING
+                </h2>
+                <div className="text-4xl font-bold text-cyan-400 animate-pulse uppercase tracking-[0.2em]">
+                    Constructing: {gameData?.topic || 'The Future'}
+                </div>
+                <div className="mt-16 w-[500px] h-4 bg-white/5 rounded-full overflow-hidden border border-white/10 p-1">
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: "100%" }}
+                        transition={{ duration: 15, ease: "easeInOut" }}
+                        className="h-full bg-gradient-to-r from-cyan-600 via-blue-500 to-cyan-400 rounded-full shadow-[0_0_30px_#06b6d4]"
+                    />
+                </div>
             </div>
         );
     }
@@ -145,11 +200,16 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
                 key={category}
                 initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="absolute top-8 left-1/2 -translate-x-1/2 z-10"
+                className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full flex flex-col items-center"
             >
                 <div className="px-8 py-2 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-300 font-bold uppercase tracking-[0.4em] drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                    {category}
+                    {gameData?.isCustomAI ? (gameData?.customTitle || 'AI GENERATED') : category}
                 </div>
+                {gameData?.isCustomAI && (
+                    <div className="mt-2 text-[#ff00ff] font-black uppercase tracking-widest text-xs animate-pulse">
+                        DESIGNED BY {gameData?.customCreator || 'SWARM'}
+                    </div>
+                )}
             </motion.div>
 
             <div className="absolute top-8 right-8 z-20 scale-125">
@@ -235,7 +295,7 @@ const TriviaHost: React.FC<TriviaHostProps> = ({ question, timer, showResult }) 
                     </motion.div>
                 ))}
             </div>
-        </div>
+        </div >
     );
 };
 

@@ -7,6 +7,10 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { generateMashupGame } from './src/utils/ai.js';
+import { SwarmEngine } from './src/swarm';
+
+// Initialize Swarm Engine early
+const swarm = SwarmEngine.getInstance();
 
 const app = express();
 app.use(cors());
@@ -79,13 +83,14 @@ interface GameState {
     roomCode: string;
     hostId: string | null;
     players: Record<string, Player>;
-    status: 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS';
-    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION' | 'EMOJI_STORY' | 'BLUFF' | 'THIS_OR_THAT' | 'SPEED_DRAW' | 'CHAIN_REACTION' | 'MIND_MELD' | 'COMPETE' | 'BRAIN_BURST' | 'GLOBAL_AVERAGES' | 'SKILL_SHOWDOWN' | 'AI_MASHUP';
+    status: 'LOBBY' | 'GAME_SELECT' | 'PLAYING' | 'RESULTS' | 'FINAL_SUBMISSION';
+    currentGame?: 'TRIVIA' | '2TRUTHS' | 'HOT_TAKES' | 'POLL' | 'BUZZ_IN' | 'WORD_RACE' | 'REACTION' | 'EMOJI_STORY' | 'BLUFF' | 'THIS_OR_THAT' | 'SPEED_DRAW' | 'CHAIN_REACTION' | 'MIND_MELD' | 'COMPETE' | 'BRAIN_BURST' | 'GLOBAL_AVERAGES' | 'SKILL_SHOWDOWN' | 'AI_MASHUP' | 'CUSTOM_AI_GAME' | 'FINAL_BOSS_GAME';
     currentSequenceIndex?: number;
     gameData?: any;
     gameVotes: Record<string, number>;
     timer?: number;
     leaderboard: { name: string; score: number }[];
+    customGames: any[]; // Queue of AI generated games
 }
 
 let gameState: GameState = {
@@ -95,6 +100,7 @@ let gameState: GameState = {
     status: 'LOBBY',
     gameVotes: {},
     leaderboard: [],
+    customGames: [],
 };
 
 // Timer management
@@ -740,6 +746,7 @@ io.on('connection', (socket: any) => {
                 status: 'LOBBY',
                 gameVotes: {},
                 leaderboard: [],
+                customGames: [],
             };
         }
         io.emit('gameState', gameState);
@@ -788,10 +795,21 @@ io.on('connection', (socket: any) => {
         }
 
         if (gameState.currentSequenceIndex >= GAME_SEQUENCE.length) {
-            // End of sequence, go to RESULTS
+            if (gameState.status !== 'FINAL_SUBMISSION') {
+                gameState.status = 'FINAL_SUBMISSION';
+                gameState.gameData = { timer: 45, ideas: [] };
+                io.emit('gameState', gameState);
+
+                startTimer(45, () => {
+                    if (gameState.status === 'FINAL_SUBMISSION') {
+                        generateFinalBossGame();
+                    }
+                });
+                return;
+            }
             gameState.status = 'RESULTS';
             gameState.currentGame = undefined;
-            gameState.gameData = undefined;
+            gameState.gameData = { revealIndex: -1 }; // For dramatic reveal
             io.emit('gameState', gameState);
             return;
         }
@@ -1418,6 +1436,53 @@ io.on('connection', (socket: any) => {
                     io.emit('gameState', gameState);
                 }
             });
+        } else if (action === 'START_CUSTOM_AI_GAME') {
+            const gameId = payload.gameId;
+            const game = gameState.customGames.find(g => g.id === gameId);
+            if (!game) return;
+
+            gameState.currentGame = 'TRIVIA';
+            gameState.gameData = {
+                phase: 'ROUND',
+                questionIndex: 0,
+                question: game.questions[0],
+                timer: 45,
+                answers: {},
+                showResult: false,
+                currentQuestions: game.questions,
+                isCustomAI: true,
+                customTitle: game.title,
+                customIntro: game.narratorIntro,
+                customCreator: game.creator
+            };
+            io.emit('gameState', gameState);
+
+            startTimer(45, () => {
+                if (gameState.currentGame === 'TRIVIA' && gameState.gameData.phase === 'ROUND') {
+                    gameState.gameData.showResult = true;
+                    io.emit('gameState', gameState);
+                }
+            });
+        } else if (action === 'GENERATE_CUSTOM_TRIVIA') {
+            const topic = payload.topic || 'Surprise Me';
+            generateCustomTrivia(topic);
+        } else if (action === 'START_FINAL_BOSS_GAME') {
+            generateFinalBossGame();
+        }
+    });
+
+    socket.on('submitFinalIdea', (idea: string) => {
+        if (gameState.status === 'FINAL_SUBMISSION' && gameState.gameData.ideas) {
+            gameState.gameData.ideas.push({ idea, playerId: socket.id, playerName: gameState.players[socket.id]?.name || 'Anonymous' });
+            io.emit('gameState', gameState);
+        }
+    });
+
+    socket.on('submitBossAnswer', (data: { action: 'SELECT' | 'PROMPT', index?: number, text?: string }) => {
+        if (gameState.currentGame === 'FINAL_BOSS_GAME' && gameState.gameData.phase === 'ROUND') {
+            if (!gameState.gameData.answers) gameState.gameData.answers = {};
+            gameState.gameData.answers[socket.id] = data;
+            io.emit('gameState', gameState);
         }
     });
 
@@ -1842,6 +1907,233 @@ io.on('connection', (socket: any) => {
         gameState.gameData.fiftyFiftyDisabled = shuffledWrong.slice(0, 2);
         io.emit('gameState', gameState);
     });
+
+    // --- LIVE AI GAME GENERATION ---
+    socket.on('submitGameIdea', async (idea: string) => {
+        const player = gameState.players[socket.id];
+        if (!player) return;
+
+        console.log(`[SWARM] Generating game for ${player.name}: "${idea}"`);
+
+        try {
+            // We tell V.I.C. what to do
+            const prompt = `
+                You are a game designer for a party game called FamGame. 
+                A player named "${player.name}" has submitted an idea for a custom trivia mini-game: "${idea}".
+                
+                Generate a completely custom 5-question trivia game based on this idea.
+                Return ONLY a valid JSON object matching exactly this structure:
+                {
+                    "title": "A fun, punchy title for this specific game",
+                    "narratorIntro": "A funny, sassy 1-2 sentence intro spoken by the robotic host V.I.C. about this game, explicitly mentioning that ${player.name} created it.",
+                    "questions": [
+                        { "q": "Question text", "a": ["Wrong", "Correct", "Wrong", "Wrong"], "correct": 1 }
+                    ]
+                }
+            `;
+
+            const res = await swarm.execute(prompt);
+
+            // Try to parse the JSON it returned (clean markdown block if any)
+            let jsonString = (res.text || "").replace(/^```json/m, '').replace(/```$/m, '').trim();
+            const gameConfig = JSON.parse(jsonString);
+
+            // Give it a unique ID 
+            gameConfig.id = Math.random().toString(36).substring(7);
+            gameConfig.creator = player.name;
+
+            // Push to the queue
+            gameState.customGames.push(gameConfig);
+            io.emit('gameState', gameState);
+
+            console.log(`[SWARM] Successfully generated custom game "${gameConfig.title}" via ${res.provider}!`);
+        } catch (error) {
+            console.error('[SWARM Error]', error);
+            // Optionally emit an error back to the specific client
+            socket.emit('gameGenerationFailed', "AI Cluster is busy or failed. Try again!");
+        }
+    });
+
+    async function generateCustomTrivia(topic: string) {
+        console.log(`[SWARM] Generating Custom Trivia for topic: "${topic}"`);
+        gameState.status = 'PLAYING';
+        gameState.currentGame = 'TRIVIA';
+        gameState.gameData = {
+            phase: 'GENERATING',
+            topic,
+            isCustomAI: true,
+            customTitle: topic.toUpperCase()
+        };
+        io.emit('gameState', gameState);
+
+        try {
+            const prompt = `
+                Generate a 10-question TRIVIA game about the topic: "${topic}".
+                The questions should range from Easy to Hard.
+                Return ONLY a JSON object:
+                {
+                    "title": "A cool title for ${topic} Trivia",
+                    "narratorIntro": "Sassy V.I.C. intro about ${topic}.",
+                    "questions": [
+                        { "q": "Question?", "a": ["Op1", "Op2", "Op3", "Op4"], "correct": 1 }
+                    ]
+                }
+            `;
+            const res = await swarm.execute(prompt);
+            let jsonString = (res.text || "").replace(/^```json/m, '').replace(/```$/m, '').trim();
+            const config = JSON.parse(jsonString);
+
+            gameState.gameData = {
+                phase: 'ROUND',
+                questionIndex: 0,
+                question: config.questions[0],
+                timer: 30,
+                answers: {},
+                showResult: false,
+                currentQuestions: config.questions,
+                isCustomAI: true,
+                customTitle: config.title,
+                customIntro: config.narratorIntro,
+                customCreator: 'THE SWARM'
+            };
+            io.emit('gameState', gameState);
+
+            startTimer(30, () => {
+                if (gameState.currentGame === 'TRIVIA' && gameState.gameData.phase === 'ROUND') {
+                    gameState.gameData.showResult = true;
+                    io.emit('gameState', gameState);
+                }
+            });
+        } catch (e) {
+            console.error(e);
+            gameState.status = 'GAME_SELECT';
+            io.emit('gameState', gameState);
+        }
+    }
+
+    async function generateFinalBossGame() {
+        const ideas = gameState.gameData.ideas || [];
+        const bestIdea = ideas.length > 0 ? ideas[Math.floor(Math.random() * ideas.length)] : { idea: 'Chaos Mode', playerName: 'THE VOID' };
+
+        console.log(`[SWARM] Generating ROBUST FINAL BOSS GAME based on: "${bestIdea.idea}"`);
+        gameState.status = 'PLAYING';
+        gameState.currentGame = 'FINAL_BOSS_GAME';
+        gameState.gameData = {
+            phase: 'GENERATING',
+            idea: bestIdea.idea,
+            creator: bestIdea.playerName
+        };
+        io.emit('gameState', gameState);
+
+        try {
+            const prompt = `
+            You are creating the ULTIMATE FINAL BOSS challenge for a social party game.
+            The player "${bestIdea.playerName}" has proposed this theme: "${bestIdea.idea}".
+
+            Based on this theme, pick the BEST game architecture from these three:
+            1. 'TRIVIA': A series of 5 high-stakes multiple choice questions.
+            2. 'PROMPT_BATTLE': 3 rounds of creative/funny prompts where players type custom responses.
+            3. 'GROUP_POLL': 3 chaotic group questions where players vote on things (like "Who is most likely to...").
+            4. 'FREESTYLE': Truly dynamic rounds. Use this if the idea doesn't fit the above (e.g., "Guess the price", "Solve the riddle", "Type words starting with X").
+
+            Pick the one that fits "${bestIdea.idea}" the best.
+            
+            Return ONLY a valid JSON object:
+            {
+                "title": "A cinematic boss-fight style title",
+                "tagline": "A snarky V.I.C. narrator comment",
+                "subMode": "TRIVIA" | "PROMPT_BATTLE" | "GROUP_POLL" | "FREESTYLE",
+                "rounds": [
+                    {
+                        "q": "The question or prompt text",
+                        "a": ["Option 1", "Option 2", "Option 3", "Option 4"], 
+                        "correct": 0,
+                        "blocks": { // REQUIRED FOR FREESTYLE
+                            "playerUI": "INPUT_FIELD" | "BUTTON_GRID" | "SLIDER" | "REACTION_GRID" | "CHECKBOX_GROUP",
+                            "hostUI": "REVEAL_VALUE" | "BAR_CHART" | "WORD_CLOUD" | "SCATTER_PLOT" | "STAT_WIDGET",
+                            "targetValue": 0 | "string" | {"x": 50, "y": 50}, 
+                            "options": [], // For Button Grid or Checkbox Group
+                            "points": [{"x": 10, "y": 20, "label": "Point A"}], // ONLY for SCATTER_PLOT
+                            "label": "Sensor Label", // ONLY for STAT_WIDGET
+                            "blocks": [] // OPTIONAL: array of {playerUI, hostUI, data} for assembling multiple blocks
+                        }
+                    }
+                ]
+            }
+
+            Make the questions/prompts EXTREMELY high quality, thematic, and intense.
+        `;
+
+            const res = await swarm.execute(prompt);
+            let jsonString = (res.text || "").replace(/^```json/m, '').replace(/```$/m, '').trim();
+            const config = JSON.parse(jsonString);
+
+            const runRound = (roundIdx: number) => {
+                const currentRound = config.rounds[roundIdx];
+                gameState.gameData = {
+                    phase: 'ROUND',
+                    roundIndex: roundIdx,
+                    subMode: config.subMode,
+                    title: config.title,
+                    tagline: config.tagline,
+                    rounds: config.rounds,
+                    currentRound: currentRound,
+                    creator: bestIdea.playerName,
+                    timer: config.subMode === 'TRIVIA' ? 20 : 35,
+                    answers: {},
+                    showResult: false
+                };
+                io.emit('gameState', gameState);
+
+                startTimer(gameState.gameData.timer, () => {
+                    if (gameState.currentGame === 'FINAL_BOSS_GAME' && gameState.gameData.phase === 'ROUND') {
+                        // SCORING
+                        const answers = gameState.gameData.answers || {};
+                        Object.keys(gameState.players).forEach(pid => {
+                            const ans = answers[pid];
+                            if (ans) {
+                                if (config.subMode === 'TRIVIA' && ans.index === currentRound.correct) {
+                                    gameState.players[pid].score += 500;
+                                } else if (config.subMode === 'FREESTYLE' && currentRound.blocks?.targetValue) {
+                                    // Simple exact match or numeric proximity for freestyle
+                                    const target = currentRound.blocks.targetValue;
+                                    if (typeof target === 'number') {
+                                        const diff = Math.abs(Number(ans.text || 0) - target);
+                                        if (diff === 0) gameState.players[pid].score += 750;
+                                        else if (diff < target * 0.1) gameState.players[pid].score += 300;
+                                    } else if (ans.text?.toLowerCase() === String(target).toLowerCase()) {
+                                        gameState.players[pid].score += 500;
+                                    }
+                                } else {
+                                    gameState.players[pid].score += 250; // Participation points
+                                }
+                            }
+                        });
+
+                        gameState.gameData.showResult = true;
+                        io.emit('gameState', gameState);
+
+                        setTimeout(() => {
+                            const nextIdx = roundIdx + 1;
+                            if (nextIdx < config.rounds.length) {
+                                runRound(nextIdx);
+                            } else {
+                                gameState.status = 'RESULTS';
+                                io.emit('gameState', gameState);
+                            }
+                        }, 8000);
+                    }
+                });
+            };
+
+            runRound(0);
+
+        } catch (e) {
+            console.error("Boss Generation Error:", e);
+            gameState.status = 'RESULTS';
+            io.emit('gameState', gameState);
+        }
+    }
 
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);

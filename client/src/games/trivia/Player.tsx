@@ -58,6 +58,28 @@ const TriviaPlayer = () => {
         if (navigator.vibrate) navigator.vibrate([50, 30]);
     }
 
+    if (gameData?.phase === 'GENERATING') {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center bg-zinc-950 p-6 space-y-8 text-center">
+                <motion.div
+                    animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                    transition={{ repeat: Infinity, duration: 3 }}
+                    className="text-8xl"
+                >
+                    🧬
+                </motion.div>
+                <div>
+                    <h2 className="text-3xl font-black text-cyan-400 uppercase tracking-tighter mb-2 animate-pulse">
+                        SWARM INBOUND
+                    </h2>
+                    <p className="text-zinc-500 font-bold uppercase text-xs tracking-widest leading-relaxed">
+                        The AI is crafting a custom challenge<br />based on the topic: <span className="text-white">{gameData?.topic}</span>
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     if (gameData?.phase === 'SETTINGS') {
         return (
             <div className="flex-1 flex flex-col items-center justify-center bg-zinc-950 p-6 space-y-8 text-center">

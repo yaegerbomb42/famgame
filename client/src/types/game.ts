@@ -27,15 +27,16 @@ export type SkillSubmitData =
     | { consistency: number }
     | { color: { r: number; g: number; b: number } }
     | { angle: number };
+export interface TriviaQuestion {
+    q: string;
+    a: string[];
+    correct: number;
+    category?: string;
+}
 
 export interface TriviaGameData {
     round: number;
-    currentQuestion: {
-        q: string;
-        a: string[];
-        correct: number;
-        category?: string;
-    } | null;
+    currentQuestion: TriviaQuestion | null;
     category: string;
     difficulty: string;
     showResult: boolean;
@@ -47,6 +48,11 @@ export interface TriviaGameData {
         choice: number;
     }>;
     phase?: 'SETTINGS' | 'PLAYING';
+    isCustomAI?: boolean;
+    customTitle?: string;
+    customIntro?: string;
+    customCreator?: string;
+    questionIndex?: number;
 }
 
 export interface ReactionGameData {

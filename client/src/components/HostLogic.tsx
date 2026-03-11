@@ -1,6 +1,7 @@
-import { useGame } from '../context/useGame';
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useGame } from '../context/useGame';
+import type { Player } from '../store/useGameStore';
 import TriviaHost from '../games/trivia/Host';
 import TwoTruthsHost from '../games/two-truths/Host';
 import HotTakesHost from '../games/hot-takes/Host';
@@ -18,7 +19,97 @@ import CompeteHost from '../games/compete/Host';
 import BrainBurstHost from '../games/brain-burst/Host';
 import GlobalAveragesHost from '../games/global-averages/Host';
 import SkillShowdownHost from '../games/skill-showdown/Host';
-import type { Player } from '../store/useGameStore';
+import FinalBossHost from '../games/final-boss/Host';
+import { useNarratorStore } from '../store/useNarratorStore';
+
+const DramaticReveal = ({ players, onPlayAgain, onNewPlayers }: { players: Player[], onPlayAgain: () => void, onNewPlayers: () => void }) => {
+    const [revealedCount, setRevealedCount] = useState(0);
+    const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+    const { speak } = useNarratorStore();
+
+    useEffect(() => {
+        if (revealedCount < sortedPlayers.length) {
+            const timer = setTimeout(() => {
+                const p = sortedPlayers[sortedPlayers.length - 1 - revealedCount];
+                if (revealedCount === sortedPlayers.length - 1) {
+                    speak(`Finally, in first place, the undisputed champion of the night... ${p.name}!`);
+                } else if (revealedCount === 0) {
+                    speak(`Let's reveal the results. In last place, with a truly... unique performance... ${p.name}.`);
+                } else {
+                    speak(`${p.name} takes position ${sortedPlayers.length - revealedCount}.`);
+                }
+                setRevealedCount(prev => prev + 1);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [revealedCount, sortedPlayers, speak]);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex-1 flex flex-col items-center w-full max-w-6xl p-8 overflow-hidden relative"
+        >
+            <h2 className="text-8xl md:text-9xl font-black mb-16 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-400 to-red-500 drop-shadow-[0_10px_30px_rgba(234,179,8,0.5)] text-center uppercase tracking-tighter">
+                Final Standings
+            </h2>
+
+            <div className="w-full flex-1 flex flex-col-reverse justify-end gap-6 overflow-hidden">
+                {sortedPlayers.map((player: Player, i: number) => {
+                    const isRevealed = (sortedPlayers.length - 1 - i) < revealedCount;
+                    if (!isRevealed) return null;
+
+                    return (
+                        <motion.div
+                            key={player.id}
+                            initial={{ y: 100, opacity: 0, scale: 0.8 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            className={`p-10 rounded-[3rem] flex items-center justify-between shadow-2xl transition-all ${i === 0
+                                ? 'bg-gradient-to-r from-yellow-500 via-orange-500 to-yellow-500 border-8 border-yellow-300 shadow-[0_0_100px_rgba(234,179,8,0.4)] h-40'
+                                : i === 1
+                                    ? 'bg-zinc-800 border-4 border-slate-400 opacity-90'
+                                    : i === 2
+                                        ? 'bg-zinc-900 border-4 border-amber-700 opacity-80'
+                                        : 'bg-black/40 border-2 border-white/5 opacity-60'
+                                }`}
+                        >
+                            <div className="flex items-center gap-12">
+                                <span className={`text-7xl font-black italic ${i === 0 ? 'text-white text-glow' : 'text-white/20'}`}>
+                                    #{i + 1}
+                                </span>
+                                <div className="flex items-center gap-8">
+                                    <span className="text-8xl drop-shadow-2xl">{player.avatar || '👾'}</span>
+                                    <span className={`text-5xl font-black uppercase tracking-tight ${i === 0 ? 'text-white' : 'text-white/80'}`}>{player.name}</span>
+                                </div>
+                            </div>
+                            <div className="text-right flex flex-col items-end">
+                                <span className="text-sm text-white/40 uppercase tracking-[0.5em] font-black">Score</span>
+                                <span className="text-7xl font-black font-mono text-white drop-shadow-lg">
+                                    {player.score.toLocaleString()}
+                                </span>
+                            </div>
+                        </motion.div>
+                    );
+                })}
+            </div>
+
+            {revealedCount >= sortedPlayers.length && (
+                <motion.div
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="flex gap-10 justify-center mt-20 shrink-0 pb-6 w-full"
+                >
+                    <button onClick={onPlayAgain} className="px-16 py-8 bg-white text-black font-black text-3xl rounded-[3rem] hover:scale-105 transition-all uppercase tracking-widest border-4 border-white">
+                        PLAY AGAIN
+                    </button>
+                    <button onClick={onNewPlayers} className="px-16 py-8 border-4 border-white/20 text-white font-black text-3xl rounded-[3rem] hover:border-white/50 transition-all uppercase tracking-widest">
+                        LOBBY
+                    </button>
+                </motion.div>
+            )}
+        </motion.div>
+    );
+};
 
 // QR Code component using Google Charts API
 const QRCode = ({ url, size = 200 }: { url: string; size?: number }) => {
@@ -123,7 +214,10 @@ const HostLogic = () => {
         let mood: NarratorMood = 'calm';
         const qNum = (questionIndex || 0) + 1;
 
-        if (phase === 'INTRO') {
+        if (phase === 'FINAL_SUBMISSION') {
+            text = 'Time is up! Let\'s see what you came up with!';
+            mood = 'dramatic';
+        } else if (phase === 'INTRO') {
             text = 'Ladies and gentlemen... Welcome, to Brain Burst! 35 questions stand between you, and ten billion dollars. Let the game, begin!';
             mood = 'epic';
         } else if (phase === 'QUESTION' && currentQuestion) {
@@ -393,6 +487,41 @@ const HostLogic = () => {
                                     </motion.button>
                                 ))}
                             </div>
+
+                            {/* CUSTOM AI GAMES */}
+                            {gameState?.customGames && gameState.customGames.length > 0 && (
+                                <div className="w-full pb-12 mt-8">
+                                    <h2 className="text-6xl md:text-7xl font-black mb-10 text-glow text-[#ff00ff] uppercase tracking-tighter text-center">
+                                        Swarm Generated
+                                    </h2>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 w-full">
+                                        {gameState.customGames.map((game: any) => (
+                                            <motion.button
+                                                key={game.id}
+                                                whileHover={{ scale: 1.05, y: -15, boxShadow: `0 30px 60px #ff00ff40` }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => socket?.emit('gameInput', { action: 'START_CUSTOM_AI_GAME', gameId: game.id })}
+                                                className="glass-card p-12 rounded-[3.5rem] flex flex-col items-center justify-center space-y-6 transition-all hover:border-[#ff00ff] border-4 border-white/10 group relative overflow-hidden h-[450px]"
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-br from-[#ff00ff]/10 to-transparent opacity-50" />
+                                                <div className="text-[6rem] md:text-[8rem] mb-2 drop-shadow-[0_20px_40px_rgba(0,0,0,0.5)] transform group-hover:rotate-12 transition-transform duration-500">
+                                                    🤖
+                                                </div>
+                                                <div className="text-3xl font-black uppercase tracking-widest text-[#ff00ff]/90 group-hover:text-[#ff00ff] group-hover:text-glow text-center leading-tight line-clamp-2">
+                                                    {game.title}
+                                                </div>
+                                                <div className="text-sm font-bold text-white/50 bg-black/50 px-4 py-2 rounded-full uppercase truncate">
+                                                    BY {game.creator}
+                                                </div>
+                                                <div className="bg-[#ff00ff]/20 px-10 py-4 rounded-full text-2xl font-black text-white/60 uppercase tracking-[0.2em] group-hover:bg-[#ff00ff] group-hover:text-white transition-all mt-auto z-10 w-full">
+                                                    PLAY
+                                                </div>
+                                                <div className="absolute -bottom-20 -right-20 w-80 h-80 blur-[100px] opacity-0 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none bg-[#ff00ff]" />
+                                            </motion.button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </motion.div>
                     )}
 
@@ -523,6 +652,21 @@ const HostLogic = () => {
                                 />
                             )}
 
+                            {gameState.currentGame === 'FINAL_BOSS_GAME' && (
+                                <FinalBossHost
+                                    phase={(gameState.gameData.phase || 'GENERATING') as 'GENERATING' | 'ROUND'}
+                                    subMode={gameState.gameData.subMode as 'TRIVIA' | 'PROMPT_BATTLE' | 'GROUP_POLL'}
+                                    title={gameState.gameData.title}
+                                    tagline={gameState.gameData.tagline}
+                                    currentRound={gameState.gameData.currentRound}
+                                    answers={gameState.gameData.answers}
+                                    showResult={!!gameState.gameData.showResult}
+                                    timer={gameState.gameData.timer ?? 20}
+                                    players={gameState.players}
+                                    creator={gameState.gameData.creator}
+                                />
+                            )}
+
                             {gameState.currentGame === 'COMPETE' && (
                                 <CompeteHost
                                     phase={(gameState.gameData.phase || 'COUNTDOWN') as 'COUNTDOWN' | 'SELECTING' | 'ACTIVE' | 'RESULTS'}
@@ -587,76 +731,60 @@ const HostLogic = () => {
                         </>
                     )}
 
+                    {gameState.status === 'FINAL_SUBMISSION' && (
+                        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-20 text-center overflow-hidden">
+                            <div className="absolute inset-0 z-0">
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100vw] bg-[radial-gradient(circle_at_center,_#ff00ff15_0%,transparent_70%)]" />
+                            </div>
+
+                            <motion.div
+                                initial={{ y: -100, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                className="z-10 mb-20"
+                            >
+                                <h2 className="text-8xl font-black text-white uppercase tracking-tighter mb-4 text-glow">
+                                    THE FINALE
+                                </h2>
+                                <p className="text-3xl font-bold text-[#ff00ff] uppercase tracking-[0.4em] animate-pulse">
+                                    Submit your Final Boss Idea
+                                </p>
+                            </motion.div>
+
+                            <div className="z-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10 w-full max-w-7xl">
+                                {(gameState.gameData?.ideas || []).map((idea: any, i: number) => (
+                                    <motion.div
+                                        key={i}
+                                        initial={{ scale: 0, rotate: -10 }}
+                                        animate={{ scale: 1, rotate: 0 }}
+                                        className="glass-card p-10 rounded-[2.5rem] border-2 border-[#ff00ff]/30 flex flex-col items-center justify-center space-y-4"
+                                    >
+                                        <div className="text-2xl font-black text-white line-clamp-2">"{idea.idea}"</div>
+                                        <div className="text-xs font-bold text-white/30 uppercase tracking-widest">PROPOSED BY {idea.playerName}</div>
+                                    </motion.div>
+                                ))}
+                            </div>
+
+                            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-6">
+                                <div className="text-8xl font-black font-mono text-white/10">{gameState.gameData?.timer}S</div>
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => socket?.emit('gameInput', { action: 'START_FINAL_BOSS_GAME' })}
+                                    className="px-20 py-8 bg-[#ff00ff] text-white font-black text-4xl rounded-full shadow-[0_0_50px_rgba(255,0,255,0.5)] uppercase tracking-widest cursor-pointer"
+                                >
+                                    UNLEASH THE BOSS
+                                </motion.button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* RESULTS STATE */}
                     {gameState.status === 'RESULTS' && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex-1 flex flex-col items-center w-full max-w-5xl p-8 overflow-hidden"
-                        >
-                            <h2 className="text-7xl md:text-9xl font-black mb-12 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-400 to-red-500 drop-shadow-[0_10px_30px_rgba(234,179,8,0.3)] text-center uppercase tracking-tighter">
-                                Final Standings
-                            </h2>
-
-                            <div className="w-full flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar space-y-6">
-                                {(Object.values(gameState.players) as Player[])
-                                    .sort((a, b) => b.score - a.score)
-                                    .map((player: Player, i: number) => (
-                                        <motion.div
-                                            key={player.id}
-                                            initial={{ x: -100, opacity: 0 }}
-                                            animate={{ x: 0, opacity: 1 }}
-                                            transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
-                                            className={`p-8 rounded-[2.5rem] flex items-center justify-between shadow-2xl transition-all hover:scale-[1.02] ${i === 0
-                                                ? 'bg-gradient-to-r from-yellow-500/30 via-orange-500/20 to-yellow-500/30 border-4 border-yellow-400/50 shadow-[0_0_50px_rgba(234,179,8,0.2)]'
-                                                : i === 1
-                                                    ? 'bg-gradient-to-r from-slate-400/20 to-slate-400/10 border-4 border-slate-400/30'
-                                                    : i === 2
-                                                        ? 'bg-gradient-to-r from-amber-700/20 to-amber-700/10 border-4 border-amber-700/30'
-                                                        : 'glass-card border-2 border-white/5'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-8">
-                                                <div className="relative">
-                                                    <span className={`text-6xl md:text-7xl font-black italic ${i === 0 ? 'text-yellow-400 text-glow' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-white/20'}`}>
-                                                        #{i + 1}
-                                                    </span>
-                                                    {i === 0 && <div className="absolute -top-6 -left-6 text-4xl animate-bounce">👑</div>}
-                                                </div>
-                                                <div className="flex items-center gap-6">
-                                                    <span className="text-6xl md:text-7xl drop-shadow-lg">{player.avatar || '👾'}</span>
-                                                    <span className="text-4xl md:text-5xl font-black uppercase tracking-tight">{player.name}</span>
-                                                </div>
-                                            </div>
-                                            <div className="text-right flex flex-col items-end">
-                                                <span className="text-sm text-white/30 uppercase tracking-[0.3em] font-black">Points</span>
-                                                <span className="text-5xl md:text-7xl font-black font-mono text-transparent bg-clip-text bg-gradient-to-br from-[#00ffff] to-[#00d4ff] drop-shadow-[0_0_20px_rgba(0,212,255,0.4)]">
-                                                    {player.score.toLocaleString()}
-                                                </span>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                            </div>
-
-                            <div className="flex gap-10 justify-center mt-12 shrink-0 pb-6 w-full">
-                                <motion.button
-                                    whileHover={{ scale: 1.05, y: -5 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={startGame}
-                                    className="px-16 py-8 bg-white text-black font-black text-3xl md:text-4xl rounded-[3rem] shadow-2xl hover:bg-white/90 transition-all uppercase tracking-widest border-4 border-white active:scale-95"
-                                >
-                                    PLAY AGAIN
-                                </motion.button>
-                                <motion.button
-                                    whileHover={{ scale: 1.05, y: -5 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={backToLobby}
-                                    className="px-16 py-8 border-4 border-white/20 text-white font-black text-3xl md:text-4xl rounded-[3rem] hover:border-white/50 transition-all uppercase tracking-widest active:scale-95"
-                                >
-                                    NEW PLAYERS
-                                </motion.button>
-                            </div>
-                        </motion.div>
+                        <DramaticReveal
+                            players={Object.values(gameState.players)}
+                            onPlayAgain={startGame}
+                            onNewPlayers={backToLobby}
+                        />
                     )}
                 </AnimatePresence>
             </main>
