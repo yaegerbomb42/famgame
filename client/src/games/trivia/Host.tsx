@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Timer } from '../../components/Shared/Timer';
 import { useGameStore } from '../../store/useGameStore';
 import type { Player } from '../../store/useGameStore';
-import type { TriviaGameData, TriviaQuestion } from '../../types/game';
+import type { TriviaQuestion } from '../../types/game';
 import { useNarratorStore } from '../../store/useNarratorStore';
 
 interface TriviaHostProps {
