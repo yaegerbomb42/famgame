@@ -9,8 +9,9 @@ interface BlockData {
     points?: { x: number; y: number; label?: string }[];
 }
 
-type ActionPayload = { text?: string; index?: number; value?: any; values?: any[] };
-type AnswerData = { text?: string; index?: number; value?: any; values?: any[] };
+type BlockValue = string | number | { x: number; y: number } | string[] | number[] | undefined;
+type ActionPayload = { text?: string; index?: number; value?: BlockValue; values?: BlockValue[] };
+type AnswerData = { text?: string; index?: number; value?: BlockValue; values?: BlockValue[] };
 
 interface UIBlock {
     type: string;
@@ -241,7 +242,7 @@ const HostScatterPlot = ({ points, answers, showResult }: { points?: { x: number
         ))}
 
         {/* Player Answers as crosses */}
-        {showResult && Object.entries(answers || {}).map(([pid, ans], i) => {
+        {showResult && Object.entries(answers || {}).map(([pid, ans]) => {
             if (!ans.value?.x) return null;
             return (
                 <motion.div
