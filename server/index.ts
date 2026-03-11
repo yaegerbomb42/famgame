@@ -2095,16 +2095,34 @@ io.on('connection', (socket: any) => {
                                 if (config.subMode === 'TRIVIA' && ans.index === currentRound.correct) {
                                     gameState.players[pid].score += 500;
                                 } else if (config.subMode === 'FREESTYLE' && currentRound.blocks?.targetValue) {
-                                    // Simple exact match or numeric proximity for freestyle
                                     const target = currentRound.blocks.targetValue;
-                                    if (typeof target === 'number') {
+
+                                    if (typeof target === 'object' && target !== null && 'x' in target && 'y' in target) {
+                                        // SCATTER_PLOT distance scoring
+                                        const playerPos = ans.value || { x: 0, y: 0 };
+                                        const dist = Math.sqrt(Math.pow(playerPos.x - target.x, 2) + Math.pow(playerPos.y - target.y, 2));
+                                        if (dist < 5) gameState.players[pid].score += 1000;
+                                        else if (dist < 15) gameState.players[pid].score += 500;
+                                        else if (dist < 30) gameState.players[pid].score += 200;
+                                    } else if (Array.isArray(target)) {
+                                        // CHECKBOX / Multi-select scoring
+                                        const playerValues = ans.values || [];
+                                        const correctCount = playerValues.filter((v: any) => (target as any[]).includes(v)).length;
+                                        const totalCorrect = (target as any[]).length;
+                                        if (correctCount === totalCorrect && playerValues.length === totalCorrect) {
+                                            gameState.players[pid].score += 800;
+                                        } else if (correctCount > 0) {
+                                            gameState.players[pid].score += Math.floor((correctCount / totalCorrect) * 400);
+                                        }
+                                    } else if (typeof target === 'number') {
                                         const diff = Math.abs(Number(ans.text || 0) - target);
                                         if (diff === 0) gameState.players[pid].score += 750;
                                         else if (diff < target * 0.1) gameState.players[pid].score += 300;
                                     } else if (ans.text?.toLowerCase() === String(target).toLowerCase()) {
                                         gameState.players[pid].score += 500;
                                     }
-                                } else {
+                                }
+                                else {
                                     gameState.players[pid].score += 250; // Participation points
                                 }
                             }

@@ -35,7 +35,7 @@ const PlayerInputField = ({ onAction }: { onAction?: (action: string, payload: A
         <div className="flex flex-col space-y-6 w-full max-w-md mx-auto">
             <textarea
                 autoFocus
-                className="w-full bg-white/5 border-2 border-white/20 rounded-3xl p-6 text-xl font-bold text-white focus:border-cyan-400 focus:outline-none placeholder-white/10 resize-none h-40 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all"
+                className="w-full bg-white/5 border-2 border-white/20 rounded-[2rem] p-8 text-2xl font-bold text-white focus:border-cyan-400 focus:outline-none placeholder-white/10 resize-none h-48 shadow-[0_0_30px_rgba(0,0,0,0.4)] transition-all text-center"
                 placeholder="Type your response..."
                 value={val}
                 onChange={(e) => setVal(e.target.value)}
@@ -70,7 +70,7 @@ const PlayerSlider = ({ onAction }: { onAction?: (action: string, payload: Actio
             <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onAction?.('SUBMIT', { text: String(val) })}
-                className="w-full py-5 rounded-2xl bg-cyan-500 font-black text-xl uppercase tracking-widest text-white"
+                className="w-full py-6 rounded-3xl bg-cyan-500 font-black text-2xl uppercase tracking-[0.2em] text-white shadow-[0_0_30px_rgba(6,182,212,0.3)]"
             >
                 Submit Guess
             </motion.button>
@@ -85,7 +85,7 @@ const PlayerButtonGrid = ({ options, onAction }: { options?: string[], onAction?
                 key={i}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => onAction?.('SUBMIT', { text: opt, index: i })}
-                className="p-6 rounded-3xl bg-white/5 border-2 border-white/10 text-white font-bold text-lg hover:border-cyan-400 hover:bg-cyan-400/10 transition-all text-center"
+                className="p-8 rounded-[2.5rem] bg-white/5 border-2 border-white/10 text-white font-black text-2xl hover:border-cyan-400 hover:bg-cyan-400/10 transition-all text-center"
             >
                 {opt}
             </motion.button>
@@ -138,7 +138,7 @@ const PlayerCheckboxGroup = ({ options, onAction }: { options?: string[], onActi
             <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onAction?.('SUBMIT', { values: selected.map(i => options?.[i]) })}
-                className="w-full py-4 rounded-xl bg-cyan-500 font-black text-lg uppercase text-white shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                className="w-full py-6 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 font-black text-2xl uppercase tracking-widest text-white shadow-[0_10px_40px_rgba(6,182,212,0.3)]"
             >
                 Lock Choice
             </motion.button>
@@ -236,7 +236,7 @@ const HostScatterPlot = ({ points, answers, showResult }: { points?: { x: number
                 style={{ left: `${p.x}%`, top: `${p.y}%` }}
                 className="absolute w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_15px_#22d3ee] -translate-x-1/2 -translate-y-1/2"
             >
-                {p.label && <span className="absolute top-6 left-1/2 -translate-x-1/2 text-xs font-black text-cyan-400 uppercase tracking-widest whitespace-nowrap">{p.label}</span>}
+                {p.label && <span className="absolute top-8 left-1/2 -translate-x-1/2 text-sm font-black text-[#00ffff] uppercase tracking-[0.3em] whitespace-nowrap bg-black/60 px-3 py-1 rounded-md border border-cyan-400/30">{p.label}</span>}
             </motion.div>
         ))}
 
