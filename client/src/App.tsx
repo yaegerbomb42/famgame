@@ -84,7 +84,9 @@ import LoadingScreen from './components/LoadingScreen';
 
 function App() {
   const role = useGameStore((state: GameStore) => state.role);
+  const serverStatus = useGameStore((state: GameStore) => state.serverStatus);
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -102,6 +104,21 @@ function App() {
             <LoadingScreen key="loading" />
           ) : (
             <>
+              {/* Server Status Indicator */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl"
+              >
+                <div className={`w-3 h-3 rounded-full ${serverStatus === 'READY'
+                    ? 'bg-green-400 shadow-[0_0_15px_#4ade80]'
+                    : 'bg-amber-400 animate-pulse shadow-[0_0_15px_#fbbf24]'
+                  }`} />
+                <span className="text-sm font-black uppercase tracking-[0.2em] text-white/70">
+                  {serverStatus === 'READY' ? 'Game Engine Ready' : 'Waking Game Engine...'}
+                </span>
+              </motion.div>
+
               {role === 'NONE' && <Home key="home" />}
               {role === 'HOST' && <HostLogic key="host" />}
               {role === 'PLAYER' && <PlayerLogic key="player" />}

@@ -22,17 +22,18 @@ export interface GameState {
     gameData: AllGameData;
     chat: ChatMessage[];
     aiPersona: AiPersona;
-    customGames: any[];
+    customGames: unknown[];
 }
 
 export interface GameStore {
     socket: Socket | null;
     gameState: GameState | null;
     isConnected: boolean;
+    serverStatus: 'IDLE' | 'WAKING' | 'READY' | 'ERROR';
     role: 'NONE' | 'HOST' | 'PLAYER';
 
     // Actions
-    initSocket: () => void;
+    initSocket: () => Promise<void>;
     setRole: (role: 'NONE' | 'HOST' | 'PLAYER') => void;
     createRoom: (name: string) => void;
     joinRoom: (name: string, code: string, avatar?: string, color?: string) => void;
@@ -49,24 +50,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
     socket: null,
     gameState: null,
     isConnected: false,
+    serverStatus: 'IDLE',
     role: 'NONE',
 
-    initSocket: () => {
+    initSocket: async () => {
         if (get().socket) return;
+        set({ serverStatus: 'WAKING' });
 
-        const socket = io(SOCKET_URL);
+        // Pre-flight "wake up" call
+        try {
+            await fetch(SOCKET_URL, { mode: 'no-cors' });
+        } catch {
+            console.log('Server wakeup ping sent (or failed, which is expected during boot)');
+        }
+
+        const socket = io(SOCKET_URL, {
+            reconnectionAttempts: 20,
+            reconnectionDelay: 2000,
+        });
 
         socket.on('connect', () => {
-            set({ isConnected: true });
+            set({ isConnected: true, serverStatus: 'READY' });
             console.log('Connected to server');
         });
 
         socket.on('gameState', (state: GameState) => {
-            set({ gameState: state });
+            set({ gameState: state, serverStatus: 'READY' });
         });
 
         socket.on('disconnect', () => {
             set({ isConnected: false });
+        });
+
+        socket.on('connect_error', () => {
+            set({ serverStatus: 'WAKING' });
         });
 
         socket.on('roomClosed', () => {
