@@ -9,6 +9,19 @@ import GlobalAveragesPlayer from '../games/global-averages/Player';
 import SkillShowdownPlayer from '../games/skill-showdown/Player';
 import AIMashupPlayer from '../games/ai-mashup/Player';
 import FinalBossPlayer from '../games/final-boss/Player';
+import HotTakesPlayer from '../games/hot-takes/Player';
+import PollPlayer from '../games/poll/Player';
+import BuzzPlayer from '../games/buzz/Player';
+import TwoTruthsPlayer from '../games/two-truths/Player';
+import WordRacePlayer from '../games/word-race/Player';
+import EmojiStoryPlayer from '../games/emoji-story/Player';
+import BluffPlayer from '../games/bluff/Player';
+import ThisOrThatPlayer from '../games/this-or-that/Player';
+import SpeedDrawPlayer from '../games/speed-draw/Player';
+import ChainReactionPlayer from '../games/chain-reaction/Player';
+import MindMeldPlayer from '../games/mind-meld/Player';
+import CompetePlayer from '../games/compete/Player';
+import RoastMasterPlayer from '../games/roast-master/Player';
 
 import type {
     BrainBurstGameData,
@@ -258,13 +271,19 @@ const PlayerLogic = () => {
                                 {gameState.currentGame === 'AI_MASHUP' && <AIMashupPlayer />}
                                 {gameState.currentGame === 'FINAL_BOSS_GAME' && <FinalBossPlayer />}
 
-                                {/* Fallback for unimplemented games */}
-                                {!['TRIVIA', 'REACTION', 'BRAIN_BURST', 'GLOBAL_AVERAGES', 'SKILL_SHOWDOWN', 'AI_MASHUP', 'FINAL_BOSS_GAME'].includes(gameState.currentGame || '') && (
-                                    <div className="flex flex-col items-center justify-center h-full text-center">
-                                        <h1 className="text-2xl font-bold animate-pulse uppercase tracking-widest text-cyan-400">Loading {gameState.currentGame}...</h1>
-                                        <p className="text-white/50 mt-4">Look at the Big Screen!</p>
-                                    </div>
-                                )}
+                                {gameState.currentGame === '2TRUTHS' && <TwoTruthsPlayer />}
+                                {gameState.currentGame === 'HOT_TAKES' && <HotTakesPlayer />}
+                                {gameState.currentGame === 'POLL' && <PollPlayer />}
+                                {gameState.currentGame === 'BUZZ_IN' && <BuzzPlayer />}
+                                {gameState.currentGame === 'WORD_RACE' && <WordRacePlayer />}
+                                {gameState.currentGame === 'EMOJI_STORY' && <EmojiStoryPlayer />}
+                                {gameState.currentGame === 'BLUFF' && <BluffPlayer />}
+                                {gameState.currentGame === 'THIS_OR_THAT' && <ThisOrThatPlayer />}
+                                {gameState.currentGame === 'SPEED_DRAW' && <SpeedDrawPlayer />}
+                                {gameState.currentGame === 'CHAIN_REACTION' && <ChainReactionPlayer />}
+                                {gameState.currentGame === 'MIND_MELD' && <MindMeldPlayer />}
+                                {gameState.currentGame === 'COMPETE' && <CompetePlayer />}
+                                {gameState.currentGame === 'ROAST_MASTER' && <RoastMasterPlayer />}
                             </div>
                         )}
                     </AnimatePresence>

@@ -20,6 +20,8 @@ import BrainBurstHost from '../games/brain-burst/Host';
 import GlobalAveragesHost from '../games/global-averages/Host';
 import SkillShowdownHost from '../games/skill-showdown/Host';
 import FinalBossHost from '../games/final-boss/Host';
+import AIMashupHost from '../games/ai-mashup/Host';
+import RoastMasterHost from '../games/roast-master/Host';
 import { useNarratorStore } from '../store/useNarratorStore';
 
 const DramaticReveal = ({ players, onPlayAgain, onNewPlayers }: { players: Player[], onPlayAgain: () => void, onNewPlayers: () => void }) => {
@@ -253,6 +255,155 @@ const HostLogic = () => {
             narrate(text as string, mood);
         }
     }, [gameState?.gameData?.phase, gameState?.gameData?.questionIndex]);
+
+    // Narrator — auto-narrate game events for ALL other games
+    const lastGameNarrationRef = useRef<string>('');
+    useEffect(() => {
+        if (!gameState?.gameData || !gameState.currentGame) return;
+        if (gameState.currentGame === 'BRAIN_BURST') return; // handled above
+        if (gameState.currentGame === 'AI_MASHUP') return; // AIMashupHost handles its own narration
+        if (gameState.currentGame === 'ROAST_MASTER') return; // RoastMasterHost handles its own narration
+
+        const { phase, showResult } = gameState.gameData;
+        const game = gameState.currentGame;
+        let text = '';
+        let mood: NarratorMood = 'calm';
+        const key = `${game}-${phase}-${showResult}-${gameState.gameData?.round || 0}`;
+
+        if (key === lastGameNarrationRef.current) return;
+
+        // Trivia narration
+        if (game === 'TRIVIA' && showResult) {
+            const lines = ['And the answer is revealed!', 'Let\'s see who got it right!', 'Results time! The tension is palpable.'];
+            text = lines[Math.floor(Math.random() * lines.length)];
+            mood = 'excited';
+        } else if (game === 'TRIVIA' && !showResult && gameState.gameData?.question) {
+            const round = (gameState.gameData?.round || 0) + 1;
+            text = `Question ${round}! ${gameState.gameData.question.q}`;
+            mood = round > 5 ? 'dramatic' : 'calm';
+        }
+
+        // Global Averages narration
+        if (game === 'GLOBAL_AVERAGES' && phase === 'REVEAL') {
+            const correct = gameState.gameData?.correct;
+            text = `The real answer is ${correct} percent! Let's see who was closest.`;
+            mood = 'excited';
+        } else if (game === 'GLOBAL_AVERAGES' && phase === 'WAITING' && gameState.gameData?.question) {
+            text = gameState.gameData.question;
+            mood = 'dramatic';
+        }
+
+        // Skill Showdown narration
+        if (game === 'SKILL_SHOWDOWN' && phase === 'PREVIEW') {
+            const title = gameState.gameData?.challenge?.title || 'a new challenge';
+            text = `Next challenge: ${title}! Get ready.`;
+            mood = 'tense';
+        } else if (game === 'SKILL_SHOWDOWN' && phase === 'REVEAL') {
+            text = 'Scores are in! Let\'s see how you measured up.';
+            mood = 'excited';
+        }
+
+        // This or That narration
+        if (game === 'THIS_OR_THAT' && phase === 'CHOOSING') {
+            const a = gameState.gameData?.optionA || '';
+            const b = gameState.gameData?.optionB || '';
+            if (a && b) { text = `${a}... or ${b}? Pick your side!`; mood = 'dramatic'; }
+        } else if (game === 'THIS_OR_THAT' && phase === 'REVEAL') {
+            text = 'The votes are in! Let\'s see where the crowd stands.';
+            mood = 'excited';
+        }
+
+        // Mind Meld narration
+        if (game === 'MIND_MELD' && phase === 'ANSWERING') {
+            text = `The prompt is: ${gameState.gameData?.prompt || 'think alike'}. Write your answer now!`;
+            mood = 'tense';
+        } else if (game === 'MIND_MELD' && phase === 'RESULTS') {
+            text = 'Mind meld complete! Let\'s see the connections.';
+            mood = 'excited';
+        }
+
+        // Chain Reaction narration
+        if (game === 'CHAIN_REACTION' && phase === 'ACTIVE') {
+            text = 'The chain is live! Keep it going!';
+            mood = 'tense';
+        } else if (game === 'CHAIN_REACTION' && phase === 'RESULTS') {
+            text = 'Chain broken! That was quite a run.';
+            mood = 'dramatic';
+        }
+
+        // Compete narration
+        if (game === 'COMPETE' && phase === 'ACTIVE') {
+            text = 'Go go go! Give it everything you\'ve got!';
+            mood = 'excited';
+        } else if (game === 'COMPETE' && phase === 'RESULTS') {
+            text = 'And we have a winner! What a showdown.';
+            mood = 'epic';
+        }
+
+        // Two Truths narration
+        if (game === '2TRUTHS' && phase === 'VOTING') {
+            text = 'Which one is the lie? Vote now!';
+            mood = 'tense';
+        } else if (game === '2TRUTHS' && phase === 'REVEAL') {
+            text = 'The lie has been revealed! Were you fooled?';
+            mood = 'excited';
+        }
+
+        // Hot Takes narration
+        if (game === 'HOT_TAKES' && phase === 'VOTING') {
+            text = 'Cast your votes! Who has the hottest take?';
+            mood = 'dramatic';
+        } else if (game === 'HOT_TAKES' && phase === 'RESULTS') {
+            text = 'The people have spoken! Interesting opinions.';
+            mood = 'excited';
+        }
+
+        // Poll narration
+        if (game === 'POLL' && phase === 'RESULTS') {
+            text = 'And the majority says... let\'s see the results!';
+            mood = 'excited';
+        }
+
+        // Bluff narration
+        if (game === 'BLUFF' && phase === 'VOTING') {
+            text = 'Is it real or is it bluff? Cast your vote!';
+            mood = 'tense';
+        } else if (game === 'BLUFF' && phase === 'REVEAL') {
+            text = 'The truth comes out! Were they bluffing?';
+            mood = 'excited';
+        }
+
+        // Emoji Story narration
+        if (game === 'EMOJI_STORY' && phase === 'GUESSING') {
+            text = 'Time to decode the emoji story! What does it mean?';
+            mood = 'dramatic';
+        } else if (game === 'EMOJI_STORY' && phase === 'REVEAL') {
+            text = 'The story is revealed! Did anyone crack the code?';
+            mood = 'excited';
+        }
+
+        // Speed Draw narration
+        if (game === 'SPEED_DRAW' && phase === 'VOTING') {
+            text = 'Art gallery is open! Vote for the best drawing.';
+            mood = 'calm';
+        } else if (game === 'SPEED_DRAW' && phase === 'RESULTS') {
+            text = 'And the people\'s choice is in!';
+            mood = 'excited';
+        }
+
+        // Buzz In narration
+        if (game === 'BUZZ_IN' && phase === 'BUZZED') {
+            const winnerId = gameState.gameData?.winnerId;
+            const winner = winnerId ? gameState.players[winnerId] : null;
+            text = winner ? `${winner.name} buzzed in first! Lightning reflexes!` : 'We have a buzzer!';
+            mood = 'excited';
+        }
+
+        if (text && key !== lastGameNarrationRef.current) {
+            lastGameNarrationRef.current = key;
+            narrate(text, mood);
+        }
+    }, [gameState?.gameData?.phase, gameState?.gameData?.showResult, gameState?.gameData?.round, gameState?.currentGame, gameState?.gameData?.question, gameState?.gameData?.correct, gameState?.gameData?.prompt, gameState?.gameData?.optionA, gameState?.gameData?.optionB, gameState?.gameData?.winnerId, gameState?.gameData?.challenge?.title]);
 
     if (!gameState || !gameState.roomCode) return (
         <div className="flex h-screen items-center justify-center bg-[#0a0518]">
@@ -717,6 +868,14 @@ const HostLogic = () => {
                                     scores={gameState.gameData.scores || {}}
                                     players={gameState.players}
                                 />
+                            )}
+
+                            {gameState.currentGame === 'AI_MASHUP' && (
+                                <AIMashupHost />
+                            )}
+
+                            {gameState.currentGame === 'ROAST_MASTER' && (
+                                <RoastMasterHost />
                             )}
 
                             {/* Next Button */}

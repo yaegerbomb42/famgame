@@ -77,7 +77,7 @@ interface Player {
     gameVote?: string;
 }
 
-export const GAME_SEQUENCE: string[] = ['TRIVIA', 'BRAIN_BURST', 'GLOBAL_AVERAGES', 'SKILL_SHOWDOWN', 'AI_MASHUP'];
+export const GAME_SEQUENCE: string[] = ['TRIVIA', 'BRAIN_BURST', 'THIS_OR_THAT', 'GLOBAL_AVERAGES', 'MIND_MELD', 'SKILL_SHOWDOWN', 'CHAIN_REACTION', 'AI_MASHUP'];
 
 interface GameState {
     roomCode: string;
