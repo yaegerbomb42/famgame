@@ -8,7 +8,7 @@ export class HotTakesGame extends BaseGame {
     name = 'Hot Takes';
     description = 'Defend your most controversial opinions and see who joins your side.';
     
-    protected introTime = 8;
+    protected introTime = 6;
 
     protected async initGameData(gameState: GameState): Promise<void> {
         gameState.gameData = {
@@ -31,14 +31,14 @@ export class HotTakesGame extends BaseGame {
     protected async onTimerEnd(gameState: GameState, broadcast: () => void, roast: (c?: string, t?: string) => void): Promise<void> {
         if (this.phase === 'INTRO') {
             gameState.gameData.subPhase = 'INPUT';
-            this.transitionTo(gameState, 'PLAYING', 60);
+            this.transitionTo(gameState, 'PLAYING', 35);
         } else if (this.phase === 'PLAYING') {
             if (gameState.gameData.subPhase === 'INPUT') {
                 gameState.gameData.subPhase = 'VOTE';
-                this.transitionTo(gameState, 'PLAYING', 30);
+                this.transitionTo(gameState, 'PLAYING', 18);
             } else if (gameState.gameData.subPhase === 'VOTE') {
                 this.resolveVotes(gameState);
-                this.transitionTo(gameState, 'REVEAL', 15);
+                this.transitionTo(gameState, 'REVEAL', 7);
             }
         } else if (this.phase === 'REVEAL') {
             if (gameState.gameData.currentRound < gameState.gameData.totalRounds - 1) {
@@ -51,7 +51,7 @@ export class HotTakesGame extends BaseGame {
                 gameState.gameData.prompt = newPrompt || 'What is the most overrated movie?';
                 
                 gameState.gameData.subPhase = 'INPUT';
-                this.transitionTo(gameState, 'PLAYING', 60);
+                this.transitionTo(gameState, 'PLAYING', 35);
             } else {
                 this.onEnd(gameState, broadcast, roast);
             }

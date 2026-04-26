@@ -247,3 +247,28 @@ html, body, #root {
 .centered-content {
   @apply flex flex-col items-center justify-center text-center;
 }
+
+.dopamine-slider {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dopamine-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  border: 4px solid rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, var(--game-frame-primary), var(--game-frame-secondary));
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.08), 0 0 30px var(--game-frame-glow);
+}
+
+.dopamine-slider::-moz-range-thumb {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  border: 4px solid rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, var(--game-frame-primary), var(--game-frame-secondary));
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.08), 0 0 30px var(--game-frame-glow);
+}

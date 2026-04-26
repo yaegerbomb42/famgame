@@ -6,7 +6,7 @@ export class TwoTruthsGame extends BaseGame {
     name = '2 Truths & 1 Lie';
     description = 'Present two facts and one lie. Can your friends identify the deception?';
 
-    protected introTime = 8;
+    protected introTime = 6;
 
     protected async initGameData(gameState: GameState): Promise<void> {
         const players = this.getNonHostPlayerIds(gameState);
@@ -27,7 +27,7 @@ export class TwoTruthsGame extends BaseGame {
         if (this.phase === 'INTRO') {
             // Intro is over, move to input phase
             gameState.gameData.subPhase = 'INPUT';
-            this.transitionTo(gameState, 'PLAYING', 45);
+            this.transitionTo(gameState, 'PLAYING', 35);
         } else if (this.phase === 'PLAYING') {
             if (subPhase === 'INPUT') {
                 if (Object.keys(submissions).length === 0) {
@@ -38,7 +38,7 @@ export class TwoTruthsGame extends BaseGame {
                 await this.startVoting(gameState, broadcast);
             } else if (subPhase === 'VOTING') {
                 this.resolveVotes(gameState);
-                this.transitionTo(gameState, 'REVEAL', 15);
+                this.transitionTo(gameState, 'REVEAL', 7);
             }
         } else if (this.phase === 'REVEAL') {
             const nextSubjectIndex = (gameState.gameData.subjectIndex || 0) + 1;
@@ -82,7 +82,7 @@ export class TwoTruthsGame extends BaseGame {
     private async startVoting(gameState: GameState, broadcast: () => void) {
         gameState.gameData.subPhase = 'VOTING';
         gameState.gameData.votes = {};
-        this.transitionTo(gameState, 'PLAYING', 30);
+        this.transitionTo(gameState, 'PLAYING', 18);
         broadcast();
     }
 
