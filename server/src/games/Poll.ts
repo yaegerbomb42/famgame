@@ -6,6 +6,7 @@ export class PollGame extends BaseGame {
     id = 'POLL' as const;
     name = 'Poll Party';
     description = 'Guess the correct global statistic percentage! Closest wins.';
+    protected introTime = 4;
 
     protected async initGameData(gameState: GameState): Promise<void> {
         gameState.gameData = {
@@ -27,7 +28,7 @@ export class PollGame extends BaseGame {
             gameState.gameData.correct = questions[0].correct;
         }
 
-        this.transitionTo(gameState, 'INTRO', 5);
+        this.transitionTo(gameState, 'INTRO', 4);
     }
 
     public async update(dt: number, gameState: GameState, broadcast: () => void, roast: (c?: string, t?: string) => void): Promise<void> {
@@ -35,7 +36,7 @@ export class PollGame extends BaseGame {
 
         if (this.phase === 'INTRO' && this.timer <= 0) {
             this.phase = 'PLAYING';
-            this.timer = 20;
+            this.timer = 14;
             broadcast();
             return;
         }
@@ -51,7 +52,7 @@ export class PollGame extends BaseGame {
 
             if (this.timer <= 0) {
                 this.phase = 'REVEAL';
-                this.timer = 8;
+                this.timer = 5;
                 this.resolveGuesses(gameState);
                 broadcast();
             }
@@ -60,7 +61,7 @@ export class PollGame extends BaseGame {
 
     protected async onTimerEnd(gameState: GameState, broadcast: () => void, roast: (c?: string, t?: string) => void): Promise<void> {
         if (this.phase === 'REVEAL') {
-            this.transitionTo(gameState, 'RESULTS', 8);
+            this.transitionTo(gameState, 'RESULTS', 4);
         } else if (this.phase === 'RESULTS') {
             if (gameState.gameData.currentRound < gameState.gameData.totalRounds - 1) {
                 gameState.gameData.currentRound++;
@@ -68,7 +69,7 @@ export class PollGame extends BaseGame {
                 gameState.gameData.currentQuestion = nextQ.q;
                 gameState.gameData.correct = nextQ.correct;
                 gameState.gameData.submissions = {}; // reset
-                this.transitionTo(gameState, 'COUNTDOWN', 3);
+                this.transitionTo(gameState, 'COUNTDOWN', 2);
             } else {
                 this.onEnd(gameState, broadcast, roast);
             }

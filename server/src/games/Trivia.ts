@@ -33,6 +33,7 @@ export class TriviaGame extends BaseGame {
 
     private playerStreaks: Record<string, number> = {};
     private loadingCategory: string | null = null;
+    protected introTime = 6;
 
     protected async initGameData(gameState: GameState): Promise<void> {
         gameState.gameData = {
@@ -149,7 +150,7 @@ export class TriviaGame extends BaseGame {
         }
 
         this.loadingCategory = categoryToUse;
-        this.transitionTo(gameState, 'LOADING', 15);
+        this.transitionTo(gameState, 'LOADING', 6);
 
         const finish = (questions: any[]) => {
             if (this.phase !== 'LOADING') return;
@@ -203,11 +204,11 @@ export class TriviaGame extends BaseGame {
             questions,
             question: questions[0],
             round: 0,
-            timer: 25,
+            timer: 18,
             submissions: {},
             roundResults: {}
         };
-        this.transitionTo(gameState, 'PLAYING', 25);
+        this.transitionTo(gameState, 'PLAYING', 18);
     }
 
     private resolveRound(gameState: GameState) {
@@ -231,7 +232,7 @@ export class TriviaGame extends BaseGame {
         });
 
         gameState.gameData.roundResults = results;
-        this.transitionTo(gameState, 'REVEAL', 8);
+        this.transitionTo(gameState, 'REVEAL', 5);
     }
 
     private nextRound(gameState: GameState) {
@@ -247,6 +248,6 @@ export class TriviaGame extends BaseGame {
         gameState.gameData.question = gameState.gameData.questions[this.round];
         gameState.gameData.submissions = {};
         gameState.gameData.roundResults = {};
-        this.transitionTo(gameState, 'PLAYING', 25);
+        this.transitionTo(gameState, 'PLAYING', 18);
     }
 }

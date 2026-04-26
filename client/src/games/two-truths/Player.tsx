@@ -1,213 +1,214 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useGameStore } from '../../store/useGameStore';
 import { useSound } from '../../context/SoundContext';
+import { ActionButton, GameScreen, HeroPanel, Panel, StatPill } from '../../components/ui/GameFrame';
+
+const ACCENT = {
+  primary: '#34d399',
+  secondary: '#f472b6',
+  glow: 'rgba(52, 211, 153, 0.26)',
+};
 
 const TwoTruthsPlayer: React.FC = () => {
-    const { socket, gameState } = useGameStore();
-    const { playClick, playSuccess, playError } = useSound();
-    
-    const [stmts, setStmts] = useState(['', '', '']);
-    const [lieIdx, setLieIdx] = useState<number | null>(null);
-    const [votedIdx, setVotedIdx] = useState<number | null>(null);
+  const { socket, gameState } = useGameStore();
+  const { playClick, playSuccess, playError } = useSound();
+  const [statements, setStatements] = useState(['', '', '']);
+  const [lieIndex, setLieIndex] = useState<number | null>(null);
+  const [localVoteIndex, setLocalVoteIndex] = useState<number | null>(null);
 
-    const { phase, gameData } = (gameState as any) || {};
-    const { 
-        subPhase, 
-        submissions = {}, 
-        playerOrder = [], 
-        subjectIndex = 0, 
-        votes = {} 
-    } = gameData || {};
+  const { phase, gameData, players } = (gameState as any) || {};
+  const { subPhase, submissions = {}, playerOrder = [], subjectIndex = 0, votes = {}, timer = 0 } = gameData || {};
 
-    const myId = socket?.id || '';
-    const mySubmission = submissions[myId];
-    const subjectId = playerOrder[subjectIndex];
-    const isSubject = myId === subjectId;
-    const myVote = votes[myId];
+  const myId = socket?.id || '';
+  const mySubmission = submissions[myId];
+  const subjectId = playerOrder[subjectIndex];
+  const subject = subjectId ? players?.[subjectId] : null;
+  const liveStatements = useMemo(
+    () => (subjectId && submissions[subjectId]?.statements) || [],
+    [subjectId, submissions],
+  );
+  const isSubject = myId === subjectId;
+  const myVote = votes[myId];
 
-    const handleSubmit = () => {
-        if (stmts.some(s => !s.trim()) || lieIdx === null) {
-            playError();
-            return;
-        }
-        socket?.emit('gameInput', { statements: stmts, lieIndex: lieIdx });
-        playSuccess();
-        if (navigator.vibrate) navigator.vibrate(50);
-    };
-
-    const handleVote = (idx: number) => {
-        if (votedIdx !== null || myVote !== undefined || isSubject) return;
-        setVotedIdx(idx);
-        socket?.emit('gameInput', { voteIndex: idx });
-        playSuccess();
-        if (navigator.vibrate) navigator.vibrate(50);
-    };
-
-    if (phase === 'INTRO' || phase === 'RESULTS') {
-        const isIntro = phase === 'INTRO';
-        return (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-12 bg-[#0d0f1a]">
-                <div className="text-[12rem] animate-pulse">{isIntro ? '🤥' : '🕵️‍♂️'}</div>
-                <div className="text-center space-y-4">
-                    <h2 className="text-7xl font-black text-white uppercase italic tracking-tighter italic text-center">
-                        {isIntro ? "TWO TRUTHS" : "CASE CLOSED"}
-                    </h2>
-                    <p className="text-2xl text-[#ff00ff] font-black uppercase tracking-widest animate-pulse">
-                        {isIntro ? "ONE LIE" : "THE TRUTH HURTS"}
-                    </p>
-                </div>
-            </div>
-        );
+  const handleSubmit = () => {
+    if (statements.some((entry) => !entry.trim()) || lieIndex === null) {
+      playError();
+      return;
     }
+    socket?.emit('gameInput', { statements, lieIndex });
+    playSuccess();
+    if (navigator.vibrate) navigator.vibrate(50);
+  };
 
-    return (
-        <div className="flex-1 flex flex-col p-6 space-y-6 bg-[#0d0f1a] overflow-hidden">
-            <AnimatePresence mode="wait">
-                {(phase === 'PLAYING' && subPhase === 'INPUT') && (
-                    <motion.div
-                        key="input"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex-1 flex flex-col space-y-6"
-                    >
-                        {mySubmission ? (
-                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8">
-                                <div className="text-[12rem] animate-bounce">🤐</div>
-                                <h3 className="text-5xl font-black uppercase tracking-tighter text-[#00ff00] italic">SECRETS LOCKED!</h3>
-                                <p className="text-2xl text-white/40 font-black uppercase tracking-widest">Waiting for the other liars...</p>
-                            </div>
-                        ) : (
-                            <div className="flex-1 flex flex-col space-y-6">
-                                <h3 className="text-3xl font-black text-center text-white/40 uppercase tracking-widest">CRAFT YOUR DECEPTION</h3>
-                                
-                                <div className="space-y-4 flex-1 overflow-y-auto pr-2 scrollbar-hide">
-                                    {stmts.map((st, i) => (
-                                        <div 
-                                            key={i}
-                                            className={`p-6 rounded-[3rem] border-4 transition-all duration-300 ${
-                                                lieIdx === i 
-                                                    ? 'border-[#ff00ff] bg-[#ff00ff]/5 shadow-[0_0_30px_rgba(255,0,255,0.2)]' 
-                                                    : 'border-white/5 bg-[#1a1f3a]'
-                                            }`}
-                                        >
-                                            <div className="flex justify-between items-center mb-4">
-                                                <span className="text-xs font-black text-white/20 uppercase tracking-[0.3em]">STATEMENT {i + 1}</span>
-                                                <button
-                                                    onClick={() => { playClick(); setLieIdx(i); }}
-                                                    className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest border-2 transition-all ${
-                                                        lieIdx === i 
-                                                            ? 'bg-[#ff00ff] border-[#ff00ff] text-white shadow-lg' 
-                                                            : 'bg-transparent border-white/20 text-white/40 hover:border-white/60'
-                                                    }`}
-                                                >
-                                                    {lieIdx === i ? 'THE LIE 🤥' : 'MARK AS LIE'}
-                                                </button>
-                                            </div>
-                                            <textarea
-                                                value={st}
-                                                onChange={(e) => {
-                                                    const next = [...stmts];
-                                                    next[i] = e.target.value;
-                                                    setStmts(next);
-                                                }}
-                                                placeholder="WRITE SOMETHING..."
-                                                className="w-full bg-transparent text-2xl font-black text-white focus:outline-none resize-none placeholder:text-white/5 uppercase italic"
-                                                rows={2}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
+  const handleVote = (index: number) => {
+    if (localVoteIndex !== null || myVote !== undefined || isSubject) return;
+    setLocalVoteIndex(index);
+    socket?.emit('gameInput', { voteIndex: index });
+    playSuccess();
+    if (navigator.vibrate) navigator.vibrate(50);
+  };
 
-                                <motion.button
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={handleSubmit}
-                                    disabled={stmts.some(s => !s.trim()) || lieIdx === null}
-                                    className="w-full bg-gradient-to-r from-[#ff00ff] to-[#ffaa00] text-white py-8 rounded-[2.5rem] font-black text-3xl uppercase tracking-[0.2em] shadow-[0_0_50px_rgba(255,0,255,0.3)] border-4 border-white/20 disabled:opacity-20"
-                                >
-                                    LOCK 'EM IN
-                                </motion.button>
-                            </div>
-                        )}
-                    </motion.div>
-                )}
+  return (
+    <GameScreen accent={ACCENT}>
+      <div className="flex h-full flex-col gap-5 p-5">
+        <AnimatePresence mode="wait">
+          {(phase === 'INTRO' || phase === 'RESULTS') && (
+            <motion.div key={`static-${phase}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex h-full items-center justify-center">
+              <HeroPanel
+                accent={ACCENT}
+                eyebrow={phase === 'RESULTS' ? 'Round Complete' : 'Two Truths'}
+                title={
+                  phase === 'RESULTS'
+                    ? <>The TV is exposing <span className="text-pink-300">the best liar</span></>
+                    : <>Write fast. Make one <span className="text-emerald-300">dangerously believable</span></>
+                }
+                subtitle={
+                  phase === 'RESULTS'
+                    ? 'Stay ready for the next player spotlight. This game feels best when each turn snaps into the next one.'
+                    : 'Short, specific statements play better than long stories. One of them should feel just real enough to bait votes.'
+                }
+                icon={phase === 'RESULTS' ? '🕵️' : '🤥'}
+                className="w-full max-w-4xl"
+              />
+            </motion.div>
+          )}
 
-                {subPhase === 'VOTING' && (
-                    <motion.div
-                        key="voting"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex-1 flex flex-col space-y-8"
-                    >
-                        {isSubject ? (
-                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
-                                <motion.div 
-                                    animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
-                                    transition={{ repeat: Infinity, duration: 2 }}
-                                    className="text-[15rem]"
-                                >
-                                    😰
-                                </motion.div>
-                                <div className="space-y-4">
-                                    <h3 className="text-5xl font-black uppercase tracking-tighter text-[#ffff00] italic">UNDER OATH!</h3>
-                                    <p className="text-2xl text-white/40 font-black uppercase tracking-widest leading-loose">Everyone is trying to spot your lie. STAY COOL.</p>
-                                </div>
-                            </div>
-                        ) : (votedIdx !== null || myVote !== undefined) ? (
-                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8">
-                                <div className="text-[12rem] animate-pulse">🕵️‍♂️</div>
-                                <h3 className="text-5xl font-black uppercase tracking-tighter text-[#00ffff] italic">JUDGMENT CAST!</h3>
-                                <p className="text-2xl text-white/40 font-black uppercase tracking-widest">Waiting for the reveal...</p>
-                            </div>
-                        ) : (
-                            <div className="flex-1 flex flex-col justify-center space-y-12">
-                                <div className="text-center space-y-2">
-                                    <span className="text-xl font-black text-white/20 uppercase tracking-[0.4em]">WHICH ONE IS THE</span>
-                                    <h2 className="text-7xl font-black text-[#ff00ff] uppercase italic tracking-tighter italic">LIE?</h2>
-                                </div>
+          {phase === 'PLAYING' && subPhase === 'INPUT' && (
+            <motion.div key="input" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex h-full flex-col gap-5 overflow-hidden">
+              {mySubmission ? (
+                <HeroPanel
+                  accent={ACCENT}
+                  eyebrow="Locked In"
+                  title={<>Your mix is loaded. <span className="text-emerald-300">Now stay cool.</span></>}
+                  subtitle="Everyone else is still writing. Hold position while the room catches up."
+                  icon="✅"
+                  aside={<StatPill label="Timer" value={`${Math.ceil(timer)}s`} accent={ACCENT.primary} />}
+                  className="my-auto"
+                />
+              ) : (
+                <>
+                  <HeroPanel
+                    accent={ACCENT}
+                    eyebrow="Create Your Set"
+                    title={<>Two truths. One <span className="text-pink-300">trap</span>.</>}
+                    subtitle="Mark exactly one statement as the lie. Punchy lines land better than essays."
+                    icon="✍️"
+                    aside={<StatPill label="Time Left" value={`${Math.ceil(timer)}s`} accent={ACCENT.primary} />}
+                  />
 
-                                <div className="grid grid-cols-3 gap-6">
-                                    {[0, 1, 2].map((i) => (
-                                        <motion.button
-                                            key={i}
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={() => handleVote(i)}
-                                            className="aspect-square bg-[#1a1f3a] rounded-[3rem] border-8 border-white/10 flex items-center justify-center text-8xl font-black text-white hover:border-[#ff00ff] hover:bg-[#ff00ff]/10 transition-all shadow-2xl"
-                                        >
-                                            {i + 1}
-                                        </motion.button>
-                                    ))}
-                                </div>
+                  <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto pb-2">
+                    {statements.map((statement, index) => (
+                      <Panel key={index} className={lieIndex === index ? 'border-pink-300/40 bg-pink-400/12' : ''}>
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                          <div className="text-[11px] font-black uppercase tracking-[0.22em] text-white/42">Statement {index + 1}</div>
+                          <button
+                            onClick={() => {
+                              playClick();
+                              setLieIndex(index);
+                            }}
+                            className={`rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] transition ${lieIndex === index ? 'border-pink-300/40 bg-pink-400/18 text-pink-100' : 'border-white/10 bg-black/20 text-white/62'}`}
+                          >
+                            {lieIndex === index ? 'Marked Lie' : 'Mark as Lie'}
+                          </button>
+                        </div>
+                        <textarea
+                          value={statement}
+                          onChange={(event) => {
+                            const next = [...statements];
+                            next[index] = event.target.value;
+                            setStatements(next);
+                          }}
+                          placeholder="Type something believable"
+                          rows={3}
+                          className="w-full resize-none rounded-[1.2rem] border border-white/10 bg-black/20 px-4 py-4 text-lg font-semibold text-white outline-none placeholder:text-white/24"
+                        />
+                      </Panel>
+                    ))}
+                  </div>
 
-                                <div className="text-center">
-                                    <p className="text-xl font-black text-white/20 uppercase tracking-widest animate-pulse">REFER TO THE BIG SCREEN FOR THE STATEMENTS</p>
-                                </div>
-                            </div>
-                        )}
-                    </motion.div>
-                )}
+                  <ActionButton onClick={handleSubmit} disabled={statements.some((entry) => !entry.trim()) || lieIndex === null}>
+                    Lock My Set
+                  </ActionButton>
+                </>
+              )}
+            </motion.div>
+          )}
 
-                {phase === 'REVEAL' && (
-                    <motion.div
-                        key="reveal"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-12"
-                    >
-                        <motion.div 
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ duration: 0.5, repeat: Infinity }}
-                            className="text-[12rem]"
-                        >
-                            🎭
-                        </motion.div>
-                        <h3 className="text-6xl font-black text-[#ff00ff] uppercase tracking-tighter italic drop-shadow-[0_0_30px_rgba(255,0,255,0.5)]">DID THEY LIE?</h3>
-                        <p className="text-2xl text-white/40 font-black uppercase tracking-widest">The truth is coming out on the TV!</p>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
+          {subPhase === 'VOTING' && (
+            <motion.div key="vote" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex h-full flex-col gap-5 overflow-hidden">
+              {isSubject ? (
+                <HeroPanel
+                  accent={ACCENT}
+                  eyebrow="Pressure On"
+                  title={<>They are reading <span className="text-pink-300">your tells</span></>}
+                  subtitle="You cannot vote on your own set. Just enjoy the discomfort while everyone tries to sniff out the fake."
+                  icon="😅"
+                  aside={<StatPill label="Votes Coming" value={Object.keys(votes).length} accent={ACCENT.secondary} />}
+                  className="my-auto"
+                />
+              ) : myVote !== undefined || localVoteIndex !== null ? (
+                <HeroPanel
+                  accent={ACCENT}
+                  eyebrow="Vote Cast"
+                  title={<>Your suspicion is <span className="text-emerald-300">locked</span></>}
+                  subtitle="Now watch the host screen for the reveal. Good bluff rounds should move quickly from here."
+                  icon="🗳️"
+                  aside={<StatPill label="Subject" value={subject?.name || 'Player'} accent={ACCENT.primary} />}
+                  className="my-auto"
+                />
+              ) : (
+                <>
+                  <HeroPanel
+                    accent={ACCENT}
+                    eyebrow="Spot the Lie"
+                    title={
+                      <>
+                        Which line from <span className="text-pink-300">{subject?.name || 'this player'}</span> is fake?
+                      </>
+                    }
+                    subtitle="The most believable lie usually wins. Trust your gut and tap once."
+                    icon={subject?.avatar || '🕵️'}
+                    aside={<StatPill label="Time Left" value={`${Math.ceil(timer)}s`} accent={ACCENT.primary} />}
+                  />
+
+                  <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto pb-2">
+                    {liveStatements.map((statement: string, index: number) => (
+                      <button
+                        key={index}
+                        onClick={() => handleVote(index)}
+                        className="rounded-[1.7rem] border border-white/10 bg-white/[0.06] p-5 text-left transition hover:-translate-y-0.5 hover:border-emerald-300/35 hover:bg-emerald-400/10"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] bg-white/10 text-lg font-black text-white/80">
+                            {index + 1}
+                          </div>
+                          <div className="pt-1 text-xl font-black leading-tight tracking-[-0.03em] text-white">{statement}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </motion.div>
+          )}
+
+          {phase === 'REVEAL' && (
+            <motion.div key="reveal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex h-full items-center justify-center">
+              <HeroPanel
+                accent={ACCENT}
+                eyebrow="Truth Reveal"
+                title={<>The host screen has the <span className="text-pink-300">answer</span></>}
+                subtitle="Use the reveal moment to reset quickly. The next player should be up almost immediately."
+                icon="🎯"
+                className="w-full max-w-4xl"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </GameScreen>
+  );
 };
 
 export default TwoTruthsPlayer;
